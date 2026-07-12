@@ -1,0 +1,28 @@
+<?xml version="1.0" ?>
+<sdf version="1.6">
+  <model name="imav">
+    <static>true</static> 
+        
+    <link name="base_link">
+      
+      <collision name="collision">
+        <geometry>
+          <mesh>
+            <uri>model://imav/meshes/all.stl</uri>
+            <scale>1 1 1</scale>
+          </mesh>
+        </geometry>
+      </collision>
+      
+      <visual name="visual">
+        <geometry>
+          <mesh>
+            <uri>model://imav/meshes/all.dae</uri>
+            <scale>1 1 1</scale>
+          </mesh>
+        </geometry>
+      </visual>
+      
+    </link>
+  </model>
+</sdf>
