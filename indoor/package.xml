@@ -3,9 +3,14 @@
 <package format="3">
   <name>indoor</name>
   <version>0.0.0</version>
-  <description>TODO: Package description</description>
+  <description>
+    IMAV 2026 indoor competition package
+  </description>
   <maintainer email="lucascronchi2005@gmail.com">lucas</maintainer>
   <license>TODO: License declaration</license>
+
+  <exec_depend>rclpy</exec_depend>
+  <exec_depend>nectar</exec_depend>
 
   <test_depend>ament_copyright</test_depend>
   <test_depend>ament_flake8</test_depend>

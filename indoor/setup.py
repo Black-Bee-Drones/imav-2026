@@ -5,6 +5,21 @@ from setuptools import find_packages, setup
 
 package_name = 'indoor'
 
+
+def _recursive_data_files(src_root: str, dest_root: str):
+    """Install every file under src_root into share/<pkg>/<dest_root>/..."""
+    entries = []
+    for dirpath, _dirnames, filenames in os.walk(src_root):
+        if not filenames:
+            continue
+        rel = os.path.relpath(dirpath, src_root)
+        install_dir = os.path.join('share', package_name, dest_root, rel)
+        if rel == '.':
+            install_dir = os.path.join('share', package_name, dest_root)
+        entries.append((install_dir, [os.path.join(dirpath, f) for f in filenames]))
+    return entries
+
+
 setup(
     name=package_name,
     version='0.0.0',
@@ -14,12 +29,13 @@ setup(
         ('share/' + package_name, ['package.xml']),
         (os.path.join('share', package_name, 'launch'), glob(os.path.join('launch', '*launch.py'))),
         (os.path.join('share', package_name, 'config'), glob('config/*.yaml')),
+        *(_recursive_data_files('simulation', 'simulation')),
     ],
     install_requires=['setuptools'],
     zip_safe=True,
     maintainer='Lucas Ronchi',
     maintainer_email='lucascronchi2005@gmail.com',
-    description='TODO: Package description',
+    description='IMAV 2026 indoor',
     license='TODO: License declaration',
     extras_require={
         'test': [

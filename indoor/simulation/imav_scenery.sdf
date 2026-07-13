@@ -1,12 +1,12 @@
 <?xml version="1.0" ?>
-<sdf version="1.8">
-  <world name="imav">
+<sdf version="1.9">
+  <world name="imav_scenery">
     <plugin filename="gz-sim-physics-system" name="gz::sim::systems::Physics"/>
     <plugin filename="gz-sim-user-commands-system" name="gz::sim::systems::UserCommands"/>
     <plugin filename="gz-sim-scene-broadcaster-system" name="gz::sim::systems::SceneBroadcaster"/>
 
     <scene>
-      <ambient>0.7 0.7 0.7 1.0</ambient> 
+      <ambient>0.7 0.7 0.7 1.0</ambient>
       <background>0.5 0.5 0.5 1.0</background>
       <shadows>true</shadows>
     </scene>
