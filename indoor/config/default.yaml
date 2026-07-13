@@ -1,6 +1,11 @@
 mangalarga:
   ros__parameters:
 
+    # Global
+    overall_max: 10 * 60
+    overall_max_per_state: 5 * 60
+    px_threshold: 50
+
     # Initialize
     drone_type: 'mavros'
 
@@ -11,3 +16,21 @@ mangalarga:
 
     # Takeoff
     takeoff_altitude: 1.2  # m
+
+    # PID xy
+    controller_xy_kp: 1
+    controller_xy_kd: 1
+    controller_xy_ki: 1
+    controller_xy_output_min: -1
+    controller_xy_output_max: 1
+    controller_xy_integral_min: -1
+    controller_xy_integral_max: 1
+
+    # PID z
+    controller_z_kp: 1
+    controller_z_kd: 1
+    controller_z_ki: 1
+    controller_z_output_min: -1
+    controller_z_output_max: 1
+    controller_z_integral_min: -1
+    controller_z_integral_max: 1

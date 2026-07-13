@@ -12,7 +12,7 @@ from yasmin import State, Blackboard
 from yasmin_ros.yasmin_node import YasminNode
 from yasmin_ros.basic_outcomes import SUCCEED, ABORT
 
-from nectar.control import DroneFactory, MavrosConfig, PoseSource
+from nectar.control import DroneFactory, MavrosConfig, PoseSource, PIDController
 from nectar.vision import ImageHandler
 from nectar.ai import Detector, DetectionResult
 
@@ -36,6 +36,40 @@ class Initialize(State):
         self.confidence_threshold = self.node.get_parameter('confidence_threshold').value
         self.image_source = self.node.get_parameter('image_source').value
 
+        # PID xy
+        self.node.declare_parameter('controller_xy_kp', Parameter.Type.DOUBLE)
+        self.node.declare_parameter('controller_xy_kd', Parameter.Type.DOUBLE)
+        self.node.declare_parameter('controller_xy_ki', Parameter.Type.DOUBLE)
+        self.node.declare_parameter('controller_xy_output_min', Parameter.Type.DOUBLE)
+        self.node.declare_parameter('controller_xy_output_max', Parameter.Type.DOUBLE)
+        self.node.declare_parameter('controller_xy_integral_min', Parameter.Type.DOUBLE)
+        self.node.declare_parameter('controller_xy_integral_max', Parameter.Type.DOUBLE)
+
+        self.controller_xy_kp = self.node.get_parameter('controller_xy_kp').value
+        self.controller_xy_kd = self.node.get_parameter('controller_xy_kd').value
+        self.controller_xy_ki = self.node.get_parameter('controller_xy_ki').value
+        self.controller_xy_output_min = self.node.get_parameter('controller_xy_output_min').value
+        self.controller_xy_output_max = self.node.get_parameter('controller_xy_output_max').value
+        self.controller_xy_integral_min = self.node.get_parameter('controller_xy_integral_min').value
+        self.controller_xy_integral_max = self.node.get_parameter('controller_xy_integral_max').value
+
+        # PID z
+        self.node.declare_parameter('controller_z_kp', Parameter.Type.DOUBLE)
+        self.node.declare_parameter('controller_z_kd', Parameter.Type.DOUBLE)
+        self.node.declare_parameter('controller_z_ki', Parameter.Type.DOUBLE)
+        self.node.declare_parameter('controller_z_output_min', Parameter.Type.DOUBLE)
+        self.node.declare_parameter('controller_z_output_max', Parameter.Type.DOUBLE)
+        self.node.declare_parameter('controller_z_integral_min', Parameter.Type.DOUBLE)
+        self.node.declare_parameter('controller_z_integral_max', Parameter.Type.DOUBLE)
+
+        self.controller_z_kp = self.node.get_parameter('controller_z_kp').value
+        self.controller_z_kd = self.node.get_parameter('controller_z_kd').value
+        self.controller_z_ki = self.node.get_parameter('controller_z_ki').value
+        self.controller_z_output_min = self.node.get_parameter('controller_z_output_min').value
+        self.controller_z_output_max = self.node.get_parameter('controller_z_output_max').value
+        self.controller_z_integral_min = self.node.get_parameter('controller_z_integral_min').value
+        self.controller_z_integral_max = self.node.get_parameter('controller_z_integral_max').value
+
     def execute(self, blackboard: Blackboard):
         yasmin.YASMIN_LOG_INFO('Initializing...')
 
@@ -43,8 +77,9 @@ class Initialize(State):
         try:
             yasmin.YASMIN_LOG_INFO('Initializing Start Time...')
             self.start_time = self.node.get_clock().now()
+
             blackboard['start_time'] = self.start_time
-            yasmin.YASMIN_LOG_INFO('Successfull Start Time...')
+            yasmin.YASMIN_LOG_INFO('successful Start Time!')
 
         except KeyboardInterrupt:
             yasmin.YASMIN_LOG_WARN('Execution interrupted by user.')
@@ -63,7 +98,7 @@ class Initialize(State):
             drone = DroneFactory.create('mavros', drone_config)
 
             blackboard['drone'] = drone
-            yasmin.YASMIN_LOG_INFO(f'Successfull start Drone(\'{self.drone_type}\')...')
+            yasmin.YASMIN_LOG_INFO(f'successful start Drone(\'{self.drone_type}\')!')
 
         except KeyboardInterrupt:
             yasmin.YASMIN_LOG_WARN('Execution interrupted by user.')
@@ -71,6 +106,44 @@ class Initialize(State):
 
         except Exception as e:
             yasmin.YASMIN_LOG_ERROR(f'DroneFactory failed: {e}')
+            return ABORT
+
+        # PID
+        try:
+            yasmin.YASMIN_LOG_INFO(f'Initializing PID (x, y and z)...')
+            pid_x = PIDController(
+                kp = self.controller_xy_kp,
+                kd = self.controller_xy_kd,
+                ki = self.controller_xy_ki,
+                output_limits = (self.controller_xy_output_min, self.controller_xy_output_max),
+                integral_limits = (self.controller_xy_integral_min, self.controller_xy_integral_max),
+            )
+            pid_y = PIDController(
+                kp = self.controller_xy_kp,
+                kd = self.controller_xy_kd,
+                ki = self.controller_xy_ki,
+                output_limits = (self.controller_xy_output_min, self.controller_xy_output_max),
+                integral_limits = (self.controller_xy_integral_min, self.controller_xy_integral_max),
+            )
+            pid_z = PIDController(
+                kp = self.controller_z_kp,
+                kd = self.controller_z_kd,
+                ki = self.controller_z_ki,
+                output_limits = (self.controller_z_output_min, self.controller_z_output_max),
+                integral_limits = (self.controller_z_integral_min, self.controller_z_integral_max),
+            )
+
+            blackboard['pid_x'] = pid_x
+            blackboard['pid_y'] = pid_y
+            blackboard['pid_z'] = pid_z
+            yasmin.YASMIN_LOG_INFO(f'successful start PID (x, y and z)!')
+
+        except KeyboardInterrupt:
+            yasmin.YASMIN_LOG_WARN('Execution interrupted by user.')
+            return ABORT
+
+        except Exception as e:
+            yasmin.YASMIN_LOG_ERROR(f'PID failed: {e}')
             return ABORT
 
         # Detector
@@ -82,7 +155,7 @@ class Initialize(State):
             )
 
             blackboard['detector'] = self.detector
-            yasmin.YASMIN_LOG_INFO('Successfull start Detector...')
+            yasmin.YASMIN_LOG_INFO('successful start Detector!')
 
         except KeyboardInterrupt:
             yasmin.YASMIN_LOG_WARN('Execution interrupted by user.')
@@ -107,7 +180,7 @@ class Initialize(State):
             image_handler.take_photo()
 
             blackboard['image_handler'] = image_handler
-            yasmin.YASMIN_LOG_INFO('Successfull start ImageHandler...')
+            yasmin.YASMIN_LOG_INFO('successful start ImageHandler!')
 
         except KeyboardInterrupt:
             yasmin.YASMIN_LOG_WARN('Execution interrupted by user.')
@@ -117,7 +190,7 @@ class Initialize(State):
             yasmin.YASMIN_LOG_ERROR(f'ImageHandler failed: {e}')
             return ABORT
 
-        yasmin.YASMIN_LOG_INFO('Completed successfully.')
+        yasmin.YASMIN_LOG_INFO('Completed successfully!!!')
         return SUCCEED
 
     def callback_detector(self, image: np.ndarray) -> DetectionResult:

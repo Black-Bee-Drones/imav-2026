@@ -1,5 +1,5 @@
 from yasmin import StateMachine
-from yasmin_ros.basic_outcomes import SUCCEED, ABORT
+from yasmin_ros.basic_outcomes import SUCCEED, TIMEOUT, ABORT
 
 from .states import (
     Initialize,
@@ -37,7 +37,7 @@ class IndoorSM(StateMachine):
         self.add_state(
             'OBSTACLESM',
             ObstacleSM(),
-            transitions = {SUCCEED: 'INSPECTSM', ABORT: 'LAND'},
+            transitions = {SUCCEED: 'INSPECTSM', TIMEOUT: 'LAND'},
         )
 
         self.add_state(
