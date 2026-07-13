@@ -1,0 +1,13 @@
+mangalarga:
+  ros__parameters:
+
+    # Initialize
+    drone_type: 'mavros'
+
+    model_source: 'best.pt'
+    confidence_threshold: 0.5
+
+    image_source: 'realsense'
+
+    # Takeoff
+    takeoff_altitude: 1.2  # m

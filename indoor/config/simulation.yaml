@@ -1,0 +1,5 @@
+mangalarga:
+  ros__parameters:
+
+    # Initialize
+    image_source: '/front_camera/image'
