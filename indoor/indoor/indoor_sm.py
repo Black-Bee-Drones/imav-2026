@@ -1,5 +1,5 @@
 from yasmin import StateMachine
-from yasmin_ros.basic_outcomes import SUCCEED, TIMEOUT, ABORT
+from yasmin_ros.basic_outcomes import SUCCEED, CANCEL, ABORT
 
 from .states import (
     Initialize,
@@ -37,19 +37,19 @@ class IndoorSM(StateMachine):
         self.add_state(
             'OBSTACLESM',
             ObstacleSM(),
-            transitions = {SUCCEED: 'INSPECTSM', TIMEOUT: 'LAND'},
+            transitions = {SUCCEED: 'INSPECTSM', CANCEL: 'PRECISELANDINGSM'},
         )
 
         self.add_state(
             'INSPECTSM',
             InspectSM(),
-            transitions = {SUCCEED: 'DROPPINGSM', ABORT: 'LAND'},
+            transitions = {SUCCEED: 'DROPPINGSM', CANCEL: 'PRECISELANDINGSM', ABORT: 'LAND'},
         )
 
         self.add_state(
             'DROPPINGSM',
             DroppingSM(),
-            transitions = {SUCCEED: 'PRECISELANDINGSM', ABORT: 'LAND'},
+            transitions = {SUCCEED: 'PRECISELANDINGSM', CANCEL: 'PRECISELANDINGSM'},
         )
 
         self.add_state(

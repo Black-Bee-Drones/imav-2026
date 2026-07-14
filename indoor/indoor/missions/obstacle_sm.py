@@ -1,5 +1,5 @@
 from yasmin import StateMachine
-from yasmin_ros.basic_outcomes import SUCCEED, TIMEOUT
+from yasmin_ros.basic_outcomes import SUCCEED, CANCEL, TIMEOUT
 
 from states import (
     Windows,
@@ -11,44 +11,44 @@ from states import (
 
 class ObstacleSM(StateMachine):
     def __init__(self):
-        super().__init__(outcomes=[SUCCEED, TIMEOUT])
+        super().__init__(outcomes=[SUCCEED, CANCEL])
         self.set_name('Obstacle course state machine')
         self.set_description('State machine for completing an obstacle course.')
 
         self.add_state(
             'WINDOWS1',
             Windows(),
-            transitions={SUCCEED: 'RED_BAR', TIMEOUT: TIMEOUT},
+            transitions={SUCCEED: 'RED_BAR', TIMEOUT: CANCEL},
         )
 
         self.add_state(
             'RED_BAR',
             RedBar(),
-            transitions={SUCCEED: 'BLUE_BAR1', TIMEOUT: TIMEOUT},
+            transitions={SUCCEED: 'BLUE_BAR1', TIMEOUT: CANCEL},
         )
 
         self.add_state(
             'BLUE_BAR1',
             BlueBar(),
-            transitions={SUCCEED: 'BLUE_BAR2', TIMEOUT: TIMEOUT},
+            transitions={SUCCEED: 'BLUE_BAR2', TIMEOUT: CANCEL},
         )
 
         self.add_state(
             'BLUE_BAR2',
             BlueBar(),
-            transitions={SUCCEED: 'TUBES', TIMEOUT: TIMEOUT},
+            transitions={SUCCEED: 'TUBES', TIMEOUT: CANCEL},
         )
 
         self.add_state(
             'TUBES',
             Tubes(),
-            transitions={SUCCEED: 'WINDOWS2', TIMEOUT: TIMEOUT},
+            transitions={SUCCEED: 'WINDOWS2', TIMEOUT: CANCEL},
         )
 
         self.add_state(
             'WINDOWS2',
             Windows(),
-            transitions={SUCCEED: SUCCEED, TIMEOUT: TIMEOUT},
+            transitions={SUCCEED: SUCCEED, TIMEOUT: CANCEL},
         )
 
         self.set_start_state('WINDOWS1')

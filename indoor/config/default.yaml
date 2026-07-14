@@ -5,6 +5,8 @@ mangalarga:
     overall_max: 10 * 60
     overall_max_per_state: 5 * 60
     px_threshold: 50
+    max_altitude: 7.0
+    safe_altitude: 3.0
 
     # Initialize
     drone_type: 'mavros'
@@ -16,6 +18,16 @@ mangalarga:
 
     # Takeoff
     takeoff_altitude: 1.2  # m
+
+    # GoToLandingBase
+    fixed_base_x: 0.0
+    fixed_base_y: 2.0
+    mobile_base_x: 0.0
+    mobile_base_y: -2.0
+
+    # Precise Landing - Center
+    lost_detection: 10
+    land_speed: -0.5
 
     # PID xy
     controller_xy_kp: 1

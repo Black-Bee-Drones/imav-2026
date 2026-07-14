@@ -10,7 +10,7 @@ from nectar.control import MavrosDrone, MoveReference
 
 
 class BlueBar(State):
-    def __init__(self, step=3):
+    def __init__(self, step: int = 3):
         super().__init__(outcomes=[SUCCEED, TIMEOUT])
 
         self.step = step
