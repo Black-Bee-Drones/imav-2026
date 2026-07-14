@@ -31,6 +31,7 @@ setup(
         (os.path.join('share', package_name, 'config'), glob('config/*.yaml')),
         (os.path.join('share', package_name, 'models'), glob("share/models/*")),
         *(_recursive_data_files('simulation', 'simulation')),
+        (os.path.join('share', package_name, 'models'), glob('share/models/*.pt')),
     ],
     install_requires=['setuptools'],
     zip_safe=True,

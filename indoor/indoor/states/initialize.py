@@ -131,7 +131,7 @@ class Initialize(State):
             drone = DroneFactory.create('mavros', drone_config)
 
             blackboard['drone'] = drone
-            yasmin.YASMIN_LOG_INFO(f'successful start Drone(\'{self.drone_type}\')!')
+            yasmin.YASMIN_LOG_INFO(f'Successful start Drone(\'{self.drone_type}\')!')
 
         except KeyboardInterrupt:
             yasmin.YASMIN_LOG_WARN('Execution interrupted by user.')
@@ -169,7 +169,7 @@ class Initialize(State):
             blackboard['pid_x'] = pid_x
             blackboard['pid_y'] = pid_y
             blackboard['pid_z'] = pid_z
-            yasmin.YASMIN_LOG_INFO(f'successful start PID (x, y and z)!')
+            yasmin.YASMIN_LOG_INFO(f'Successful start PID (x, y and z)!')
 
         except KeyboardInterrupt:
             yasmin.YASMIN_LOG_WARN('Execution interrupted by user.')
