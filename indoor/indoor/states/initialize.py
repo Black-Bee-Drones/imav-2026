@@ -20,7 +20,9 @@ from nectar.ai import Detector, DetectionResult
 class Initialize(State):
     def __init__(self):
         super().__init__(outcomes=[SUCCEED, ABORT])
-        self.set_description('Initializes the drone, detector and camera.')
+        """
+        Initializes the drone, detector and camera.
+        """
 
         self.node = YasminNode.get_instance()
 
@@ -30,11 +32,21 @@ class Initialize(State):
         self.node.declare_parameter('model_source', Parameter.Type.STRING)
         self.node.declare_parameter('confidence_threshold', Parameter.Type.DOUBLE)
         self.node.declare_parameter('image_source', Parameter.Type.STRING)
+        self.node.declare_parameter('timeout', Parameter.Type.INTEGER)
+        self.node.declare_parameter('timeout_per_state', Parameter.Type.INTEGER)
+        self.node.declare_parameter('px_threshold', Parameter.Type.INTEGER)
+        self.node.declare_parameter('safe_altitude', Parameter.Type.DOUBLE)
+        self.node.declare_parameter('max_altitude', Parameter.Type.DOUBLE)
 
         self.drone_type = self.node.get_parameter('drone_type').value
-        self.model_source = models_path / self.node.get_parameter('model_source').value
+        self.model_source = str(models_path / self.node.get_parameter('model_source').value)
         self.confidence_threshold = self.node.get_parameter('confidence_threshold').value
         self.image_source = self.node.get_parameter('image_source').value
+        self.timeout = self.node.get_parameter('timeout').value
+        self.timeout_per_state = self.node.get_parameter('timeout_per_state').value
+        self.px_threshold = self.node.get_parameter('px_threshold').value
+        self.safe_altitude = self.node.get_parameter('safe_altitude').value
+        self.max_altitude = self.node.get_parameter('max_altitude').value
 
         # PID xy
         self.node.declare_parameter('controller_xy_kp', Parameter.Type.DOUBLE)
@@ -73,20 +85,26 @@ class Initialize(State):
     def execute(self, blackboard: Blackboard):
         yasmin.YASMIN_LOG_INFO('Initializing...')
 
-        # Start Time
+        # Const
         try:
-            yasmin.YASMIN_LOG_INFO('Initializing Start Time...')
+            yasmin.YASMIN_LOG_INFO('Initializing Start Const...')
             self.start_time = self.node.get_clock().now()
 
             blackboard['start_time'] = self.start_time
-            yasmin.YASMIN_LOG_INFO('successful Start Time!')
+            blackboard['timeout'] = self.timeout
+            blackboard['timeout_per_state'] = self.timeout_per_state
+            blackboard['px_threshold'] = self.px_threshold
+            blackboard['safe_altitude'] = self.safe_altitude
+            blackboard['max_altitude'] = self.max_altitude
+
+            yasmin.YASMIN_LOG_INFO('successful Start Const!')
 
         except KeyboardInterrupt:
             yasmin.YASMIN_LOG_WARN('Execution interrupted by user.')
             return ABORT
 
         except Exception as e:
-            yasmin.YASMIN_LOG_ERROR(f'DroneFactory failed: {e}')
+            yasmin.YASMIN_LOG_ERROR(f'Const failed: {e}')
             return ABORT
 
         # Drone
@@ -153,6 +171,9 @@ class Initialize(State):
                 model_source = self.model_source,
                 confidence_threshold = self.confidence_threshold,
             )
+
+            yasmin.YASMIN_LOG_INFO('Load detector...')
+            self.detector.load()
 
             blackboard['detector'] = self.detector
             yasmin.YASMIN_LOG_INFO('successful start Detector!')

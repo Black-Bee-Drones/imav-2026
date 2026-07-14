@@ -8,7 +8,9 @@ from nectar.control import MavrosDrone
 class Land(State):
     def __init__(self):
         super().__init__(outcomes=[SUCCEED, ABORT])
-        self.set_description('Land the drone.')
+        """
+        Land the drone.
+        """
 
     def execute(self, blackboard: Blackboard):
         drone: MavrosDrone = blackboard.get('drone')

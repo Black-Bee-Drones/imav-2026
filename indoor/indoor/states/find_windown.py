@@ -31,6 +31,8 @@ class FindWindown(State):
         image_handler: ImageHandler = blackboard.get('image_handler')
 
         self.start_time: Time = blackboard['start_time']
+        self.timeout = blackboard['timeout']
+        self.timeout_per_state = blackboard['timeout_per_state']
         self.start_state = self.node.get_clock().now()
 
         yasmin.YASMIN_LOG_INFO('Start.')
@@ -72,5 +74,5 @@ class FindWindown(State):
     def check_timeout(self):
         now = self.node.get_clock().now()
 
-        return now - self.start_time > Duration(seconds=self.overall_max) or \
-            now - self.start_state > Duration(seconds=self.overall_max_per_state)
+        return now - self.start_time > Duration(seconds=self.timeout) or \
+            now - self.start_state > Duration(seconds=self.timeout_per_state)

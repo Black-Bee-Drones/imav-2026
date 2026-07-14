@@ -16,16 +16,13 @@ class Reacquire(State):
 
         self.node = YasminNode.get_instance()
 
-        self.node.declare_parameter('max_altitude', Parameter.Type.DOUBLE)
-
-        self.max_altitude = self.node.get_parameter('max_altitude').value
-
     def execute(self, blackboard: Blackboard):
         drone: MavrosDrone = blackboard['drone']
+        max_altitude: float = blackboard['max_altitude']
 
         yasmin.YASMIN_LOG_INFO(f'Reacquire - Altitude step: {self.step} m...')
 
-        if self.step + drone.get_altitude() >= self.max_altitude:
+        if self.step + drone.get_altitude() >= max_altitude:
             yasmin.YASMIN_LOG_ERROR('Altitude limit.')
             return ABORT
 

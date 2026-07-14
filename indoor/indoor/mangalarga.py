@@ -10,7 +10,7 @@ import nectar
 try:
     from .indoor_sm import IndoorSM
 except:
-    from indoor_sm import IndoorSM
+    from indoor.indoor_sm import IndoorSM
 
 
 def main(args=None):
@@ -23,10 +23,6 @@ def main(args=None):
     try:
         indoor_sm = IndoorSM()
 
-        yasmin.YASMIN_LOG_INFO(indoor_sm.get_name())
-        yasmin.YASMIN_LOG_INFO(indoor_sm.get_description())
-
-        final_outcome = indoor_sm()
 
     except KeyboardInterrupt:
         if indoor_sm.is_running():
@@ -41,6 +37,7 @@ def main(args=None):
         yasmin.YASMIN_LOG_ERROR("Check the YAML parameter file.")
 
     else:
+        final_outcome = indoor_sm()
         if final_outcome == SUCCEED:
             yasmin.YASMIN_LOG_INFO(final_outcome)
         else:

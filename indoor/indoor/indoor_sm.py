@@ -18,9 +18,11 @@ class IndoorSM(StateMachine):
 
     def __init__(self):
         super().__init__(outcomes=[SUCCEED, ABORT])
+        """
+        Indoor Mission
 
-        self.set_name('Indoor Mission')
-        self.set_description('Main state machine for the IMAV 2026 Indoor Competition.')
+        Main state machine for the IMAV 2026 Indoor Competition
+        """
 
         self.add_state(
             'INITIALIZE',

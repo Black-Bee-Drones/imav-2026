@@ -11,7 +11,9 @@ from nectar.control import MavrosDrone
 class Takeoff(State):
     def __init__(self, altitude: int | float = 1.2):
         super().__init__(outcomes=[SUCCEED, ABORT])
-        self.set_description('Take off the drone to the target altitude.')
+        """
+        Take off the drone to the target altitude.
+        """
 
         self.node = YasminNode.get_instance()
 

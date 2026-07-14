@@ -4,12 +4,6 @@ import os
 import cv2
 import pathlib
 
-from rclpy.parameter import Parameter
-from ament_index_python.packages import get_package_share_directory
-
-
-
-
 from rclpy.time import Time, Duration
 from rclpy.parameter import Parameter
 
@@ -30,14 +24,6 @@ class GoToLandingBase(State):
 
         self.node = YasminNode.get_instance()
 
-        self.node.declare_parameter('safe_altitude', Parameter.Type.DOUBLE)
-        self.node.declare_parameter('overall_max', Parameter.Type.DOUBLE)
-        self.node.declare_parameter('overall_max_per_state', Parameter.Type.BOUBLE)
-
-        self.safe_altitude = self.node.get_parameter('safe_altitude').value
-        self.overall_max = self.node.get_parameter('overall_max').value
-        self.overall_max_per_state = self.node.get_parameter('overall_max_per_state').value
-
         if fixed_base:
             self.node.declare_parameter('fixed_base_x', Parameter.Type.DOUBLE)
             self.node.declare_parameter('fixed_base_y', Parameter.Type.DOUBLE)
@@ -53,12 +39,15 @@ class GoToLandingBase(State):
 
     def execute(self, blackboard: Blackboard):
         drone: MavrosDrone = blackboard.get('drone')
+        safe_altitude: int = blackboard.get('safe_altitude')
 
         self.aruco = Aruco(5, 0.5)
         image_handler: ImageHandler = blackboard.get('image_handler')
         image_handler.image_processing_callback = self.callback_aruco
 
         self.start_time: Time = blackboard['start_time']
+        self.timeout = blackboard['timeout']
+        self.timeout_per_state = blackboard['timeout_per_state']
         self.start_state = self.node.get_clock().now()
 
         yasmin.YASMIN_LOG_INFO('Start.')
@@ -72,7 +61,7 @@ class GoToLandingBase(State):
         drone.move_to(
             x = None,
             y = None,
-            z = self.safe_altitude,
+            z = safe_altitude,
             yaw = 0,
             reference = MoveReference.TAKEOFF,  
         )
@@ -85,7 +74,7 @@ class GoToLandingBase(State):
         drone.move_to(
             x = None,
             y = self.base_y,
-            z = self.safe_altitude,
+            z = safe_altitude,
             yaw = 0,
             reference = MoveReference.TAKEOFF,  
         )
@@ -98,7 +87,7 @@ class GoToLandingBase(State):
         drone.move_to(
             x = self.base_x,
             y = self.base_y,
-            z = self.safe_altitude,
+            z = safe_altitude,
             yaw = 0,
             reference = MoveReference.TAKEOFF,  
         )
@@ -113,8 +102,8 @@ class GoToLandingBase(State):
     def check_timeout(self):
         now = self.node.get_clock().now()
 
-        return now - self.start_time > Duration(seconds=self.overall_max) or \
-            now - self.start_state > Duration(seconds=self.overall_max_per_state)
+        return now - self.start_time > Duration(seconds=self.timeout) or \
+            now - self.start_state > Duration(seconds=self.timeout_per_state)
 
     def callback_aruco(self, image: np.ndarray):
         start = datetime.fromtimestamp(self.start_time.nanoseconds / 1e9)

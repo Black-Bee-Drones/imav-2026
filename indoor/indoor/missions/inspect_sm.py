@@ -1,7 +1,7 @@
 from yasmin import StateMachine
 from yasmin_ros.basic_outcomes import SUCCEED, CANCEL, TIMEOUT, ABORT
 
-from states import (
+from indoor.states import (
     GoToWindown,
     FindWindown,
     Windows,
@@ -12,8 +12,9 @@ from states import (
 class InspectSM(StateMachine):
     def __init__(self):
         super().__init__(outcomes=[SUCCEED, CANCEL, ABORT])
-        self.set_name('Inspect a dark room state machine')
-        self.set_description('State machine for inspecting a dark room.')
+        """
+        Inspect a dark room state machine.
+        """
 
         self.add_state(
             'GO_TO_WINDOWN',

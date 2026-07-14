@@ -1,7 +1,7 @@
 from yasmin import StateMachine
 from yasmin_ros.basic_outcomes import SUCCEED, TIMEOUT, FAIL, ABORT
 
-from states import (
+from indoor.states import (
     GoToLandingBase,
     Center,
     Reacquire,
@@ -12,8 +12,9 @@ from states import (
 class PreciseLandingSM(StateMachine):
     def __init__(self):
         super().__init__(outcomes=[SUCCEED, ABORT])
-        self.set_name('Precise landing state machine')
-        self.set_description('State machine for performing a precision landing.')
+        """
+        Precise landing state machine.
+        """
 
         self.add_state(
             'GO_TO_LAND',

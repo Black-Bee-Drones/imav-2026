@@ -1,7 +1,7 @@
 from yasmin import StateMachine
 from yasmin_ros.basic_outcomes import SUCCEED, CANCEL, TIMEOUT
 
-from states import (
+from indoor.states import (
     Windows,
     RedBar,
     BlueBar,
@@ -12,8 +12,9 @@ from states import (
 class ObstacleSM(StateMachine):
     def __init__(self):
         super().__init__(outcomes=[SUCCEED, CANCEL])
-        self.set_name('Obstacle course state machine')
-        self.set_description('State machine for completing an obstacle course.')
+        """
+        Obstacle course state machine.
+        """
 
         self.add_state(
             'WINDOWS1',
@@ -51,4 +52,4 @@ class ObstacleSM(StateMachine):
             transitions={SUCCEED: SUCCEED, TIMEOUT: CANCEL},
         )
 
-        self.set_start_state('WINDOWS1')
+        self.set_start_state('RED_BAR')
