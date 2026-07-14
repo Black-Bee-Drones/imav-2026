@@ -20,14 +20,14 @@ class Center(State):
 
         self.node = YasminNode.get_instance()
 
-        self.node.declare_parameter('lost_detection', Parameter.Type.INTEGER)
+        self.node.declare_parameter('lost_tolerance', Parameter.Type.INTEGER)
         self.node.declare_parameter('land_altitude', Parameter.Type.DOUBLE)
         self.node.declare_parameter('land_speed', Parameter.Type.DOUBLE)
         self.node.declare_parameter('px_threshold', Parameter.Type.DOUBLE)
         self.node.declare_parameter('overall_max', Parameter.Type.DOUBLE)
         self.node.declare_parameter('overall_max_per_state', Parameter.Type.BOUBLE)
 
-        self.lost_detection = self.node.get_parameter('lost_detection').value
+        self.lost_tolerance = self.node.get_parameter('lost_tolerance').value
         self.land_altitude = self.node.get_parameter('land_altitude').value
         self.land_speed = self.node.get_parameter('land_altitude').value
         self.px_threshold = self.node.get_parameter('px_threshold').value
@@ -57,9 +57,9 @@ class Center(State):
         while True:
             now = self.node.get_clock().now()
 
-            image, bbox, marker_id = image_handler.take_photo()
+            image, bbox, id = image_handler.take_photo()
 
-            if marker_id == 0:
+            if isinstance(id, int):
                 lost = 0
 
                 h, w = image.shape[:2]
@@ -85,10 +85,10 @@ class Center(State):
                     vyaw = 0,
                 )
             else:
-                yasmin.YASMIN_LOG_ERROR(f'Lost detection ({lost}/{self.lost_detection}).')
+                yasmin.YASMIN_LOG_ERROR(f'Lost detection ({lost}/{self.lost_tolerance}).')
                 lost += 1
 
-                if self.lost_detection < lost:
+                if self.lost_tolerance <= lost:
                     yasmin.YASMIN_LOG_ERROR('Lost detection exceeded.')
                     drone.move_velocity()
                     return FAIL

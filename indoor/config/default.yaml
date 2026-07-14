@@ -19,6 +19,14 @@ mangalarga:
     # Takeoff
     takeoff_altitude: 1.2  # m
 
+    # Inspect - Windown
+    room_x: 10.0
+    room_y: 2.0
+
+    # Find Windown
+    find_tolerance: 2
+    back_speed: -0.5
+
     # GoToLandingBase
     fixed_base_x: 0.0
     fixed_base_y: 2.0
@@ -26,7 +34,7 @@ mangalarga:
     mobile_base_y: -2.0
 
     # Precise Landing - Center
-    lost_detection: 10
+    lost_tolerance: 10
     land_speed: -0.5
 
     # PID xy
