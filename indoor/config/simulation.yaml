@@ -1,5 +1,6 @@
 mangalarga:
   ros__parameters:
 
-    # Initialize
+    connection_string: 'tcp://127.0.0.1:5760'
+    
     image_source: '/front_camera/image'

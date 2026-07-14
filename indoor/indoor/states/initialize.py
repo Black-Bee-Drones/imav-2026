@@ -16,6 +16,7 @@ from nectar.control import DroneFactory, MavrosConfig, PoseSource, PIDController
 from nectar.vision import ImageHandler
 from nectar.ai import Detector, DetectionResult
 
+import traceback
 
 class Initialize(State):
     def __init__(self):
@@ -36,7 +37,8 @@ class Initialize(State):
         self.node.declare_parameter('timeout', 1800)  # seconds
         self.node.declare_parameter('timeout_per_state', 300)  # seconds
         self.node.declare_parameter('safe_altitude', 3.0)  # meters
-        self.node.declare_parameter('max_altitude', 7.0)  # meters
+        self.node.declare_parameter('max_altitude', 7.0)
+        self.node.declare_parameter('connection_string', 'serial:///dev/ttyUSB0:921600')
 
         self.drone_type: str = self.node.get_parameter('drone_type').value
         self.model_source = str(models_path / self.node.get_parameter('model_source').value)
@@ -68,6 +70,15 @@ class Initialize(State):
         self.node.declare_parameter('lost_tolerance', 10)
         self.node.declare_parameter('land_altitude', 1.0)
         self.node.declare_parameter('land_speed', -0.5)  # meters per second
+
+        self.confidence_threshold = self.node.get_parameter('confidence_threshold').value
+        self.image_source = self.node.get_parameter('image_source').value
+        self.timeout = self.node.get_parameter('timeout').value
+        self.timeout_per_state = self.node.get_parameter('timeout_per_state').value
+        self.px_threshold = self.node.get_parameter('px_threshold').value
+        self.safe_altitude = self.node.get_parameter('safe_altitude').value
+        self.max_altitude = self.node.get_parameter('max_altitude').value
+        self.connection_string = self.node.get_parameter('connection_string').value
 
         # PID xy
         self.node.declare_parameter('controller_xy_kp', 1.0)
@@ -127,6 +138,7 @@ class Initialize(State):
             yasmin.YASMIN_LOG_INFO(f'Initializing Drone("{self.drone_type}")...')
             drone_config = MavrosConfig(
                 pose_source = PoseSource.VISION,
+                connection_string=self.connection_string
             )
             drone = DroneFactory.create('mavros', drone_config)
 
@@ -224,6 +236,7 @@ class Initialize(State):
 
         except Exception as e:
             yasmin.YASMIN_LOG_ERROR(f'ImageHandler failed: {e}')
+            traceback.print_exc()
             return ABORT
 
         yasmin.YASMIN_LOG_INFO('Completed successfully!!!')
