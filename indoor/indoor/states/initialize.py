@@ -45,12 +45,12 @@ class Initialize(State):
         self.drone_type: str = self.node.get_parameter('drone_type').value
         self.connection_string = self.node.get_parameter('connection_string').value
 
-        # Initialize - Detector and Aruco
-        self.node.declare_parameter('gate_model_source', 'best.pt')
+        # Initialize - Detector
+        self.node.declare_parameter('gate_model_source', 'gate.pt')
         self.node.declare_parameter('gate_conf', 0.5)
         self.node.declare_parameter('baby_model_source', 'best.pt')
         self.node.declare_parameter('baby_conf', 0.5)
-        self.node.declare_parameter('box_model_source', 'best.pt')
+        self.node.declare_parameter('box_model_source', 'package.pt')
         self.node.declare_parameter('box_conf', 0.5)
         self.node.declare_parameter('marker_dict', 5)  # 5x5
 
