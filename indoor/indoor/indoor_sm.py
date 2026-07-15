@@ -1,5 +1,5 @@
 from yasmin import StateMachine
-from yasmin_ros.basic_outcomes import SUCCEED, CANCEL, ABORT
+from yasmin_ros.basic_outcomes import SUCCEED, TIMEOUT, ABORT
 
 from indoor.states import (
     Initialize,
@@ -15,14 +15,20 @@ from indoor.missions import (
 
 
 class IndoorSM(StateMachine):
-
-    def __init__(self):
+    def __init__(self, missions: tuple[str] = ('OBSTACLESM', 'INSPECTSM', 'DROPPINGSM', 'PRECISELANDINGSM')):
         super().__init__(outcomes=[SUCCEED, ABORT])
         """
         Indoor Mission
 
         Main state machine for the IMAV 2026 Indoor Competition
         """
+
+        missions_sm = {
+            'OBSTACLESM': ObstacleSM,
+            'INSPECTSM': InspectSM,
+            'DROPPINGSM': DroppingSM,
+            'PRECISELANDINGSM': PreciseLandingSM,
+        }
 
         self.add_state(
             'INITIALIZE',
@@ -36,29 +42,16 @@ class IndoorSM(StateMachine):
             transitions = {SUCCEED: 'OBSTACLESM', ABORT: 'LAND'},
         )
 
-        self.add_state(
-            'OBSTACLESM',
-            ObstacleSM(),
-            transitions = {SUCCEED: 'INSPECTSM', CANCEL: 'PRECISELANDINGSM'},
-        )
-
-        self.add_state(
-            'INSPECTSM',
-            InspectSM(),
-            transitions = {SUCCEED: 'DROPPINGSM', CANCEL: 'PRECISELANDINGSM', ABORT: 'LAND'},
-        )
-
-        self.add_state(
-            'DROPPINGSM',
-            DroppingSM(),
-            transitions = {SUCCEED: 'PRECISELANDINGSM', CANCEL: 'PRECISELANDINGSM'},
-        )
-
-        self.add_state(
-            'PRECISELANDINGSM',
-            PreciseLandingSM(),
-            transitions = {SUCCEED: 'LAND', ABORT: 'LAND'},
-        )
+        for i, mission in enumerate(missions):
+            self.add_state(
+                mission,
+                missions_sm.get(mission),
+                transitions = {
+                    SUCCEED: missions[i + 1] if i < len(missions)-1 else 'LAND',
+                    TIMEOUT: 'PRECISELANDINGSM',
+                    ABORT: 'LAND'
+                },
+            )
 
         self.add_state(
             'LAND',

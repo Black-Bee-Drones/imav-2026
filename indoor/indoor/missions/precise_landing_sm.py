@@ -11,7 +11,7 @@ from indoor.states import (
 
 class PreciseLandingSM(StateMachine):
     def __init__(self):
-        super().__init__(outcomes=[SUCCEED, ABORT])
+        super().__init__(outcomes=[SUCCEED, TIMEOUT, ABORT])
         """
         Precise landing state machine.
         """

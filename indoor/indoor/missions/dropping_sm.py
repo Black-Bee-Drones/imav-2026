@@ -1,5 +1,5 @@
 from yasmin import StateMachine
-from yasmin_ros.basic_outcomes import SUCCEED, CANCEL, ABORT
+from yasmin_ros.basic_outcomes import SUCCEED, TIMEOUT, ABORT
 
 from indoor.states import (
     Reacquire,
@@ -8,7 +8,7 @@ from indoor.states import (
 
 class DroppingSM(StateMachine):
     def __init__(self):
-        super().__init__(outcomes=[SUCCEED, CANCEL])
+        super().__init__(outcomes=[SUCCEED, TIMEOUT, ABORT])
         """
         Dropping on hot spot state machine.
         """
@@ -16,7 +16,7 @@ class DroppingSM(StateMachine):
         self.add_state(
             'REACQUIRE',
             Reacquire(),
-            transitions={SUCCEED: SUCCEED, ABORT: CANCEL},
+            transitions={SUCCEED: SUCCEED, ABORT: ABORT},
         )
 
         self.set_start_state('REACQUIRE')
