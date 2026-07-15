@@ -12,11 +12,10 @@ from yasmin import State, Blackboard
 from yasmin_ros.yasmin_node import YasminNode
 from yasmin_ros.basic_outcomes import SUCCEED, ABORT
 
-from nectar.control import DroneFactory, MavrosConfig, PoseSource, PIDController
+from nectar.control import DroneFactory, MavrosConfig, MavlinkConfig,PoseSource, PIDController
 from nectar.vision import ImageHandler
 from nectar.ai import Detector, DetectionResult
 
-import traceback
 
 class Initialize(State):
     def __init__(self):
@@ -136,11 +135,21 @@ class Initialize(State):
         # Drone
         try:
             yasmin.YASMIN_LOG_INFO(f'Initializing Drone("{self.drone_type}")...')
-            drone_config = MavrosConfig(
-                pose_source = PoseSource.VISION,
-                connection_string=self.connection_string
-            )
-            drone = DroneFactory.create('mavros', drone_config)
+            
+            if self.drone_type == 'mavros':
+                drone_config = MavrosConfig(
+                    pose_source = PoseSource.VISION,
+                    connection_string=self.connection_string
+                )
+
+            elif self.drone_type == 'mavlink':
+                drone_config = MavlinkConfig(
+                    pose_source=PoseSource.VISION,
+                    start_driver=False,
+                    connection_string=self.connection_string
+                )
+
+            drone = DroneFactory.create(self.drone_type, drone_config)
 
             blackboard['drone'] = drone
             yasmin.YASMIN_LOG_INFO(f'Successful start Drone(\'{self.drone_type}\')!')
@@ -236,7 +245,6 @@ class Initialize(State):
 
         except Exception as e:
             yasmin.YASMIN_LOG_ERROR(f'ImageHandler failed: {e}')
-            traceback.print_exc()
             return ABORT
 
         yasmin.YASMIN_LOG_INFO('Completed successfully!!!')
