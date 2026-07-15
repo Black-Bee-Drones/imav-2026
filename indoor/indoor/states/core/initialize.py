@@ -27,90 +27,28 @@ class Initialize(State):
 
         models_path = pathlib.Path(get_package_share_directory('indoor')) / 'models'
 
-        # Global
-        self.node.declare_parameter('timeout', 1800)  # seconds
-        self.node.declare_parameter('timeout_per_state', 300)  # seconds
-        self.node.declare_parameter('safe_altitude', 3.0)  # meters
-        self.node.declare_parameter('max_altitude', 7.0)  # meters
-
-        self.timeout = self.node.get_parameter('timeout').value
-        self.timeout_per_state = self.node.get_parameter('timeout_per_state').value
-        self.safe_altitude = self.node.get_parameter('safe_altitude').value
-        self.max_altitude = self.node.get_parameter('max_altitude').value
-
-        # Initialize - Drone
-        self.node.declare_parameter('drone_type', 'mavlink')
-        self.node.declare_parameter('connection_string', 'udp:127.0.0.1:14551')
-
+        # Drone
         self.drone_type: str = self.node.get_parameter('drone_type').value
         self.connection_string = self.node.get_parameter('connection_string').value
 
-        # Initialize - Detector
-        self.node.declare_parameter('gate_model_source', 'gate.pt')
-        self.node.declare_parameter('gate_conf', 0.5)
-        self.node.declare_parameter('baby_model_source', 'best.pt')
-        self.node.declare_parameter('baby_conf', 0.5)
-        self.node.declare_parameter('box_model_source', 'package.pt')
-        self.node.declare_parameter('box_conf', 0.5)
-        self.node.declare_parameter('marker_dict', 5)  # 5x5
-
+        # Detector
         self.gate_model_source: str = str(models_path / self.node.get_parameter('gate_model_source').value)
         self.gate_conf: float = self.node.get_parameter('gate_conf').value
         self.baby_model_source: str = str(models_path / self.node.get_parameter('baby_model_source').value)
         self.baby_conf: float = self.node.get_parameter('baby_conf').value
         self.box_model_source: str = str(models_path / self.node.get_parameter('box_model_source').value)
         self.box_conf: float = self.node.get_parameter('box_conf').value
+
+        # Aruco
         self.marker_dict: int = self.node.get_parameter('marker_dict').value
 
-        # Initialize - ImageHandler
-        self.node.declare_parameter('front_image_source', 'ros')
-        self.node.declare_parameter('front_ros_topic', '/camera/color/image_raw')
-        self.node.declare_parameter('down_image_source', 'webcam')
-        self.node.declare_parameter('down_ros_topic', '/donw_camera/image')
-
+        # ImageHandler
         self.front_image_source: str = self.node.get_parameter('front_image_source').value
         self.front_ros_topic: str = self.node.get_parameter('front_ros_topic').value
         self.down_image_source: str = self.node.get_parameter('down_image_source').value
         self.down_ros_topic: str = self.node.get_parameter('down_ros_topic').value
 
-        # Takeoff
-        self.node.declare_parameter('takeoff_altitude', 1.2)  # meters
-
-        # Obstacle / Window
-        self.node.declare_parameter('window_threshold', 50)  # pixels
-
-        # Inspect / GoToWindown
-        self.node.declare_parameter('room_x', 10.0)  # meters
-        self.node.declare_parameter('room_y', 2.0)  # meters
-
-        # Inspect / FindWindow
-        self.node.declare_parameter('find_tolerance', 2)
-        self.node.declare_parameter('back_speed', -0.5)  # meters per second
-
-        # Precise landing / GoToLandingBase
-        self.node.declare_parameter('fixed_base_x', 0.0)  # meters
-        self.node.declare_parameter('fixed_base_y', 2.0)  # meters
-        self.node.declare_parameter('mobile_base_x', 0.0)  # meters
-        self.node.declare_parameter('mobile_base_y', -2.0)  # meters
-
-        # Precise landing / Center
-        self.node.declare_parameter('center_threshold', 50)  # pixels
-        self.node.declare_parameter('lost_tolerance', 10)
-        self.node.declare_parameter('land_altitude', 1.0)  # meters
-        self.node.declare_parameter('land_speed', -0.5)  # meters per second
-
-        # Precise landing / Reacquire
-        self.node.declare_parameter('reacquire_step', 0.5)  # meters
-
         # PID xy
-        self.node.declare_parameter('controller_xy_kp', 1.0)
-        self.node.declare_parameter('controller_xy_kd', 1.0)
-        self.node.declare_parameter('controller_xy_ki', 1.0)
-        self.node.declare_parameter('controller_xy_output_min', -1.0)
-        self.node.declare_parameter('controller_xy_output_max', 1.0)
-        self.node.declare_parameter('controller_xy_integral_min', -1.0)
-        self.node.declare_parameter('controller_xy_integral_max', 1.0)
-
         self.controller_xy_kp = self.node.get_parameter('controller_xy_kp').value
         self.controller_xy_kd = self.node.get_parameter('controller_xy_kd').value
         self.controller_xy_ki = self.node.get_parameter('controller_xy_ki').value
@@ -120,14 +58,6 @@ class Initialize(State):
         self.controller_xy_integral_max = self.node.get_parameter('controller_xy_integral_max').value
 
         # PID z
-        self.node.declare_parameter('controller_z_kp', 1.0)
-        self.node.declare_parameter('controller_z_kd', 1.0)
-        self.node.declare_parameter('controller_z_ki', 1.0)
-        self.node.declare_parameter('controller_z_output_min', -1.0)
-        self.node.declare_parameter('controller_z_output_max', 1.0)
-        self.node.declare_parameter('controller_z_integral_min', -1.0)
-        self.node.declare_parameter('controller_z_integral_max', 1.0)
-
         self.controller_z_kp = self.node.get_parameter('controller_z_kp').value
         self.controller_z_kd = self.node.get_parameter('controller_z_kd').value
         self.controller_z_ki = self.node.get_parameter('controller_z_ki').value

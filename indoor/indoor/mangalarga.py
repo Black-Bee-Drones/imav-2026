@@ -7,10 +7,10 @@ from yasmin_ros.basic_outcomes import SUCCEED
 
 import nectar
 
-try:
-    from .indoor_sm import IndoorSM
-except:
-    from indoor.indoor_sm import IndoorSM
+from indoor import (
+    Config,
+    IndoorSM,
+)
 
 
 def main(args=None):
@@ -21,6 +21,9 @@ def main(args=None):
     nectar.use_executor(YasminNode.get_instance()._executor)
 
     try:
+        config = Config(node=YasminNode.get_instance())
+        config.declare_parameters()
+
         indoor_sm = IndoorSM()
 
         final_outcome = indoor_sm()
