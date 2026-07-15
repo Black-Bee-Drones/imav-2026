@@ -1,9 +1,5 @@
-import os
-
 from launch import LaunchDescription
 from launch_ros.actions import Node
-
-from ament_index_python.packages import get_package_share_directory
 
 
 def generate_launch_description():
@@ -13,7 +9,11 @@ def generate_launch_description():
             executable='mangalarga',
             name='mangalarga',
             parameters=[
-                os.path.join(get_package_share_directory('indoor'), 'config', 'simulation.yaml'),
+                {
+                    'drone_type': 'mavlink',
+                    'connection_string': 'tcp://127.0.0.1:5762',
+                    'image_source': '/front_camera/image',
+                }
             ],
             output='screen',
         ),

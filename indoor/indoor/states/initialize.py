@@ -135,7 +135,6 @@ class Initialize(State):
         # Drone
         try:
             yasmin.YASMIN_LOG_INFO(f'Initializing Drone("{self.drone_type}")...')
-            
             if self.drone_type == 'mavros':
                 drone_config = MavrosConfig(
                     pose_source = PoseSource.VISION,
@@ -148,6 +147,10 @@ class Initialize(State):
                     start_driver=False,
                     connection_string=self.connection_string
                 )
+
+            else:
+                yasmin.YASMIN_LOG_ERROR('Invalid drone_type.')
+                return ABORT
 
             drone = DroneFactory.create(self.drone_type, drone_config)
 

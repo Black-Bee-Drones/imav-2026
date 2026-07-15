@@ -1,7 +1,0 @@
-mangalarga:
-  ros__parameters:
-
-    connection_string: 'tcp://127.0.0.1:5762'
-    
-    drone_type: 'mavlink'
-    image_source: '/front_camera/image'
