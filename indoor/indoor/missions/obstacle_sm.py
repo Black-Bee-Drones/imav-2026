@@ -48,7 +48,7 @@ class ObstacleSM(StateMachine):
 
         self.add_state(
             'WINDOWS2',
-            Windows(),
+            Window(),
             transitions={SUCCEED: SUCCEED, TIMEOUT: CANCEL},
         )
 

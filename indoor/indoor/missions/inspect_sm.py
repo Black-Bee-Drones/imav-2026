@@ -17,19 +17,19 @@ class InspectSM(StateMachine):
         """
 
         self.add_state(
-            'GO_TO_WINDOWN',
+            'GO_TO_WINDOW',
             GoToWindow(),
-            transitions={SUCCEED: 'FIND_WINDOWN', TIMEOUT: CANCEL},
+            transitions={SUCCEED: 'FIND_WINDOW', TIMEOUT: CANCEL},
         )
 
         self.add_state(
-            'FIND_WINDOWN',
+            'FIND_WINDOW',
             FindWindow(),
-            transitions={SUCCEED: 'WINDOWS', TIMEOUT: CANCEL},
+            transitions={SUCCEED: 'WINDOW', TIMEOUT: CANCEL},
         )
 
         self.add_state(
-            'WINDOWS',
+            'WINDOW',
             Window(),
             transitions={SUCCEED: 'GO_OUT', TIMEOUT: ABORT},
         )
@@ -40,4 +40,4 @@ class InspectSM(StateMachine):
             transitions={SUCCEED: SUCCEED, TIMEOUT: ABORT},
         )
 
-        self.set_start_state('GO_TO_WINDOWN')
+        self.set_start_state('GO_TO_WINDOW')
