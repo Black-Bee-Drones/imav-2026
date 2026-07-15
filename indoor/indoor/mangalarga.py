@@ -18,11 +18,12 @@ def main(args=None):
 
     set_ros_loggers()
 
-    nectar.use_executor(YasminNode.get_instance()._executor) 
+    nectar.use_executor(YasminNode.get_instance()._executor)
 
     try:
         indoor_sm = IndoorSM()
 
+        final_outcome = indoor_sm()
 
     except KeyboardInterrupt:
         if indoor_sm.is_running():
@@ -30,14 +31,13 @@ def main(args=None):
 
     except Exception as e:
         yasmin.YASMIN_LOG_ERROR(f'Indoor state machine failed: {e}')
-    
+
     except rclpy.exceptions.ParameterUninitializedException as e:
         yasmin.YASMIN_LOG_ERROR("Required parameter is not configured!")
         yasmin.YASMIN_LOG_ERROR(f"Details: {e}")
         yasmin.YASMIN_LOG_ERROR("Check the YAML parameter file.")
 
     else:
-        final_outcome = indoor_sm()
         if final_outcome == SUCCEED:
             yasmin.YASMIN_LOG_INFO(final_outcome)
         else:
