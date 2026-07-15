@@ -1,5 +1,4 @@
 from rclpy.time import Time, Duration
-from rclpy.parameter import Parameter
 
 import yasmin
 from yasmin import State, Blackboard
@@ -19,20 +18,18 @@ class FindWindown(State):
 
         self.node = YasminNode.get_instance()
 
-        self.node.declare_parameter('find_tolerance', Parameter.Type.INTEGER)
-        self.node.declare_parameter('back_speed', Parameter.Type.DOUBLE)
+        self.timeout: int | float = self.node.get_parameter('timeout').value
+        self.timeout_per_state: int | float = self.node.get_parameter('timeout_per_state').value
 
-        self.find_tolerance = self.node.get_parameter('find_tolerance').value
-        self.back_speed = self.node.get_parameter('back_speed').value
+        self.find_tolerance: int | float = self.node.get_parameter('find_tolerance').value
+        self.back_speed: int | float = self.node.get_parameter('back_speed').value
 
     def execute(self, blackboard: Blackboard):
         drone: MavrosDrone = blackboard.get('drone')
 
         image_handler: ImageHandler = blackboard.get('image_handler')
 
-        self.start_time: Time = blackboard['start_time']
-        self.timeout = blackboard['timeout']
-        self.timeout_per_state = blackboard['timeout_per_state']
+        self.start_time: Time = blackboard.get('start_time')
         self.start_state = self.node.get_clock().now()
 
         yasmin.YASMIN_LOG_INFO('Start.')

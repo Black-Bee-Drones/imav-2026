@@ -28,34 +28,55 @@ class Initialize(State):
 
         models_path = pathlib.Path(get_package_share_directory('indoor')) / 'models'
 
-        self.node.declare_parameter('drone_type', Parameter.Type.STRING)
-        self.node.declare_parameter('model_source', Parameter.Type.STRING)
-        self.node.declare_parameter('confidence_threshold', Parameter.Type.DOUBLE)
-        self.node.declare_parameter('image_source', Parameter.Type.STRING)
-        self.node.declare_parameter('timeout', Parameter.Type.INTEGER)
-        self.node.declare_parameter('timeout_per_state', Parameter.Type.INTEGER)
-        self.node.declare_parameter('px_threshold', Parameter.Type.INTEGER)
-        self.node.declare_parameter('safe_altitude', Parameter.Type.DOUBLE)
-        self.node.declare_parameter('max_altitude', Parameter.Type.DOUBLE)
+        # Global
+        self.node.declare_parameter('drone_type', 'mavros')
+        self.node.declare_parameter('model_source', 'best.pt')
+        self.node.declare_parameter('confidence_threshold', 0.5)
+        self.node.declare_parameter('image_source', 'realsense')
+        self.node.declare_parameter('timeout', 1800)  # seconds
+        self.node.declare_parameter('timeout_per_state', 300)  # seconds
+        self.node.declare_parameter('safe_altitude', 3.0)  # meters
+        self.node.declare_parameter('max_altitude', 7.0)  # meters
 
-        self.drone_type = self.node.get_parameter('drone_type').value
+        self.drone_type: str = self.node.get_parameter('drone_type').value
         self.model_source = str(models_path / self.node.get_parameter('model_source').value)
-        self.confidence_threshold = self.node.get_parameter('confidence_threshold').value
-        self.image_source = self.node.get_parameter('image_source').value
-        self.timeout = self.node.get_parameter('timeout').value
-        self.timeout_per_state = self.node.get_parameter('timeout_per_state').value
-        self.px_threshold = self.node.get_parameter('px_threshold').value
-        self.safe_altitude = self.node.get_parameter('safe_altitude').value
-        self.max_altitude = self.node.get_parameter('max_altitude').value
+        self.confidence_threshold: float = self.node.get_parameter('confidence_threshold').value
+        self.image_source: str = self.node.get_parameter('image_source').value
+
+        # Takeoff
+        self.node.declare_parameter('takeoff_altitude', 1.2)  # meters
+
+        # Obstacle / Window
+        self.node.declare_parameter('window_threshold', 50)  # pixels
+
+        # Inspect / GoToWindown
+        self.node.declare_parameter('room_x', 10.0)  # meters
+        self.node.declare_parameter('room_y', 2.0)  # meters
+
+        # Inspect / FindWindow
+        self.node.declare_parameter('find_tolerance', 2)
+        self.node.declare_parameter('back_speed', -0.5)  # meters per second
+
+        # Precise landing / GoToLandingBase
+        self.node.declare_parameter('fixed_base_x', 0.0)  # meters
+        self.node.declare_parameter('fixed_base_y', 2.0)  # meters
+        self.node.declare_parameter('mobile_base_x', 0.0)  # meters
+        self.node.declare_parameter('mobile_base_y', -2.0)  # meters
+
+        # Precise landing / Center
+        self.node.declare_parameter('center_threshold', 50)  # pixels
+        self.node.declare_parameter('lost_tolerance', 10)
+        self.node.declare_parameter('land_altitude', 1.0)
+        self.node.declare_parameter('land_speed', -0.5)  # meters per second
 
         # PID xy
-        self.node.declare_parameter('controller_xy_kp', Parameter.Type.DOUBLE)
-        self.node.declare_parameter('controller_xy_kd', Parameter.Type.DOUBLE)
-        self.node.declare_parameter('controller_xy_ki', Parameter.Type.DOUBLE)
-        self.node.declare_parameter('controller_xy_output_min', Parameter.Type.DOUBLE)
-        self.node.declare_parameter('controller_xy_output_max', Parameter.Type.DOUBLE)
-        self.node.declare_parameter('controller_xy_integral_min', Parameter.Type.DOUBLE)
-        self.node.declare_parameter('controller_xy_integral_max', Parameter.Type.DOUBLE)
+        self.node.declare_parameter('controller_xy_kp', 1.0)
+        self.node.declare_parameter('controller_xy_kd', 1.0)
+        self.node.declare_parameter('controller_xy_ki', 1.0)
+        self.node.declare_parameter('controller_xy_output_min', -1.0)
+        self.node.declare_parameter('controller_xy_output_max', 1.0)
+        self.node.declare_parameter('controller_xy_integral_min', -1.0)
+        self.node.declare_parameter('controller_xy_integral_max', 1.0)
 
         self.controller_xy_kp = self.node.get_parameter('controller_xy_kp').value
         self.controller_xy_kd = self.node.get_parameter('controller_xy_kd').value
@@ -66,13 +87,13 @@ class Initialize(State):
         self.controller_xy_integral_max = self.node.get_parameter('controller_xy_integral_max').value
 
         # PID z
-        self.node.declare_parameter('controller_z_kp', Parameter.Type.DOUBLE)
-        self.node.declare_parameter('controller_z_kd', Parameter.Type.DOUBLE)
-        self.node.declare_parameter('controller_z_ki', Parameter.Type.DOUBLE)
-        self.node.declare_parameter('controller_z_output_min', Parameter.Type.DOUBLE)
-        self.node.declare_parameter('controller_z_output_max', Parameter.Type.DOUBLE)
-        self.node.declare_parameter('controller_z_integral_min', Parameter.Type.DOUBLE)
-        self.node.declare_parameter('controller_z_integral_max', Parameter.Type.DOUBLE)
+        self.node.declare_parameter('controller_z_kp', 1.0)
+        self.node.declare_parameter('controller_z_kd', 1.0)
+        self.node.declare_parameter('controller_z_ki', 1.0)
+        self.node.declare_parameter('controller_z_output_min', -1.0)
+        self.node.declare_parameter('controller_z_output_max', 1.0)
+        self.node.declare_parameter('controller_z_integral_min', -1.0)
+        self.node.declare_parameter('controller_z_integral_max', 1.0)
 
         self.controller_z_kp = self.node.get_parameter('controller_z_kp').value
         self.controller_z_kd = self.node.get_parameter('controller_z_kd').value
@@ -87,16 +108,10 @@ class Initialize(State):
 
         # Const
         try:
-            yasmin.YASMIN_LOG_INFO('Initializing Start Const...')
+            yasmin.YASMIN_LOG_INFO('Initializing Start time...')
             self.start_time = self.node.get_clock().now()
 
-            blackboard['start_time'] = self.start_time
-            blackboard['timeout'] = self.timeout
-            blackboard['timeout_per_state'] = self.timeout_per_state
-            blackboard['px_threshold'] = self.px_threshold
-            blackboard['safe_altitude'] = self.safe_altitude
-            blackboard['max_altitude'] = self.max_altitude
-
+            blackboard.set('start_time', self.start_time)
             yasmin.YASMIN_LOG_INFO('successful Start Const!')
 
         except KeyboardInterrupt:
@@ -104,7 +119,7 @@ class Initialize(State):
             return ABORT
 
         except Exception as e:
-            yasmin.YASMIN_LOG_ERROR(f'Const failed: {e}')
+            yasmin.YASMIN_LOG_ERROR(f'Start time failed: {e}')
             return ABORT
 
         # Drone

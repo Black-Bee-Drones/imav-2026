@@ -1,5 +1,4 @@
 from rclpy.time import Time, Duration
-from rclpy.parameter import Parameter
 
 import yasmin
 from yasmin import State, Blackboard
@@ -15,12 +14,13 @@ class GoOut(State):
 
         self.node = YasminNode.get_instance()
 
+        self.timeout: int | float = self.node.get_parameter('timeout').value
+        self.timeout_per_state: int | float = self.node.get_parameter('timeout_per_state').value
+
     def execute(self, blackboard: Blackboard):
         drone: MavrosDrone = blackboard.get('drone')
 
-        self.start_time: Time = blackboard['start_time']
-        self.timeout = blackboard['timeout']
-        self.timeout_per_state = blackboard['timeout_per_state']
+        self.start_time: Time = blackboard.get('start_time')
         self.start_state = self.node.get_clock().now()
 
         yasmin.YASMIN_LOG_INFO('Start.')

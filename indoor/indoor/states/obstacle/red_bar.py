@@ -1,5 +1,4 @@
 from rclpy.time import Time, Duration
-from rclpy.parameter import Parameter
 
 import yasmin
 from yasmin import State, Blackboard
@@ -9,7 +8,7 @@ from yasmin_ros.basic_outcomes import SUCCEED, TIMEOUT
 from nectar.control import MavrosDrone, MoveReference
 
 
-class BlueBar(State):
+class RedBar(State):
     def __init__(self, step: int = 3):
         super().__init__(outcomes=[SUCCEED, TIMEOUT])
 
@@ -17,12 +16,13 @@ class BlueBar(State):
 
         self.node = YasminNode.get_instance()
 
+        self.timeout: int | float = self.node.get_parameter('timeout').value
+        self.timeout_per_state: int | float = self.node.get_parameter('timeout_per_state').value
+
     def execute(self, blackboard: Blackboard):
         drone: MavrosDrone = blackboard.get('drone')
 
-        self.start_time: Time = blackboard['start_time']
-        self.timeout = blackboard['timeout']
-        self.timeout_per_state = blackboard['timeout_per_state']
+        self.start_time: Time = blackboard.get('start_time')
         self.start_state = self.node.get_clock().now()
 
         yasmin.YASMIN_LOG_INFO('Start.')
@@ -30,7 +30,7 @@ class BlueBar(State):
             yasmin.YASMIN_LOG_ERROR('Timeout.')
             return TIMEOUT
 
-        z = [.4, .8, 1.2][self.step-1] / 2
+        z = 0.5 + [1.2, 1.6, 1.98][self.step-1]
 
         yasmin.YASMIN_LOG_INFO(f'Correcting drone altitude by z={z:.1f} m...')
         drone.move_to(
@@ -47,7 +47,7 @@ class BlueBar(State):
             yasmin.YASMIN_LOG_ERROR('Timeout.')
             return TIMEOUT
 
-        yasmin.YASMIN_LOG_INFO('Fly under the blue bar...')
+        yasmin.YASMIN_LOG_INFO('Fly over the red bar...')
         drone.move_to(
             x = 1 + 0.2,
             y = 0,

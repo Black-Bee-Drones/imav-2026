@@ -5,7 +5,6 @@ import cv2
 import pathlib
 
 from rclpy.time import Time, Duration
-from rclpy.parameter import Parameter
 
 import yasmin
 from yasmin import State, Blackboard
@@ -24,30 +23,22 @@ class GoToLandingBase(State):
 
         self.node = YasminNode.get_instance()
 
-        if fixed_base:
-            self.node.declare_parameter('fixed_base_x', Parameter.Type.DOUBLE)
-            self.node.declare_parameter('fixed_base_y', Parameter.Type.DOUBLE)
+        self.aruco = Aruco(5, 0.5)
 
-            self.base_x = self.node.get_parameter('fixed_base_x').value
-            self.base_y = self.node.get_parameter('fixed_base_y').value
-        else:
-            self.node.declare_parameter('mobile_base_x', Parameter.Type.DOUBLE)
-            self.node.declare_parameter('mobile_base_y', Parameter.Type.DOUBLE)
+        self.timeout: int | float = self.node.get_parameter('timeout').value
+        self.timeout_per_state: int | float = self.node.get_parameter('timeout_per_state').value
 
-            self.base_x = self.node.get_parameter('mobile_base_x').value
-            self.base_y = self.node.get_parameter('mobile_base_y').value
+        self.base_x: int | float = self.node.get_parameter(f'{"fixed" if fixed_base else "mobile"}_base_x').value
+        self.base_y: int | float = self.node.get_parameter(f'{"fixed" if fixed_base else "mobile"}_base_y').value
 
     def execute(self, blackboard: Blackboard):
         drone: MavrosDrone = blackboard.get('drone')
         safe_altitude: int = blackboard.get('safe_altitude')
 
-        self.aruco = Aruco(5, 0.5)
         image_handler: ImageHandler = blackboard.get('image_handler')
         image_handler.image_processing_callback = self.callback_aruco
 
-        self.start_time: Time = blackboard['start_time']
-        self.timeout = blackboard['timeout']
-        self.timeout_per_state = blackboard['timeout_per_state']
+        self.start_time: Time = blackboard.get('start_time')
         self.start_state = self.node.get_clock().now()
 
         yasmin.YASMIN_LOG_INFO('Start.')

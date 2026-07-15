@@ -1,5 +1,4 @@
 from rclpy.time import Time, Duration
-from rclpy.parameter import Parameter
 
 import yasmin
 from yasmin import State, Blackboard
@@ -9,25 +8,19 @@ from yasmin_ros.basic_outcomes import SUCCEED, TIMEOUT
 from nectar.control import MavrosDrone, MoveReference
 
 
-class GoToWindown(State):
+class Tubes(State):
     def __init__(self):
         super().__init__(outcomes=[SUCCEED, TIMEOUT])
 
         self.node = YasminNode.get_instance()
 
-        self.node.declare_parameter('room_x', Parameter.Type.DOUBLE)
-        self.node.declare_parameter('room_y', Parameter.Type.DOUBLE)
-
-        self.room_x = self.node.get_parameter('room_x').value
-        self.room_y = self.node.get_parameter('room_y').value
+        self.timeout: int | float = self.node.get_parameter('timeout').value
+        self.timeout_per_state: int | float = self.node.get_parameter('timeout_per_state').value
 
     def execute(self, blackboard: Blackboard):
         drone: MavrosDrone = blackboard.get('drone')
-        safe_altitude: int = blackboard.get('safe_altitude')
 
-        self.start_time: Time = blackboard['start_time']
-        self.timeout = blackboard['timeout']
-        self.timeout_per_state = blackboard['timeout_per_state']
+        self.start_time: Time = blackboard.get('start_time')
         self.start_state = self.node.get_clock().now()
 
         yasmin.YASMIN_LOG_INFO('Start.')
@@ -35,54 +28,56 @@ class GoToWindown(State):
             yasmin.YASMIN_LOG_ERROR('Timeout.')
             return TIMEOUT
 
-        yasmin.YASMIN_LOG_INFO('Flying to a safe altitude...')
+        yasmin.YASMIN_LOG_INFO('Correcting drone altitude...')
         drone.move_to(
             x = None,
-            y = None,
-            z = self.safe_altitude,
+            y = 0,
+            z = 0.7,
             yaw = 0,
-            reference = MoveReference.TAKEOFF,  
+            reference = MoveReference.TAKEOFF,
+            precision = 0.05,
         )
 
+        self.node.get_clock().sleep_for(Duration(seconds=1))
         if self.check_timeout():
             yasmin.YASMIN_LOG_ERROR('Timeout.')
             return TIMEOUT
 
-        yasmin.YASMIN_LOG_INFO(f'fly to y={self.room_y}...')
+        yasmin.YASMIN_LOG_INFO('Fly through the tube...')
         drone.move_to(
-            x = None,
-            y = self.room_y,
-            z = self.safe_altitude,
+            x = 1.5 + 0.2,
+            y = 0,
+            z = 0,
             yaw = 0,
-            reference = MoveReference.TAKEOFF,  
         )
 
+        self.node.get_clock().sleep_for(Duration(seconds=1))
         if self.check_timeout():
             yasmin.YASMIN_LOG_ERROR('Timeout.')
             return TIMEOUT
 
-        yasmin.YASMIN_LOG_INFO(f'fly to x={self.room_x}...')
+        yasmin.YASMIN_LOG_INFO('Fly to the side of the tube...')
         drone.move_to(
-            x = self.room_x,
-            y = self.room_y,
-            z = self.safe_altitude,
+            x = 0,
+            y = 0.5 + 0.2,
+            z = 0,
             yaw = 0,
-            reference = MoveReference.TAKEOFF,  
         )
 
+        self.node.get_clock().sleep_for(Duration(seconds=1))
         if self.check_timeout():
             yasmin.YASMIN_LOG_ERROR('Timeout.')
             return TIMEOUT
 
-        yasmin.YASMIN_LOG_INFO(f'fly up to window height...')
+        yasmin.YASMIN_LOG_INFO('Fly to the front of the tube...')
         drone.move_to(
-            x = self.room_x,
-            y = self.room_y,
-            z = 1.2,
+            x = 1 + 0.2,
+            y = 0,
+            z = 0,
             yaw = 0,
-            reference = MoveReference.TAKEOFF,  
         )
 
+        self.node.get_clock().sleep_for(Duration(seconds=1))
         if self.check_timeout():
             yasmin.YASMIN_LOG_ERROR('Timeout.')
             return TIMEOUT

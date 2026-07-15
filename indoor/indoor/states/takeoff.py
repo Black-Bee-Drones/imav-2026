@@ -1,5 +1,3 @@
-from rclpy.parameter import Parameter
-
 import yasmin
 from yasmin import State, Blackboard
 from yasmin_ros.yasmin_node import YasminNode
@@ -9,7 +7,7 @@ from nectar.control import MavrosDrone
 
 
 class Takeoff(State):
-    def __init__(self, altitude: int | float = 1.2):
+    def __init__(self):
         super().__init__(outcomes=[SUCCEED, ABORT])
         """
         Take off the drone to the target altitude.
@@ -17,9 +15,7 @@ class Takeoff(State):
 
         self.node = YasminNode.get_instance()
 
-        self.node.declare_parameter('takeoff_altitude', Parameter.Type.DOUBLE)
-
-        self.altitude = self.node.get_parameter('takeoff_altitude').value
+        self.altitude: int | float = self.node.get_parameter('takeoff_altitude').value
 
     def execute(self, blackboard: Blackboard):
         drone: MavrosDrone = blackboard['drone']
@@ -27,7 +23,7 @@ class Takeoff(State):
         yasmin.YASMIN_LOG_INFO(f'Taking off to altitude: {self.altitude} m...')
 
         try:
-            drone.takeoff(self.altitude, adjust_altitude=False)
+            drone.takeoff(self.altitude)
 
         except KeyboardInterrupt:
             yasmin.YASMIN_LOG_WARN('Execution interrupted by user.')
