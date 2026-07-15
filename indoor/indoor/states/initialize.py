@@ -12,7 +12,7 @@ from yasmin_ros.yasmin_node import YasminNode
 from yasmin_ros.basic_outcomes import SUCCEED, ABORT
 
 from nectar.control import DroneFactory, MavrosConfig, MavlinkConfig,PoseSource, PIDController
-from nectar.vision import ImageHandler, Aruco
+from nectar.vision import ImageHandler, Aruco, ROSConfig
 from nectar.ai import Detector, DetectionResult
 
 
@@ -31,7 +31,7 @@ class Initialize(State):
         self.node.declare_parameter('timeout', 1800)  # seconds
         self.node.declare_parameter('timeout_per_state', 300)  # seconds
         self.node.declare_parameter('safe_altitude', 3.0)  # meters
-        self.node.declare_parameter('max_altitude', 7.0)
+        self.node.declare_parameter('max_altitude', 7.0)  # meters
 
         self.timeout = self.node.get_parameter('timeout').value
         self.timeout_per_state = self.node.get_parameter('timeout_per_state').value
@@ -45,13 +45,14 @@ class Initialize(State):
         self.drone_type: str = self.node.get_parameter('drone_type').value
         self.connection_string = self.node.get_parameter('connection_string').value
 
-        # Initialize - Detector
+        # Initialize - Detector and Aruco
         self.node.declare_parameter('gate_model_source', 'best.pt')
         self.node.declare_parameter('gate_conf', 0.5)
         self.node.declare_parameter('baby_model_source', 'best.pt')
         self.node.declare_parameter('baby_conf', 0.5)
         self.node.declare_parameter('box_model_source', 'best.pt')
         self.node.declare_parameter('box_conf', 0.5)
+        self.node.declare_parameter('marker_dict', 5)  # 5x5
 
         self.gate_model_source: str = str(models_path / self.node.get_parameter('gate_model_source').value)
         self.gate_conf: float = self.node.get_parameter('gate_conf').value
@@ -59,18 +60,18 @@ class Initialize(State):
         self.baby_conf: float = self.node.get_parameter('baby_conf').value
         self.box_model_source: str = str(models_path / self.node.get_parameter('box_model_source').value)
         self.box_conf: float = self.node.get_parameter('box_conf').value
-
-        # Initialize - Aruco
-        self.node.declare_parameter('marker_dict', 5)  # 5x5
-
         self.marker_dict: int = self.node.get_parameter('marker_dict').value
 
         # Initialize - ImageHandler
-        self.node.declare_parameter('front_image_source', 'realsense')
+        self.node.declare_parameter('front_image_source', 'ros')
+        self.node.declare_parameter('front_ros_topic', '/camera/color/image_raw')
         self.node.declare_parameter('down_image_source', 'webcam')
+        self.node.declare_parameter('down_ros_topic', '/donw_camera/image')
 
         self.front_image_source: str = self.node.get_parameter('front_image_source').value
-        self.box_image_source: str = self.node.get_parameter('box_image_source').value
+        self.front_ros_topic: str = self.node.get_parameter('front_ros_topic').value
+        self.down_image_source: str = self.node.get_parameter('down_image_source').value
+        self.down_ros_topic: str = self.node.get_parameter('down_ros_topic').value
 
         # Takeoff
         self.node.declare_parameter('takeoff_altitude', 1.2)  # meters
@@ -318,13 +319,14 @@ class Initialize(State):
         try:
             yasmin.YASMIN_LOG_INFO('Initializing ImageHandler(front)...')
             image_handler_front = ImageHandler(
-                image_source = self.image_source,
+                image_source = self.front_image_source,
+                config = ROSConfig(topic=self.front_ros_topic) if self.front_image_source == 'ros' else None,
             )
 
-            yasmin.YASMIN_LOG_INFO('Open camera...')
+            yasmin.YASMIN_LOG_INFO('Open camera (front)...')
             image_handler_front.open()
 
-            yasmin.YASMIN_LOG_INFO('Take testing photo...')
+            yasmin.YASMIN_LOG_INFO('Take testing photo (front)...')
             image_handler_front.take_photo()
 
             blackboard['image_handler_front'] = image_handler_front
@@ -342,13 +344,14 @@ class Initialize(State):
         try:
             yasmin.YASMIN_LOG_INFO('Initializing ImageHandler(down)...')
             image_handler_down = ImageHandler(
-                image_source = self.image_source,
+                image_source = self.down_image_source,
+                config = ROSConfig(topic=self.down_ros_topic) if self.down_image_source == 'ros' else None,
             )
 
-            yasmin.YASMIN_LOG_INFO('Open camera...')
+            yasmin.YASMIN_LOG_INFO('Open camera (down)...')
             image_handler_down.open()
 
-            yasmin.YASMIN_LOG_INFO('Take testing photo...')
+            yasmin.YASMIN_LOG_INFO('Take testing photo (down)...')
             image_handler_down.take_photo()
 
             blackboard['image_handler_down'] = image_handler_down
