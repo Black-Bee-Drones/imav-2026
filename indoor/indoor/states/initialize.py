@@ -38,6 +38,7 @@ class Initialize(State):
         self.node.declare_parameter('safe_altitude', 3.0)  # meters
         self.node.declare_parameter('max_altitude', 7.0)
         self.node.declare_parameter('connection_string', 'serial:///dev/ttyUSB0:921600')
+        self.node.declare_parameter('reacquire_step', 0.5)
 
         self.drone_type: str = self.node.get_parameter('drone_type').value
         self.model_source = str(models_path / self.node.get_parameter('model_source').value)
@@ -74,7 +75,6 @@ class Initialize(State):
         self.image_source = self.node.get_parameter('image_source').value
         self.timeout = self.node.get_parameter('timeout').value
         self.timeout_per_state = self.node.get_parameter('timeout_per_state').value
-        self.px_threshold = self.node.get_parameter('px_threshold').value
         self.safe_altitude = self.node.get_parameter('safe_altitude').value
         self.max_altitude = self.node.get_parameter('max_altitude').value
         self.connection_string = self.node.get_parameter('connection_string').value

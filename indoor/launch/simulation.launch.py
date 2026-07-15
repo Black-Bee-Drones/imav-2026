@@ -13,7 +13,6 @@ def generate_launch_description():
             executable='mangalarga',
             name='mangalarga',
             parameters=[
-                os.path.join(get_package_share_directory('indoor'), 'config', 'default.yaml'),
                 os.path.join(get_package_share_directory('indoor'), 'config', 'simulation.yaml'),
             ],
             output='screen',
