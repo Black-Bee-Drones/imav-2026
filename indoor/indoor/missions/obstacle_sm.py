@@ -52,4 +52,4 @@ class ObstacleSM(StateMachine):
             transitions={SUCCEED: SUCCEED, TIMEOUT: CANCEL},
         )
 
-        self.set_start_state('RED_BAR')
+        self.set_start_state('WINDOWS1')

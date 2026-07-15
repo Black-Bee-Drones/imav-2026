@@ -39,8 +39,8 @@ class Initialize(State):
         self.max_altitude = self.node.get_parameter('max_altitude').value
 
         # Initialize - Drone
-        self.node.declare_parameter('drone_type', 'mavros')
-        self.node.declare_parameter('connection_string', 'serial:///dev/ttyUSB0:921600')
+        self.node.declare_parameter('drone_type', 'mavlink')
+        self.node.declare_parameter('connection_string', 'udp:127.0.0.1:14551')
 
         self.drone_type: str = self.node.get_parameter('drone_type').value
         self.connection_string = self.node.get_parameter('connection_string').value
