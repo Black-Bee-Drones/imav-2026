@@ -2,7 +2,7 @@ from yasmin import StateMachine
 from yasmin_ros.basic_outcomes import SUCCEED, CANCEL, TIMEOUT
 
 from indoor.states import (
-    Windows,
+    Window,
     RedBar,
     BlueBar,
     Tubes,

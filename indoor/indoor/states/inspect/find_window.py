@@ -10,7 +10,7 @@ from nectar.vision import ImageHandler
 from nectar.ai import DetectionResult
 
 
-class FindWindown(State):
+class FindWindow(State):
     def __init__(self, color_window: str = 'blue'):
         super().__init__(outcomes=[SUCCEED, TIMEOUT])
 

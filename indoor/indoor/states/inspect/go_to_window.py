@@ -8,7 +8,7 @@ from yasmin_ros.basic_outcomes import SUCCEED, TIMEOUT
 from nectar.control import MavrosDrone, MoveReference
 
 
-class GoToWindown(State):
+class GoToWindow(State):
     def __init__(self):
         super().__init__(outcomes=[SUCCEED, TIMEOUT])
 

@@ -2,9 +2,9 @@ from yasmin import StateMachine
 from yasmin_ros.basic_outcomes import SUCCEED, CANCEL, TIMEOUT, ABORT
 
 from indoor.states import (
-    GoToWindown,
-    FindWindown,
-    Windows,
+    GoToWindow,
+    FindWindow,
+    Window,
     GoOut,
 )
 
@@ -30,7 +30,7 @@ class InspectSM(StateMachine):
 
         self.add_state(
             'WINDOWS',
-            Windows(),
+            Window(),
             transitions={SUCCEED: 'GO_OUT', TIMEOUT: ABORT},
         )
 
