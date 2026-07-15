@@ -29,7 +29,8 @@ class Windows(State):
         pid_y: PIDController = blackboard.get('pid_y')
         pid_z: PIDController = blackboard.get('pid_z')
 
-        image_handler: ImageHandler = blackboard.get('image_handler')
+        image_handler_front: ImageHandler = blackboard.get('image_handler_front')
+        image_handler_front.image_processing_callback = blackboard.get('callback_detector_gate')
 
         self.start_time: Time = blackboard.get('start_time')
         self.start_state = self.node.get_clock().now()
@@ -61,7 +62,7 @@ class Windows(State):
         while True:
             now = self.node.get_clock().now()
 
-            result: DetectionResult = image_handler.take_photo()
+            result: DetectionResult = image_handler_front.take_photo()
 
             window = result.filter_by_class(['blue_window' if self.color_window == 'blue' else 'red_window'])
 

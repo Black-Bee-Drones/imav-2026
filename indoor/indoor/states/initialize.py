@@ -4,7 +4,6 @@ import os
 import cv2
 import pathlib
 
-from rclpy.parameter import Parameter
 from ament_index_python.packages import get_package_share_directory
 
 import yasmin
@@ -13,7 +12,7 @@ from yasmin_ros.yasmin_node import YasminNode
 from yasmin_ros.basic_outcomes import SUCCEED, ABORT
 
 from nectar.control import DroneFactory, MavrosConfig, MavlinkConfig,PoseSource, PIDController
-from nectar.vision import ImageHandler
+from nectar.vision import ImageHandler, Aruco
 from nectar.ai import Detector, DetectionResult
 
 
@@ -29,21 +28,49 @@ class Initialize(State):
         models_path = pathlib.Path(get_package_share_directory('indoor')) / 'models'
 
         # Global
-        self.node.declare_parameter('drone_type', 'mavros')
-        self.node.declare_parameter('model_source', 'best.pt')
-        self.node.declare_parameter('confidence_threshold', 0.5)
-        self.node.declare_parameter('image_source', 'realsense')
         self.node.declare_parameter('timeout', 1800)  # seconds
         self.node.declare_parameter('timeout_per_state', 300)  # seconds
         self.node.declare_parameter('safe_altitude', 3.0)  # meters
         self.node.declare_parameter('max_altitude', 7.0)
+
+        self.timeout = self.node.get_parameter('timeout').value
+        self.timeout_per_state = self.node.get_parameter('timeout_per_state').value
+        self.safe_altitude = self.node.get_parameter('safe_altitude').value
+        self.max_altitude = self.node.get_parameter('max_altitude').value
+
+        # Initialize - Drone
+        self.node.declare_parameter('drone_type', 'mavros')
         self.node.declare_parameter('connection_string', 'serial:///dev/ttyUSB0:921600')
-        self.node.declare_parameter('reacquire_step', 0.5)
 
         self.drone_type: str = self.node.get_parameter('drone_type').value
-        self.model_source = str(models_path / self.node.get_parameter('model_source').value)
-        self.confidence_threshold: float = self.node.get_parameter('confidence_threshold').value
-        self.image_source: str = self.node.get_parameter('image_source').value
+        self.connection_string = self.node.get_parameter('connection_string').value
+
+        # Initialize - Detector
+        self.node.declare_parameter('gate_model_source', 'best.pt')
+        self.node.declare_parameter('gate_conf', 0.5)
+        self.node.declare_parameter('baby_model_source', 'best.pt')
+        self.node.declare_parameter('baby_conf', 0.5)
+        self.node.declare_parameter('box_model_source', 'best.pt')
+        self.node.declare_parameter('box_conf', 0.5)
+
+        self.gate_model_source: str = str(models_path / self.node.get_parameter('gate_model_source').value)
+        self.gate_conf: float = self.node.get_parameter('gate_conf').value
+        self.baby_model_source: str = str(models_path / self.node.get_parameter('baby_model_source').value)
+        self.baby_conf: float = self.node.get_parameter('baby_conf').value
+        self.box_model_source: str = str(models_path / self.node.get_parameter('box_model_source').value)
+        self.box_conf: float = self.node.get_parameter('box_conf').value
+
+        # Initialize - Aruco
+        self.node.declare_parameter('marker_dict', 5)  # 5x5
+
+        self.marker_dict: int = self.node.get_parameter('marker_dict').value
+
+        # Initialize - ImageHandler
+        self.node.declare_parameter('front_image_source', 'realsense')
+        self.node.declare_parameter('down_image_source', 'webcam')
+
+        self.front_image_source: str = self.node.get_parameter('front_image_source').value
+        self.box_image_source: str = self.node.get_parameter('box_image_source').value
 
         # Takeoff
         self.node.declare_parameter('takeoff_altitude', 1.2)  # meters
@@ -68,16 +95,11 @@ class Initialize(State):
         # Precise landing / Center
         self.node.declare_parameter('center_threshold', 50)  # pixels
         self.node.declare_parameter('lost_tolerance', 10)
-        self.node.declare_parameter('land_altitude', 1.0)
+        self.node.declare_parameter('land_altitude', 1.0)  # meters
         self.node.declare_parameter('land_speed', -0.5)  # meters per second
 
-        self.confidence_threshold = self.node.get_parameter('confidence_threshold').value
-        self.image_source = self.node.get_parameter('image_source').value
-        self.timeout = self.node.get_parameter('timeout').value
-        self.timeout_per_state = self.node.get_parameter('timeout_per_state').value
-        self.safe_altitude = self.node.get_parameter('safe_altitude').value
-        self.max_altitude = self.node.get_parameter('max_altitude').value
-        self.connection_string = self.node.get_parameter('connection_string').value
+        # Precise landing / Reacquire
+        self.node.declare_parameter('reacquire_step', 0.5)  # meters
 
         # PID xy
         self.node.declare_parameter('controller_xy_kp', 1.0)
@@ -155,7 +177,7 @@ class Initialize(State):
             drone = DroneFactory.create(self.drone_type, drone_config)
 
             blackboard['drone'] = drone
-            yasmin.YASMIN_LOG_INFO(f'Successful start Drone(\'{self.drone_type}\')!')
+            yasmin.YASMIN_LOG_INFO(f'Successful start Drone("{self.drone_type}")!')
 
         except KeyboardInterrupt:
             yasmin.YASMIN_LOG_WARN('Execution interrupted by user.')
@@ -203,63 +225,153 @@ class Initialize(State):
             yasmin.YASMIN_LOG_ERROR(f'PID failed: {e}')
             return ABORT
 
-        # Detector
+        # Detector - gate
         try:
-            yasmin.YASMIN_LOG_INFO('Initializing Detector...')
-            self.detector = Detector(
-                model_source = self.model_source,
-                confidence_threshold = self.confidence_threshold,
+            yasmin.YASMIN_LOG_INFO('Initializing Detector(gate)...')
+            self.detector_gate = Detector(
+                model_source = self.gate_model_source,
+                confidence_threshold = self.gate_conf,
             )
 
-            yasmin.YASMIN_LOG_INFO('Load detector...')
-            self.detector.load()
+            yasmin.YASMIN_LOG_INFO('Load Detector(gate)...')
+            self.detector_gate.load()
 
-            blackboard['detector'] = self.detector
-            yasmin.YASMIN_LOG_INFO('successful start Detector!')
+            blackboard['detector_gate'] = self.detector_gate
+            blackboard['callback_detector_gate'] = self.callback_detector_gate
+            yasmin.YASMIN_LOG_INFO('successful start Detector(gate)!')
 
         except KeyboardInterrupt:
             yasmin.YASMIN_LOG_WARN('Execution interrupted by user.')
             return ABORT
 
         except Exception as e:
-            yasmin.YASMIN_LOG_ERROR(f'Detector failed: {e}')
+            yasmin.YASMIN_LOG_ERROR(f'Detector(gate) failed: {e}')
             return ABORT
 
-        # ImageHandler
+        # Detector - baby
         try:
-            yasmin.YASMIN_LOG_INFO('Initializing ImageHandler...')
-            image_handler = ImageHandler(
+            yasmin.YASMIN_LOG_INFO('Initializing Detector(baby)...')
+            self.detector_baby = Detector(
+                model_source = self.baby_model_source,
+                confidence_threshold = self.baby_conf,
+            )
+
+            yasmin.YASMIN_LOG_INFO('Load Detector(baby)...')
+            self.detector_baby.load()
+
+            blackboard['detector_baby'] = self.detector_baby
+            blackboard['callback_detector_baby'] = self.callback_detector_baby
+            yasmin.YASMIN_LOG_INFO('successful start Detector(baby)!')
+
+        except KeyboardInterrupt:
+            yasmin.YASMIN_LOG_WARN('Execution interrupted by user.')
+            return ABORT
+
+        except Exception as e:
+            yasmin.YASMIN_LOG_ERROR(f'Detector(baby) failed: {e}')
+            return ABORT
+
+        # Detector - box
+        try:
+            yasmin.YASMIN_LOG_INFO('Initializing Detector(box)...')
+            self.detector_box = Detector(
+                model_source = self.box_model_source,
+                confidence_threshold = self.box_conf,
+            )
+
+            yasmin.YASMIN_LOG_INFO('Load Detector(box)...')
+            self.detector_box.load()
+
+            blackboard['detector_box'] = self.detector_box
+            blackboard['callback_detector_box'] = self.callback_detector_box
+            yasmin.YASMIN_LOG_INFO('successful start Detector(box)!')
+
+        except KeyboardInterrupt:
+            yasmin.YASMIN_LOG_WARN('Execution interrupted by user.')
+            return ABORT
+
+        except Exception as e:
+            yasmin.YASMIN_LOG_ERROR(f'Detector(box) failed: {e}')
+            return ABORT
+
+        # Aruco
+        try:
+            yasmin.YASMIN_LOG_INFO('Initializing Aruco...')
+            self.aruco = Aruco(
+                marker_dict = self.marker_dict,
+                tag_size = 1.0,
+            )
+
+            blackboard['aruco'] = self.aruco
+            blackboard['callback_aruco'] = self.callback_aruco
+            yasmin.YASMIN_LOG_INFO('successful start Aruco!')
+
+        except KeyboardInterrupt:
+            yasmin.YASMIN_LOG_WARN('Execution interrupted by user.')
+            return ABORT
+
+        except Exception as e:
+            yasmin.YASMIN_LOG_ERROR(f'Aruco failed: {e}')
+            return ABORT
+
+        # ImageHandler - front
+        try:
+            yasmin.YASMIN_LOG_INFO('Initializing ImageHandler(front)...')
+            image_handler_front = ImageHandler(
                 image_source = self.image_source,
-                image_processing_callback = self.callback_detector,
             )
 
             yasmin.YASMIN_LOG_INFO('Open camera...')
-            image_handler.open()
+            image_handler_front.open()
 
             yasmin.YASMIN_LOG_INFO('Take testing photo...')
-            image_handler.take_photo()
+            image_handler_front.take_photo()
 
-            blackboard['image_handler'] = image_handler
-            yasmin.YASMIN_LOG_INFO('successful start ImageHandler!')
+            blackboard['image_handler_front'] = image_handler_front
+            yasmin.YASMIN_LOG_INFO('successful start ImageHandler(front)!')
 
         except KeyboardInterrupt:
             yasmin.YASMIN_LOG_WARN('Execution interrupted by user.')
             return ABORT
 
         except Exception as e:
-            yasmin.YASMIN_LOG_ERROR(f'ImageHandler failed: {e}')
+            yasmin.YASMIN_LOG_ERROR(f'ImageHandler(front) failed: {e}')
+            return ABORT
+
+        # ImageHandler - down
+        try:
+            yasmin.YASMIN_LOG_INFO('Initializing ImageHandler(down)...')
+            image_handler_down = ImageHandler(
+                image_source = self.image_source,
+            )
+
+            yasmin.YASMIN_LOG_INFO('Open camera...')
+            image_handler_down.open()
+
+            yasmin.YASMIN_LOG_INFO('Take testing photo...')
+            image_handler_down.take_photo()
+
+            blackboard['image_handler_down'] = image_handler_down
+            yasmin.YASMIN_LOG_INFO('successful start ImageHandler(down)!')
+
+        except KeyboardInterrupt:
+            yasmin.YASMIN_LOG_WARN('Execution interrupted by user.')
+            return ABORT
+
+        except Exception as e:
+            yasmin.YASMIN_LOG_ERROR(f'ImageHandler(down) failed: {e}')
             return ABORT
 
         yasmin.YASMIN_LOG_INFO('Completed successfully!!!')
         return SUCCEED
 
-    def callback_detector(self, image: np.ndarray) -> DetectionResult:
+    def callback_detector_gate(self, image: np.ndarray) -> DetectionResult:
         start = datetime.fromtimestamp(self.start_time.nanoseconds / 1e9)
         now = datetime.fromtimestamp(self.node.get_clock().now().nanoseconds / 1e9)
 
         indoor_path = pathlib.Path.home() / 'ros2_ws' / start.strftime('indoor-%Y-%m-%d_%H-%M-%S')
-        raw_path = indoor_path / 'raw'
-        annotated_path = indoor_path / 'annotated'
+        raw_path = indoor_path / 'gate'
+        annotated_path = indoor_path / 'gate_annotated'
 
         raw_file = raw_path / now.strftime('raw-%Y-%m-%d_%H-%M-%S-%f.png')
         annotated_file = annotated_path / now.strftime('annotated-%Y-%m-%d_%H-%M-%S-%f.png')
@@ -268,11 +380,82 @@ class Initialize(State):
         os.makedirs(raw_path, exist_ok=True)
         os.makedirs(annotated_path, exist_ok=True)
 
-        result = self.detector.detect(image)
+        result = self.detector_gate.detect(image)
         result.image = image
-        result.annotated_image = self.detector.draw_detections(image, result)
+        result.annotated_image = self.detector_gate.draw_detections(image, result)
 
         cv2.imwrite(raw_file, result.image)
         cv2.imwrite(annotated_file, result.annotated_image)
 
         return result
+
+    def callback_detector_box(self, image: np.ndarray) -> DetectionResult:
+        start = datetime.fromtimestamp(self.start_time.nanoseconds / 1e9)
+        now = datetime.fromtimestamp(self.node.get_clock().now().nanoseconds / 1e9)
+
+        indoor_path = pathlib.Path.home() / 'ros2_ws' / start.strftime('indoor-%Y-%m-%d_%H-%M-%S')
+        raw_path = indoor_path / 'box'
+        annotated_path = indoor_path / 'box_annotated'
+
+        raw_file = raw_path / now.strftime('raw-%Y-%m-%d_%H-%M-%S-%f.png')
+        annotated_file = annotated_path / now.strftime('annotated-%Y-%m-%d_%H-%M-%S-%f.png')
+
+        os.makedirs(indoor_path, exist_ok=True)
+        os.makedirs(raw_path, exist_ok=True)
+        os.makedirs(annotated_path, exist_ok=True)
+
+        result = self.detector_box.detect(image)
+        result.image = image
+        result.annotated_image = self.detector_box.draw_detections(image, result)
+
+        cv2.imwrite(raw_file, result.image)
+        cv2.imwrite(annotated_file, result.annotated_image)
+
+        return result
+
+    def callback_detector_baby(self, image: np.ndarray) -> DetectionResult:
+        start = datetime.fromtimestamp(self.start_time.nanoseconds / 1e9)
+        now = datetime.fromtimestamp(self.node.get_clock().now().nanoseconds / 1e9)
+
+        indoor_path = pathlib.Path.home() / 'ros2_ws' / start.strftime('indoor-%Y-%m-%d_%H-%M-%S')
+        raw_path = indoor_path / 'baby'
+        annotated_path = indoor_path / 'baby_annotated'
+
+        raw_file = raw_path / now.strftime('raw-%Y-%m-%d_%H-%M-%S-%f.png')
+        annotated_file = annotated_path / now.strftime('annotated-%Y-%m-%d_%H-%M-%S-%f.png')
+
+        os.makedirs(indoor_path, exist_ok=True)
+        os.makedirs(raw_path, exist_ok=True)
+        os.makedirs(annotated_path, exist_ok=True)
+
+        result = self.detector_baby.detect(image)
+        result.image = image
+        result.annotated_image = self.detector_baby.draw_detections(image, result)
+
+        cv2.imwrite(raw_file, result.image)
+        cv2.imwrite(annotated_file, result.annotated_image)
+
+        return result
+
+    def callback_aruco(self, image: np.ndarray):
+        start = datetime.fromtimestamp(self.start_time.nanoseconds / 1e9)
+        now = datetime.fromtimestamp(self.node.get_clock().now().nanoseconds / 1e9)
+
+        indoor_path = pathlib.Path.home() / 'ros2_ws' / start.strftime('indoor-%Y-%m-%d_%H-%M-%S')
+        raw_path = indoor_path / 'aruco'
+        annotated_path = indoor_path / 'aruco_annotated'
+
+        raw_file = raw_path / now.strftime('raw-%Y-%m-%d_%H-%M-%S-%f.png')
+        annotated_file = annotated_path / now.strftime('annotated-%Y-%m-%d_%H-%M-%S-%f.png')
+
+        os.makedirs(indoor_path, exist_ok=True)
+        os.makedirs(raw_path, exist_ok=True)
+        os.makedirs(annotated_path, exist_ok=True)
+
+        cv2.imwrite(raw_file, image)
+
+        bbox, id = self.aruco.detect(image, draw=True)
+
+        cv2.imwrite(annotated_file, image)
+
+        return image, bbox, id

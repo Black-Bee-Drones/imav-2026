@@ -1,6 +1,7 @@
 from .initialize import Initialize
 from .takeoff import Takeoff
 from .land import Land
+from .handler_config import HandlerConfig
 
 from .obstacle.windows import Windows
 from .obstacle.red_bar import RedBar
@@ -21,6 +22,7 @@ __all__ = [
     'Initialize',
     'Takeoff',
     'Land',
+    'HandlerConfig',
 
     'Windows',
     'RedBar',

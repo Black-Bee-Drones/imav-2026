@@ -33,7 +33,8 @@ class Center(State):
         pid_x: PIDController = blackboard.get('pid_x')
         pid_y: PIDController = blackboard.get('pid_y')
 
-        image_handler: ImageHandler = blackboard.get('image_handler')
+        image_handler_down: ImageHandler = blackboard.get('image_handler_down')
+        image_handler_down.image_processing_callback = blackboard.get('callback_aruco')
 
         self.start_time: Time = blackboard.get('start_time')
         self.start_state = self.node.get_clock().now()
@@ -50,7 +51,7 @@ class Center(State):
         while True:
             now = self.node.get_clock().now()
 
-            image, bbox, id = image_handler.take_photo()
+            image, bbox, id = image_handler_down.take_photo()
 
             if isinstance(id, int):
                 lost = 0
