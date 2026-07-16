@@ -3,14 +3,14 @@ from rclpy.time import Time, Duration
 import yasmin
 from yasmin import State, Blackboard
 from yasmin_ros.yasmin_node import YasminNode
-from yasmin_ros.basic_outcomes import SUCCEED, TIMEOUT, ABORT
+from yasmin_ros.basic_outcomes import SUCCEED, TIMEOUT, CANCEL
 
 from nectar.control import MavrosDrone
 
 
 class Reacquire(State):
     def __init__(self):
-        super().__init__(outcomes=[SUCCEED, TIMEOUT, ABORT])
+        super().__init__(outcomes=[SUCCEED, TIMEOUT, CANCEL])
 
         self.node = YasminNode.get_instance()
 
@@ -33,7 +33,7 @@ class Reacquire(State):
 
         if self.reacquire_step + drone.get_altitude() >= self.max_altitude:
             yasmin.YASMIN_LOG_ERROR('Altitude limit.')
-            return ABORT
+            return CANCEL
 
         yasmin.YASMIN_LOG_INFO(f'Up {self.reacquire_step} m...')
         drone.move_to(

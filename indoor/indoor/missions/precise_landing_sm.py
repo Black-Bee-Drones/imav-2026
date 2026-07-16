@@ -1,5 +1,5 @@
 from yasmin import StateMachine
-from yasmin_ros.basic_outcomes import SUCCEED, TIMEOUT, FAIL, ABORT
+from yasmin_ros.basic_outcomes import SUCCEED, TIMEOUT, FAIL, CANCEL, ABORT
 
 from indoor.states import (
     GoToLandingBase,
@@ -11,7 +11,7 @@ from indoor.states import (
 
 class PreciseLandingSM(StateMachine):
     def __init__(self):
-        super().__init__(outcomes=[SUCCEED, TIMEOUT, ABORT])
+        super().__init__(outcomes=[SUCCEED, CANCEL, ABORT])
         """
         Precise landing state machine.
         """
@@ -25,19 +25,13 @@ class PreciseLandingSM(StateMachine):
         self.add_state(
             'CENTER',
             Center(),
-            transitions={SUCCEED: 'LAND', FAIL: 'REACQUIRE', TIMEOUT: ABORT},
+            transitions={SUCCEED: SUCCEED, FAIL: 'REACQUIRE', TIMEOUT: ABORT},
         )
 
         self.add_state(
             'REACQUIRE',
             Reacquire(),
-            transitions={SUCCEED: 'CENTER', ABORT: ABORT},
-        )
-
-        self.add_state(
-            'LAND',
-            Land(),
-            transitions={SUCCEED: SUCCEED, ABORT: ABORT},
+            transitions={SUCCEED: 'CENTER', CANCEL: ABORT},
         )
 
         self.set_start_state('GO_TO_LAND')

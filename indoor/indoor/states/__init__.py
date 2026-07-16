@@ -22,3 +22,9 @@ from .inspect import (
     FindWindow,
     GoOut,    
 )
+
+from .dropping import (
+    GoToBox,
+    CenterBox,
+    Drop,
+)

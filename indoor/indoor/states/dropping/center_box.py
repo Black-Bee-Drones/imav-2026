@@ -1,5 +1,3 @@
-import numpy as np
-
 from rclpy.time import Time, Duration
 
 import yasmin
@@ -11,7 +9,7 @@ from nectar.control import MavrosDrone, PIDController
 from nectar.vision import ImageHandler
 
 
-class Center(State):
+class CenterBox(State):
     def __init__(self, color_window: str = 'blue'):
         super().__init__(outcomes=[SUCCEED, FAIL, TIMEOUT])
 
@@ -34,7 +32,7 @@ class Center(State):
         pid_y: PIDController = blackboard.get('pid_y')
 
         image_handler_down: ImageHandler = blackboard.get('image_handler_down')
-        image_handler_down.image_processing_callback = blackboard.get('callback_aruco')
+        image_handler_down.image_processing_callback = blackboard.get('callback_box')
 
         self.start_time: Time = blackboard.get('start_time')
         self.start_state = self.node.get_clock().now()
@@ -51,14 +49,14 @@ class Center(State):
         while True:
             now = self.node.get_clock().now()
 
-            image, bbox, id = image_handler_down.take_photo()
+            result = image_handler_down.take_photo()
 
-            if isinstance(id, int):
+            if result:
                 lost = 0
 
-                h, w = image.shape[:2]
+                h, w = result.image.shape[:2]
 
-                center = np.mean(bbox[0][0], axis=0)
+                center = result[0].center
 
                 error_x = (center[1] - (w / 2))
                 error_y = (center[0] - (h / 2))

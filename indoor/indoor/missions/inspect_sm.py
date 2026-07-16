@@ -1,5 +1,5 @@
 from yasmin import StateMachine
-from yasmin_ros.basic_outcomes import SUCCEED, TIMEOUT, ABORT
+from yasmin_ros.basic_outcomes import SUCCEED, TIMEOUT, CANCEL, ABORT
 
 from indoor.states import (
     GoToWindow,
@@ -11,7 +11,7 @@ from indoor.states import (
 
 class InspectSM(StateMachine):
     def __init__(self):
-        super().__init__(outcomes=[SUCCEED, TIMEOUT, ABORT])
+        super().__init__(outcomes=[SUCCEED, CANCEL, ABORT])
         """
         Inspect a dark room state machine.
         """
@@ -19,25 +19,25 @@ class InspectSM(StateMachine):
         self.add_state(
             'GO_TO_WINDOW',
             GoToWindow(),
-            transitions={SUCCEED: 'FIND_WINDOW', TIMEOUT: TIMEOUT},
+            transitions={SUCCEED: 'FIND_WINDOW', TIMEOUT: CANCEL},
         )
 
         self.add_state(
             'FIND_WINDOW',
             FindWindow(),
-            transitions={SUCCEED: 'WINDOW', TIMEOUT: TIMEOUT},
+            transitions={SUCCEED: 'WINDOW', TIMEOUT: CANCEL},
         )
 
         self.add_state(
             'WINDOW',
             Window(),
-            transitions={SUCCEED: 'GO_OUT', TIMEOUT: ABORT},
+            transitions={SUCCEED: 'GO_OUT', TIMEOUT: CANCEL},
         )
 
         self.add_state(
             'GO_OUT',
             GoOut(),
-            transitions={SUCCEED: SUCCEED, TIMEOUT: ABORT},
+            transitions={SUCCEED: SUCCEED, TIMEOUT: CANCEL},
         )
 
         self.set_start_state('GO_TO_WINDOW')

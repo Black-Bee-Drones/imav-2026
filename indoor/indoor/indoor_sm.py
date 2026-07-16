@@ -1,5 +1,5 @@
 from yasmin import StateMachine
-from yasmin_ros.basic_outcomes import SUCCEED, TIMEOUT, ABORT
+from yasmin_ros.basic_outcomes import SUCCEED, CANCEL, ABORT
 
 from indoor.states import (
     Initialize,
@@ -48,7 +48,7 @@ class IndoorSM(StateMachine):
                 missions_sm.get(mission),
                 transitions = {
                     SUCCEED: missions[i + 1] if i < len(missions)-1 else 'LAND',
-                    TIMEOUT: 'PRECISELANDINGSM',
+                    CANCEL: 'PRECISELANDINGSM',
                     ABORT: 'LAND'
                 },
             )

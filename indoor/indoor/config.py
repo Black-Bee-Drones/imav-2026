@@ -15,6 +15,7 @@ class Config:
         self._declare_obstacle()
         self._declare_inspect()
         self._declare_precise_landing()
+        self._declare_dropping()
         self._declare_pid()
 
         yasmin.YASMIN_LOG_INFO('Parameters successfully declared...')
@@ -79,6 +80,15 @@ class Config:
         # Reacquire
         self._node.declare_parameter('reacquire_step', 0.5)  # meters
 
+    def _declare_dropping(self):
+        # GoToBox
+        self._node.declare_parameter('box_x', 8.5)  # meters
+        self._node.declare_parameter('box_y', 0.0)  # meters
+
+        # Drop
+        self._node.declare_parameter('drop_index', 0.0)
+        self._node.declare_parameter('drop_value', 2.0)
+        
     def _declare_pid(self):
         # PID xy
         self._node.declare_parameter('controller_xy_kp', 1.0)
