@@ -86,9 +86,9 @@ class Config:
         self._node.declare_parameter('box_y', 0.0)  # meters
 
         # Drop
-        self._node.declare_parameter('drop_index', 0.0)
-        self._node.declare_parameter('drop_value', 2.0)
-        
+        self._node.declare_parameter('drop_index', 0)  # PWM port
+        self._node.declare_parameter('drop_value', 500)  # PWM value
+
     def _declare_pid(self):
         # PID xy
         self._node.declare_parameter('controller_xy_kp', 1.0)
