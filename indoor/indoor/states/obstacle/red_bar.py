@@ -7,6 +7,8 @@ from yasmin_ros.basic_outcomes import SUCCEED, TIMEOUT
 
 from nectar.control import MavrosDrone, MoveReference
 
+from indoor import Config
+
 
 class RedBar(State):
     def __init__(self, config: Config):
