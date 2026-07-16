@@ -115,16 +115,35 @@ class Config:
     controller_z_integral_max: float = 1.0
 
 @dataclass (frozen=True)
-class Cleitinho(Config):
-    missions: tuple[Mission, ...] = (
+class STILConfig(Config):
+    connection_string: str = 'tcp:127.0.0.1:5762'
+
+CLEITINHO = Config(
+    missions = (
         Mission.OBSTACLES, 
         Mission.INSPECT, 
         Mission.PRECISE_LANDING
     )
+)
 
-@dataclass (frozen=True)
-class Jorge(Config):
-    missions: tuple[Mission, ...] = (
+JORGE = Config(
+    missions = (
         Mission.DROPPING, 
         Mission.PRECISE_LANDING
     )
+)
+
+STIL_CLEITINHO = STILConfig(
+    missions = (
+        Mission.OBSTACLES, 
+        Mission.INSPECT, 
+        Mission.PRECISE_LANDING
+    )
+)
+
+STIL_JORGE = STILConfig(
+    missions = (
+        Mission.DROPPING, 
+        Mission.PRECISE_LANDING
+    )
+)
