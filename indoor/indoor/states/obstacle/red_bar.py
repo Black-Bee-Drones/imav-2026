@@ -9,7 +9,7 @@ from nectar.control import MavrosDrone, MoveReference
 
 
 class RedBar(State):
-    def __init__(self, step: int = 3):
+    def __init__(self, step: int | None = 3):
         super().__init__(outcomes=[SUCCEED, TIMEOUT])
 
         self.step = step
@@ -18,6 +18,8 @@ class RedBar(State):
 
         self.timeout: int | float = self.node.get_parameter('timeout').value
         self.timeout_per_state: int | float = self.node.get_parameter('timeout_per_state').value
+
+        self.safe_altitude: int | float = self.node.get_parameter('safe_altitude').value
 
     def execute(self, blackboard: Blackboard):
         drone: MavrosDrone = blackboard.get('drone')
@@ -30,7 +32,7 @@ class RedBar(State):
             yasmin.YASMIN_LOG_ERROR('Timeout.')
             return TIMEOUT
 
-        altitude = 0.5 + [1.2, 1.6, 1.98][self.step-1]
+        altitude = 0.5 + [1.2, 1.6, 1.98][self.step-1] if self.step else self.safe_altitude
 
         yasmin.YASMIN_LOG_INFO(f'Correcting drone altitude by z={altitude:.1f} m...')
         drone.move_to(
