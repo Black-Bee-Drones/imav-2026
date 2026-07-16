@@ -30,29 +30,44 @@ class BlueBar(State):
             yasmin.YASMIN_LOG_ERROR('Timeout.')
             return TIMEOUT
 
-        z = [.4, .8, 1.2][self.step-1] / 2
+        altitude = [.4, .8, 1.2][self.step-1] / 2
 
-        yasmin.YASMIN_LOG_INFO(f'Correcting drone altitude by z={z:.1f} m...')
+        yasmin.YASMIN_LOG_INFO(f'Correcting drone altitude by z={altitude:.1f} m...')
         drone.move_to(
-            x = None,
+            x = 2.25,
             y = 0,
-            z = z,
+            z = altitude,
             yaw = 0,
             reference = MoveReference.TAKEOFF,
             precision = 0.05,
         )
 
-        self.node.get_clock().sleep_for(Duration(seconds=1))
         if self.check_timeout():
             yasmin.YASMIN_LOG_ERROR('Timeout.')
             return TIMEOUT
 
-        yasmin.YASMIN_LOG_INFO('Fly under the blue bar...')
+        yasmin.YASMIN_LOG_INFO('Fly under the first blue bar...')
         drone.move_to(
-            x = 1 + 0.2,
+            x = 3.25,
             y = 0,
-            z = 0,
+            z = altitude,
             yaw = 0,
+            reference = MoveReference.TAKEOFF,
+            precision = 0.5
+        )
+
+        if self.check_timeout():
+            yasmin.YASMIN_LOG_ERROR('Timeout.')
+            return TIMEOUT
+
+        yasmin.YASMIN_LOG_INFO('Fly under the second blue bar...')
+        drone.move_to(
+            x = 4.25,
+            y = 0,
+            z = altitude,
+            yaw = 0,
+            reference = MoveReference.TAKEOFF,
+            precision = 0.5
         )
 
         self.node.get_clock().sleep_for(Duration(seconds=1))

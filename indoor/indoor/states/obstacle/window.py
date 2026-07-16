@@ -108,10 +108,11 @@ class Window(State):
 
         yasmin.YASMIN_LOG_INFO('Fly the drone through the window.')
         drone.move_to(
-            x = 1.25 + 0.2,
+            x = 1.25,
             y = 0,
             z = 0,
             yaw = 0,
+            precision = 0.05,
         )
 
         self.node.get_clock().sleep_for(Duration(seconds=1))

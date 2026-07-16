@@ -17,7 +17,7 @@ class ObstacleSM(StateMachine):
         """
 
         self.add_state(
-            'WINDOWS1',
+            'FIRST_WINDOW',
             Window(),
             transitions={SUCCEED: 'RED_BAR', TIMEOUT: TIMEOUT},
         )
@@ -25,17 +25,11 @@ class ObstacleSM(StateMachine):
         self.add_state(
             'RED_BAR',
             RedBar(),
-            transitions={SUCCEED: 'BLUE_BAR1', TIMEOUT: TIMEOUT},
+            transitions={SUCCEED: 'BLUE_BAR', TIMEOUT: TIMEOUT},
         )
 
         self.add_state(
-            'BLUE_BAR1',
-            BlueBar(),
-            transitions={SUCCEED: 'BLUE_BAR2', TIMEOUT: TIMEOUT},
-        )
-
-        self.add_state(
-            'BLUE_BAR2',
+            'BLUE_BAR',
             BlueBar(),
             transitions={SUCCEED: 'TUBES', TIMEOUT: TIMEOUT},
         )
@@ -43,13 +37,13 @@ class ObstacleSM(StateMachine):
         self.add_state(
             'TUBES',
             Tubes(),
-            transitions={SUCCEED: 'WINDOWS2', TIMEOUT: TIMEOUT},
+            transitions={SUCCEED: 'SECOND_WINDOW', TIMEOUT: TIMEOUT},
         )
 
         self.add_state(
-            'WINDOWS2',
+            'SECOND_WINDOW',
             Window(),
             transitions={SUCCEED: SUCCEED, TIMEOUT: TIMEOUT},
         )
 
-        self.set_start_state('WINDOWS1')
+        self.set_start_state('FIRST_WINDOW')
