@@ -1,5 +1,5 @@
 from yasmin import StateMachine
-from yasmin_ros.basic_outcomes import SUCCEED, CANCEL, ABORT
+from yasmin_ros.basic_outcomes import SUCCEED, CANCEL, ABORT, TIMEOUT
 
 from indoor.states import (
     Initialize,
@@ -17,7 +17,7 @@ from indoor import Config
 
 class IndoorSM(StateMachine):
     def __init__(self, config: Config):
-        super().__init__(outcomes=[SUCCEED, ABORT])
+        super().__init__(outcomes=[SUCCEED, ABORT, CANCEL, TIMEOUT])
         """
         Indoor Mission
 
@@ -50,7 +50,8 @@ class IndoorSM(StateMachine):
                 transitions = {
                     SUCCEED: config.missions[i + 1] if i < len(config.missions)-1 else 'LAND',
                     CANCEL: 'PRECISELANDINGSM',
-                    ABORT: 'LAND'
+                    ABORT: 'LAND',
+                    TIMEOUT: ABORT,
                 },
             )
 

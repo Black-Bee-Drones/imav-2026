@@ -13,7 +13,7 @@ from indoor import Config
 
 class InspectSM(StateMachine):
     def __init__(self, config: Config):
-        super().__init__(outcomes=[SUCCEED, CANCEL, ABORT])
+        super().__init__(outcomes=[SUCCEED, CANCEL, ABORT, TIMEOUT])
         """
         Inspect a dark room state machine.
         """

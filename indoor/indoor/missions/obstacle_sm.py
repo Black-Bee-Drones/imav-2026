@@ -12,7 +12,7 @@ from indoor import Config
 
 class ObstacleSM(StateMachine):
     def __init__(self, config: Config):
-        super().__init__(outcomes=[SUCCEED, CANCEL, ABORT])
+        super().__init__(outcomes=[SUCCEED, CANCEL, ABORT, TIMEOUT])
         """
         Obstacle course state machine.
         """
