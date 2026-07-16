@@ -44,6 +44,9 @@ class Config:
 
     ### Obstacle ###
     # Window
+    first_color_window: str | None = 'blue'  # 'blue' or 'red'
+    second_color_window: str | None = 'blue'  # 'blue' or 'red'
+    room_color_window: str | None = 'blue'  # 'blue' or 'red'
     window_threshold: int = 50  # pixels
 
     # RedBar

@@ -19,7 +19,7 @@ class ObstacleSM(StateMachine):
 
         self.add_state(
             'FIRST_WINDOW',
-            Window(config),
+            Window(config, 'first'),
             transitions={SUCCEED: 'RED_BAR', TIMEOUT: CANCEL},
         )
 
@@ -43,7 +43,7 @@ class ObstacleSM(StateMachine):
 
         self.add_state(
             'SECOND_WINDOW',
-            Window(config),
+            Window(config, 'second'),
             transitions={SUCCEED: SUCCEED, TIMEOUT: CANCEL},
         )
 

@@ -32,7 +32,7 @@ class InspectSM(StateMachine):
 
         self.add_state(
             'WINDOW',
-            Window(config),
+            Window(config, 'room'),
             transitions={SUCCEED: 'COUNT_BABIES', TIMEOUT: CANCEL},
         )
 

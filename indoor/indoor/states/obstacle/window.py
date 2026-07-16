@@ -13,11 +13,11 @@ from indoor import Config
 
 
 class Window(State):
-    def __init__(self, config: Config, color_window: str = 'blue'):
+    def __init__(self, config: Config, position: str):
         super().__init__(outcomes=[SUCCEED, TIMEOUT])
 
-        self.color_window = color_window.strip().lower()
         self.config = config
+        self.position = position
 
         self.node = YasminNode.get_instance()
 
@@ -36,6 +36,13 @@ class Window(State):
         pid_y.reset()
         pid_z.reset()
 
+        if self.position == 'first':
+            color_window = self.config.first_color_window
+        elif self.position == 'second':
+            color_window = self.config.second_color_window
+        elif self.position == 'room':
+            color_window = self.config.room_color_window
+
         yasmin.YASMIN_LOG_INFO('Start.')
         if self.check_timeout():
             yasmin.YASMIN_LOG_ERROR('Timeout.')
@@ -51,18 +58,17 @@ class Window(State):
             precision = 0.05,
         )
 
-        self.node.get_clock().sleep_for(Duration(seconds=1))
         if self.check_timeout():
             yasmin.YASMIN_LOG_ERROR('Timeout.')
             return TIMEOUT
 
         lost = 0
-        while True:
+        while color_window:
             now = self.node.get_clock().now()
 
             result: DetectionResult = image_handler_front.take_photo()
 
-            window = result.filter_by_class(['blue_window' if self.color_window == 'blue' else 'red_window'])
+            window = result.filter_by_class(['blue_window' if color_window == 'blue' else 'red_window'])
 
             if window:
                 lost = 0
@@ -98,6 +104,16 @@ class Window(State):
                 return TIMEOUT
 
             self.node.get_clock().sleep_until(now + Duration(seconds=1/30))
+
+        else:
+            yasmin.YASMIN_LOG_INFO('Fly the drone to safe altitude.')
+            drone.move_to(
+                x = 0,
+                y = 0,
+                z = self.config.safe_altitude,
+                yaw = 0,
+                precision = 0.05,
+            )
 
         self.node.get_clock().sleep_for(Duration(seconds=1))
         if self.check_timeout():
