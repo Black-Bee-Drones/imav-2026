@@ -12,10 +12,11 @@ from indoor.missions import (
     ObstacleSM,
     PreciseLandingSM,
 )
+from indoor import Config
 
 
 class IndoorSM(StateMachine):
-    def __init__(self, missions: tuple[str] = ('OBSTACLESM', 'INSPECTSM', 'DROPPINGSM', 'PRECISELANDINGSM')):
+    def __init__(self, config: Config):
         super().__init__(outcomes=[SUCCEED, ABORT])
         """
         Indoor Mission
@@ -32,22 +33,22 @@ class IndoorSM(StateMachine):
 
         self.add_state(
             'INITIALIZE',
-            Initialize(),
+            Initialize(config),
             transitions = {SUCCEED: 'TAKEOFF', ABORT: ABORT},
         )
 
         self.add_state(
             'TAKEOFF',
-            Takeoff(),
+            Takeoff(config),
             transitions = {SUCCEED: 'OBSTACLESM', ABORT: 'LAND'},
         )
 
-        for i, mission in enumerate(missions):
+        for i, mission in enumerate(config.missions):
             self.add_state(
                 mission,
-                missions_sm.get(mission),
+                missions_sm.get(mission)(config),
                 transitions = {
-                    SUCCEED: missions[i + 1] if i < len(missions)-1 else 'LAND',
+                    SUCCEED: config.missions[i + 1] if i < len(config.missions)-1 else 'LAND',
                     CANCEL: 'PRECISELANDINGSM',
                     ABORT: 'LAND'
                 },
@@ -55,7 +56,7 @@ class IndoorSM(StateMachine):
 
         self.add_state(
             'LAND',
-            Land(),
+            Land(config),
             transitions = {SUCCEED: SUCCEED, ABORT: ABORT},
         )
 

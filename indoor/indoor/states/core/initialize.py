@@ -15,67 +15,29 @@ from nectar.control import DroneFactory, MavrosConfig, MavlinkConfig,PoseSource,
 from nectar.vision import ImageHandler, Aruco, ROSConfig
 from nectar.ai import Detector, DetectionResult
 
+from indoor import Config
 
 class Initialize(State):
-    def __init__(self):
+    def __init__(self, config: Config):
         super().__init__(outcomes=[SUCCEED, ABORT])
         """
         Initializes the drone, detector and camera.
         """
 
+        self.config = config
+
         self.node = YasminNode.get_instance()
-
-        models_path = pathlib.Path(get_package_share_directory('indoor')) / 'models'
-
-        # Drone
-        self.drone_type: str = self.node.get_parameter('drone_type').value
-        self.connection_string = self.node.get_parameter('connection_string').value
-
-        # Detector
-        self.gate_model_source: str = str(models_path / self.node.get_parameter('gate_model_source').value)
-        self.gate_conf: float = self.node.get_parameter('gate_conf').value
-        self.baby_model_source: str = str(models_path / self.node.get_parameter('baby_model_source').value)
-        self.baby_conf: float = self.node.get_parameter('baby_conf').value
-        self.box_model_source: str = str(models_path / self.node.get_parameter('box_model_source').value)
-        self.box_conf: float = self.node.get_parameter('box_conf').value
-
-        # Aruco
-        self.marker_dict: int = self.node.get_parameter('marker_dict').value
-
-        # ImageHandler
-        self.front_image_source: str = self.node.get_parameter('front_image_source').value
-        self.front_ros_topic: str = self.node.get_parameter('front_ros_topic').value
-        self.down_image_source: str = self.node.get_parameter('down_image_source').value
-        self.down_ros_topic: str = self.node.get_parameter('down_ros_topic').value
-
-        # PID xy
-        self.controller_xy_kp = self.node.get_parameter('controller_xy_kp').value
-        self.controller_xy_kd = self.node.get_parameter('controller_xy_kd').value
-        self.controller_xy_ki = self.node.get_parameter('controller_xy_ki').value
-        self.controller_xy_output_min = self.node.get_parameter('controller_xy_output_min').value
-        self.controller_xy_output_max = self.node.get_parameter('controller_xy_output_max').value
-        self.controller_xy_integral_min = self.node.get_parameter('controller_xy_integral_min').value
-        self.controller_xy_integral_max = self.node.get_parameter('controller_xy_integral_max').value
-
-        # PID z
-        self.controller_z_kp = self.node.get_parameter('controller_z_kp').value
-        self.controller_z_kd = self.node.get_parameter('controller_z_kd').value
-        self.controller_z_ki = self.node.get_parameter('controller_z_ki').value
-        self.controller_z_output_min = self.node.get_parameter('controller_z_output_min').value
-        self.controller_z_output_max = self.node.get_parameter('controller_z_output_max').value
-        self.controller_z_integral_min = self.node.get_parameter('controller_z_integral_min').value
-        self.controller_z_integral_max = self.node.get_parameter('controller_z_integral_max').value
 
     def execute(self, blackboard: Blackboard):
         yasmin.YASMIN_LOG_INFO('Initializing...')
 
-        # Const
+        # Start time
         try:
             yasmin.YASMIN_LOG_INFO('Initializing Start time...')
             self.start_time = self.node.get_clock().now()
 
             blackboard.set('start_time', self.start_time)
-            yasmin.YASMIN_LOG_INFO('successful Start Const!')
+            yasmin.YASMIN_LOG_INFO('successful Start time!')
 
         except KeyboardInterrupt:
             yasmin.YASMIN_LOG_WARN('Execution interrupted by user.')
@@ -87,28 +49,28 @@ class Initialize(State):
 
         # Drone
         try:
-            yasmin.YASMIN_LOG_INFO(f'Initializing Drone("{self.drone_type}")...')
-            if self.drone_type == 'mavros':
+            yasmin.YASMIN_LOG_INFO(f'Initializing Drone("{self.config.drone_type}")...')
+            if self.config.drone_type == 'mavros':
                 drone_config = MavrosConfig(
                     pose_source = PoseSource.VISION,
-                    connection_string=self.connection_string
+                    connection_string=self.config.connection_string
                 )
 
-            elif self.drone_type == 'mavlink':
+            elif self.config.drone_type == 'mavlink':
                 drone_config = MavlinkConfig(
                     pose_source=PoseSource.VISION,
                     start_driver=False,
-                    connection_string=self.connection_string
+                    connection_string=self.config.connection_string
                 )
 
             else:
                 yasmin.YASMIN_LOG_ERROR('Invalid drone_type.')
                 return ABORT
 
-            drone = DroneFactory.create(self.drone_type, drone_config)
+            drone = DroneFactory.create(self.config.drone_type, drone_config)
 
             blackboard['drone'] = drone
-            yasmin.YASMIN_LOG_INFO(f'Successful start Drone("{self.drone_type}")!')
+            yasmin.YASMIN_LOG_INFO(f'Successful start Drone("{self.config.drone_type}")!')
 
         except KeyboardInterrupt:
             yasmin.YASMIN_LOG_WARN('Execution interrupted by user.')
@@ -122,25 +84,25 @@ class Initialize(State):
         try:
             yasmin.YASMIN_LOG_INFO(f'Initializing PID (x, y and z)...')
             pid_x = PIDController(
-                kp = self.controller_xy_kp,
-                kd = self.controller_xy_kd,
-                ki = self.controller_xy_ki,
-                output_limits = (self.controller_xy_output_min, self.controller_xy_output_max),
-                integral_limits = (self.controller_xy_integral_min, self.controller_xy_integral_max),
+                kp = self.config.controller_xy_kp,
+                kd = self.config.controller_xy_kd,
+                ki = self.config.controller_xy_ki,
+                output_limits = (self.config.controller_xy_output_min, self.config.controller_xy_output_max),
+                integral_limits = (self.config.controller_xy_integral_min, self.config.controller_xy_integral_max),
             )
             pid_y = PIDController(
-                kp = self.controller_xy_kp,
-                kd = self.controller_xy_kd,
-                ki = self.controller_xy_ki,
-                output_limits = (self.controller_xy_output_min, self.controller_xy_output_max),
-                integral_limits = (self.controller_xy_integral_min, self.controller_xy_integral_max),
+                kp = self.config.controller_xy_kp,
+                kd = self.config.controller_xy_kd,
+                ki = self.config.controller_xy_ki,
+                output_limits = (self.config.controller_xy_output_min, self.config.controller_xy_output_max),
+                integral_limits = (self.config.controller_xy_integral_min, self.config.controller_xy_integral_max),
             )
             pid_z = PIDController(
-                kp = self.controller_z_kp,
-                kd = self.controller_z_kd,
-                ki = self.controller_z_ki,
-                output_limits = (self.controller_z_output_min, self.controller_z_output_max),
-                integral_limits = (self.controller_z_integral_min, self.controller_z_integral_max),
+                kp = self.config.controller_z_kp,
+                kd = self.config.controller_z_kd,
+                ki = self.config.controller_z_ki,
+                output_limits = (self.config.controller_z_output_min, self.config.controller_z_output_max),
+                integral_limits = (self.config.controller_z_integral_min, self.config.controller_z_integral_max),
             )
 
             blackboard['pid_x'] = pid_x
@@ -160,8 +122,8 @@ class Initialize(State):
         try:
             yasmin.YASMIN_LOG_INFO('Initializing Detector(gate)...')
             self.detector_gate = Detector(
-                model_source = self.gate_model_source,
-                confidence_threshold = self.gate_conf,
+                model_source = self.config.gate_model_source,
+                confidence_threshold = self.config.gate_conf,
             )
 
             yasmin.YASMIN_LOG_INFO('Load Detector(gate)...')
@@ -183,8 +145,8 @@ class Initialize(State):
         try:
             yasmin.YASMIN_LOG_INFO('Initializing Detector(baby)...')
             self.detector_baby = Detector(
-                model_source = self.baby_model_source,
-                confidence_threshold = self.baby_conf,
+                model_source = self.config.baby_model_source,
+                confidence_threshold = self.config.baby_conf,
             )
 
             yasmin.YASMIN_LOG_INFO('Load Detector(baby)...')
@@ -206,8 +168,8 @@ class Initialize(State):
         try:
             yasmin.YASMIN_LOG_INFO('Initializing Detector(box)...')
             self.detector_box = Detector(
-                model_source = self.box_model_source,
-                confidence_threshold = self.box_conf,
+                model_source = self.config.box_model_source,
+                confidence_threshold = self.config.box_conf,
             )
 
             yasmin.YASMIN_LOG_INFO('Load Detector(box)...')
@@ -229,7 +191,7 @@ class Initialize(State):
         try:
             yasmin.YASMIN_LOG_INFO('Initializing Aruco...')
             self.aruco = Aruco(
-                marker_dict = self.marker_dict,
+                marker_dict = self.config.marker_dict,
                 tag_size = 1.0,
             )
 
@@ -249,8 +211,8 @@ class Initialize(State):
         try:
             yasmin.YASMIN_LOG_INFO('Initializing ImageHandler(front)...')
             image_handler_front = ImageHandler(
-                image_source = self.front_image_source,
-                config = ROSConfig(topic=self.front_ros_topic) if self.front_image_source == 'ros' else None,
+                image_source = self.config.front_image_source,
+                config = ROSConfig(topic=self.config.front_ros_topic) if self.config.front_image_source == 'ros' else None,
             )
 
             yasmin.YASMIN_LOG_INFO('Open camera (front)...')
@@ -274,8 +236,8 @@ class Initialize(State):
         try:
             yasmin.YASMIN_LOG_INFO('Initializing ImageHandler(down)...')
             image_handler_down = ImageHandler(
-                image_source = self.down_image_source,
-                config = ROSConfig(topic=self.down_ros_topic) if self.down_image_source == 'ros' else None,
+                image_source = self.config.down_image_source,
+                config = ROSConfig(topic=self.config.down_ros_topic) if self.config.down_image_source == 'ros' else None,
             )
 
             yasmin.YASMIN_LOG_INFO('Open camera (down)...')

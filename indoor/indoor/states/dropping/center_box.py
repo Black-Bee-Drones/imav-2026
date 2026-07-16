@@ -8,22 +8,16 @@ from yasmin_ros.basic_outcomes import SUCCEED, FAIL, TIMEOUT
 from nectar.control import MavrosDrone, PIDController
 from nectar.vision import ImageHandler
 
+from indoor import Config
+
 
 class CenterBox(State):
-    def __init__(self, color_window: str = 'blue'):
+    def __init__(self, config: Config):
         super().__init__(outcomes=[SUCCEED, FAIL, TIMEOUT])
 
-        self.color_window = color_window.strip().lower()
+        self.config = config
 
         self.node = YasminNode.get_instance()
-
-        self.timeout: int | float = self.node.get_parameter('timeout').value
-        self.timeout_per_state: int | float = self.node.get_parameter('timeout_per_state').value
-
-        self.lost_tolerance: int | float = self.node.get_parameter('lost_tolerance').value
-        self.land_altitude: int | float = self.node.get_parameter('land_altitude').value
-        self.land_speed: int | float = self.node.get_parameter('land_speed').value
-        self.center_threshold: int | float = self.node.get_parameter('center_threshold').value
 
     def execute(self, blackboard: Blackboard):
         drone: MavrosDrone = blackboard.get('drone')
@@ -61,7 +55,7 @@ class CenterBox(State):
                 error_x = (center[1] - (w / 2))
                 error_y = (center[0] - (h / 2))
 
-                if (error_x**2 + error_y**2) <= self.px_threshold**2 and drone.get_altitude() < self.land_altitude:
+                if (error_x**2 + error_y**2) <= self.config.center_threshold**2 and drone.get_altitude() < self.config.land_altitude:
                     yasmin.YASMIN_LOG_INFO('Completed successfully!!!')
                     drone.move_velocity()
                     return SUCCEED
@@ -73,14 +67,14 @@ class CenterBox(State):
                 drone.move_velocity(
                     vx = output_x,
                     vy = output_y,
-                    vz = self.land_speed if ((error_x**2 + error_y**2) <= 4*self.px_threshold**2) else 0,
+                    vz = self.config.land_speed if ((error_x**2 + error_y**2) <= 4*self.config.center_threshold**2) else 0,
                     vyaw = 0,
                 )
             else:
-                yasmin.YASMIN_LOG_ERROR(f'Lost detection ({lost}/{self.lost_tolerance}).')
+                yasmin.YASMIN_LOG_ERROR(f'Lost detection ({lost}/{self.config.lost_tolerance}).')
                 lost += 1
 
-                if self.lost_tolerance <= lost:
+                if self.config.lost_tolerance <= lost:
                     yasmin.YASMIN_LOG_ERROR('Lost detection exceeded.')
                     drone.move_velocity()
                     return FAIL
@@ -95,5 +89,5 @@ class CenterBox(State):
     def check_timeout(self):
         now = self.node.get_clock().now()
 
-        return now - self.start_time > Duration(seconds=self.timeout) or \
-            now - self.start_state > Duration(seconds=self.timeout_per_state)
+        return now - self.start_time > Duration(seconds=self.config.timeout) or \
+            now - self.start_state > Duration(seconds=self.config.timeout_per_state)

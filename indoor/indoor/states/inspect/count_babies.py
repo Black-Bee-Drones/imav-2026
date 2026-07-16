@@ -6,11 +6,14 @@ from yasmin_ros.basic_outcomes import SUCCEED
 from nectar.vision import ImageHandler
 from nectar.ai import DetectionResult
 
+from indoor import Config
+
 
 class CountBabies(State):
-    def __init__(self):
+    def __init__(self, config: Config):
         super().__init__(outcomes=[SUCCEED])
 
+        self.config = config
         self.node = YasminNode.get_instance()
 
     def execute(self, blackboard: Blackboard):

@@ -7,10 +7,11 @@ from indoor.states import (
     BlueBar,
     Tubes,
 )
+from indoor import Config
 
 
 class ObstacleSM(StateMachine):
-    def __init__(self):
+    def __init__(self, config: Config):
         super().__init__(outcomes=[SUCCEED, CANCEL, ABORT])
         """
         Obstacle course state machine.
@@ -18,31 +19,31 @@ class ObstacleSM(StateMachine):
 
         self.add_state(
             'FIRST_WINDOW',
-            Window(),
+            Window(config),
             transitions={SUCCEED: 'RED_BAR', TIMEOUT: CANCEL},
         )
 
         self.add_state(
             'RED_BAR',
-            RedBar(),
+            RedBar(config),
             transitions={SUCCEED: 'BLUE_BAR', TIMEOUT: CANCEL},
         )
 
         self.add_state(
             'BLUE_BAR',
-            BlueBar(),
+            BlueBar(config),
             transitions={SUCCEED: 'TUBES', TIMEOUT: CANCEL},
         )
 
         self.add_state(
             'TUBES',
-            Tubes(),
+            Tubes(config),
             transitions={SUCCEED: 'SECOND_WINDOW', TIMEOUT: CANCEL},
         )
 
         self.add_state(
             'SECOND_WINDOW',
-            Window(),
+            Window(config),
             transitions={SUCCEED: SUCCEED, TIMEOUT: CANCEL},
         )
 

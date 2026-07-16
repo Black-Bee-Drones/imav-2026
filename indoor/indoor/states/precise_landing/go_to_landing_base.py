@@ -7,20 +7,16 @@ from yasmin_ros.basic_outcomes import SUCCEED, TIMEOUT
 
 from nectar.control import MavrosDrone, MoveReference
 
+from indoor import Config
+
 
 class GoToLandingBase(State):
-    def __init__(self, fixed_base: bool = True):
+    def __init__(self, config: Config):
         super().__init__(outcomes=[SUCCEED, TIMEOUT])
 
-        self.fixed_base = fixed_base
+        self.config = config
 
         self.node = YasminNode.get_instance()
-
-        self.timeout: int | float = self.node.get_parameter('timeout').value
-        self.timeout_per_state: int | float = self.node.get_parameter('timeout_per_state').value
-
-        self.base_x: int | float = self.node.get_parameter(f'{"fixed" if fixed_base else "mobile"}_base_x').value
-        self.base_y: int | float = self.node.get_parameter(f'{"fixed" if fixed_base else "mobile"}_base_y').value
 
     def execute(self, blackboard: Blackboard):
         drone: MavrosDrone = blackboard.get('drone')
@@ -34,7 +30,7 @@ class GoToLandingBase(State):
             yasmin.YASMIN_LOG_ERROR('Timeout.')
             return TIMEOUT
 
-        yasmin.YASMIN_LOG_INFO(f'Fly to a {"fixed" if self.fixed_base else "mobile"} landing base...')
+        yasmin.YASMIN_LOG_INFO(f'Fly to a {"fixed" if self.config.fixed_base else "mobile"} landing base...')
 
         yasmin.YASMIN_LOG_INFO('Flying to a safe altitude...')
         drone.move_to(
@@ -49,10 +45,10 @@ class GoToLandingBase(State):
             yasmin.YASMIN_LOG_ERROR('Timeout.')
             return TIMEOUT
 
-        yasmin.YASMIN_LOG_INFO(f'fly to y={self.base_y} from the {"fixed" if self.fixed_base else "mobile"} base...')
+        yasmin.YASMIN_LOG_INFO(f'fly to y={self.config.base_y} from the {"fixed" if self.config.fixed_base else "mobile"} base...')
         drone.move_to(
             x = None,
-            y = self.base_y,
+            y = self.config.base_y,
             z = safe_altitude,
             yaw = 0,
             reference = MoveReference.TAKEOFF,  
@@ -62,10 +58,10 @@ class GoToLandingBase(State):
             yasmin.YASMIN_LOG_ERROR('Timeout.')
             return TIMEOUT
 
-        yasmin.YASMIN_LOG_INFO(f'fly to x={self.base_x} from the {"fixed" if self.fixed_base else "mobile"} base...')
+        yasmin.YASMIN_LOG_INFO(f'fly to x={self.config.base_x} from the {"fixed" if self.config.fixed_base else "mobile"} base...')
         drone.move_to(
-            x = self.base_x,
-            y = self.base_y,
+            x = self.config.base_x,
+            y = self.config.base_y,
             z = safe_altitude,
             yaw = 0,
             reference = MoveReference.TAKEOFF,  
@@ -81,5 +77,5 @@ class GoToLandingBase(State):
     def check_timeout(self):
         now = self.node.get_clock().now()
 
-        return now - self.start_time > Duration(seconds=self.timeout) or \
-            now - self.start_state > Duration(seconds=self.timeout_per_state)
+        return now - self.start_time > Duration(seconds=self.config.timeout) or \
+            now - self.start_state > Duration(seconds=self.config.timeout_per_state)

@@ -9,17 +9,12 @@ from nectar.control import MavrosDrone, MoveReference
 
 
 class RedBar(State):
-    def __init__(self, step: int | None = 3):
+    def __init__(self, config: Config):
         super().__init__(outcomes=[SUCCEED, TIMEOUT])
 
-        self.step = step
+        self.config = config
 
         self.node = YasminNode.get_instance()
-
-        self.timeout: int | float = self.node.get_parameter('timeout').value
-        self.timeout_per_state: int | float = self.node.get_parameter('timeout_per_state').value
-
-        self.safe_altitude: int | float = self.node.get_parameter('safe_altitude').value
 
     def execute(self, blackboard: Blackboard):
         drone: MavrosDrone = blackboard.get('drone')
@@ -32,7 +27,7 @@ class RedBar(State):
             yasmin.YASMIN_LOG_ERROR('Timeout.')
             return TIMEOUT
 
-        altitude = 0.5 + [1.2, 1.6, 1.98][self.step-1] if self.step else self.safe_altitude
+        altitude = 0.5 + [1.2, 1.6, 1.98][self.config.red_step-1] if self.config.red_step else self.config.safe_altitude
 
         yasmin.YASMIN_LOG_INFO(f'Correcting drone altitude by z={altitude:.1f} m...')
         drone.move_to(
@@ -70,5 +65,5 @@ class RedBar(State):
     def check_timeout(self):
         now = self.node.get_clock().now()
 
-        return now - self.start_time > Duration(seconds=self.timeout) or \
-            now - self.start_state > Duration(seconds=self.timeout_per_state)
+        return now - self.start_time > Duration(seconds=self.config.timeout) or \
+            now - self.start_state > Duration(seconds=self.config.timeout_per_state)

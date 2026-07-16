@@ -7,10 +7,11 @@ from indoor.states import (
     Reacquire,
     Drop,
 )
+from indoor import Config
 
 
 class DroppingSM(StateMachine):
-    def __init__(self):
+    def __init__(self, config: Config):
         super().__init__(outcomes=[SUCCEED, CANCEL, ABORT])
         """
         Dropping on hot spot state machine.
@@ -18,25 +19,25 @@ class DroppingSM(StateMachine):
 
         self.add_state(
             'GO_TO_BOX',
-            GoToBox(),
+            GoToBox(config),
             transitions={SUCCEED: SUCCEED, TIMEOUT: CANCEL},
         )
 
         self.add_state(
             'CENTER',
-            CenterBox(),
+            CenterBox(config),
             transitions={SUCCEED: 'DROP', FAIL: 'REACQUIRE', TIMEOUT: CANCEL},
         )
 
         self.add_state(
             'REACQUIRE',
-            Reacquire(),
+            Reacquire(config),
             transitions={SUCCEED: 'CENTER', TIMEOUT: TIMEOUT, CANCEL: CANCEL},
         )
 
         self.add_state(
             'DROP',
-            Drop(),
+            Drop(config),
             transitions={SUCCEED: SUCCEED, CANCEL: CANCEL},
         )
 

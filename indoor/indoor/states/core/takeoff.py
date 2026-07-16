@@ -1,29 +1,28 @@
 import yasmin
 from yasmin import State, Blackboard
-from yasmin_ros.yasmin_node import YasminNode
 from yasmin_ros.basic_outcomes import SUCCEED, ABORT
 
 from nectar.control import MavrosDrone
 
+from indoor import Config
+
 
 class Takeoff(State):
-    def __init__(self):
+    def __init__(self, config: Config):
         super().__init__(outcomes=[SUCCEED, ABORT])
         """
         Take off the drone to the target altitude.
         """
 
-        self.node = YasminNode.get_instance()
-
-        self.altitude: int | float = self.node.get_parameter('takeoff_altitude').value
+        self.config = config
 
     def execute(self, blackboard: Blackboard):
         drone: MavrosDrone = blackboard['drone']
 
-        yasmin.YASMIN_LOG_INFO(f'Taking off to altitude: {self.altitude} m...')
+        yasmin.YASMIN_LOG_INFO(f'Taking off to altitude: {self.config.altitude} m...')
 
         try:
-            drone.takeoff(self.altitude)
+            drone.takeoff(self.config.altitude)
 
         except KeyboardInterrupt:
             yasmin.YASMIN_LOG_WARN('Execution interrupted by user.')

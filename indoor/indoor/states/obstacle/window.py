@@ -9,19 +9,17 @@ from nectar.control import MavrosDrone, PIDController, MoveReference
 from nectar.vision import ImageHandler
 from nectar.ai import DetectionResult
 
+from indoor import Config
+
 
 class Window(State):
-    def __init__(self, color_window: str = 'blue'):
+    def __init__(self, config: Config, color_window: str = 'blue'):
         super().__init__(outcomes=[SUCCEED, TIMEOUT])
 
         self.color_window = color_window.strip().lower()
+        self.config = config
 
         self.node = YasminNode.get_instance()
-
-        self.timeout: int | float = self.node.get_parameter('timeout').value
-        self.timeout_per_state: int | float = self.node.get_parameter('timeout_per_state').value
-
-        self.window_threshold: int | float = self.node.get_parameter('window_threshold').value
 
     def execute(self, blackboard: Blackboard):
         drone: MavrosDrone = blackboard.get('drone')
@@ -76,7 +74,7 @@ class Window(State):
                 error_y = (center[0] - (h / 2))
                 error_z = (center[1] - (w / 2))
 
-                if (error_y**2 + error_z**2) <= self.window_threshold**2:
+                if (error_y**2 + error_z**2) <= self.config.window_threshold**2:
                     yasmin.YASMIN_LOG_INFO('successful alignment!')
                     drone.move_velocity()
                     break
@@ -126,5 +124,5 @@ class Window(State):
     def check_timeout(self):
         now = self.node.get_clock().now()
 
-        return now - self.start_time > Duration(seconds=self.timeout) or \
-            now - self.start_state > Duration(seconds=self.timeout_per_state)
+        return now - self.start_time > Duration(seconds=self.config.timeout) or \
+            now - self.start_state > Duration(seconds=self.config.timeout_per_state)

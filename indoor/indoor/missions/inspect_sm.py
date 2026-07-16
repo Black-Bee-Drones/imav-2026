@@ -8,10 +8,11 @@ from indoor.states import (
     CountBabies,
     GoOut,
 )
+from indoor import Config
 
 
 class InspectSM(StateMachine):
-    def __init__(self):
+    def __init__(self, config: Config):
         super().__init__(outcomes=[SUCCEED, CANCEL, ABORT])
         """
         Inspect a dark room state machine.
@@ -19,31 +20,31 @@ class InspectSM(StateMachine):
 
         self.add_state(
             'GO_TO_WINDOW',
-            GoToWindow(),
+            GoToWindow(config),
             transitions={SUCCEED: 'FIND_WINDOW', TIMEOUT: CANCEL},
         )
 
         self.add_state(
             'FIND_WINDOW',
-            FindWindow(),
+            FindWindow(config),
             transitions={SUCCEED: 'WINDOW', TIMEOUT: CANCEL},
         )
 
         self.add_state(
             'WINDOW',
-            Window(),
+            Window(config),
             transitions={SUCCEED: 'COUNT_BABIES', TIMEOUT: CANCEL},
         )
 
         self.add_state(
             'COUNT_BABIES',
-            CountBabies(),
+            CountBabies(config),
             transitions={SUCCEED: 'GO_OUT'},
         )
 
         self.add_state(
             'GO_OUT',
-            GoOut(),
+            GoOut(config),
             transitions={SUCCEED: SUCCEED, TIMEOUT: CANCEL},
         )
 

@@ -7,15 +7,16 @@ from yasmin_ros.basic_outcomes import SUCCEED, TIMEOUT
 
 from nectar.control import MavrosDrone
 
+from indoor import Config
+
 
 class GoOut(State):
-    def __init__(self):
+    def __init__(self, config: Config):
         super().__init__(outcomes=[SUCCEED, TIMEOUT])
 
-        self.node = YasminNode.get_instance()
+        self.config = config
 
-        self.timeout: int | float = self.node.get_parameter('timeout').value
-        self.timeout_per_state: int | float = self.node.get_parameter('timeout_per_state').value
+        self.node = YasminNode.get_instance()
 
     def execute(self, blackboard: Blackboard):
         drone: MavrosDrone = blackboard.get('drone')
@@ -46,5 +47,5 @@ class GoOut(State):
     def check_timeout(self):
         now = self.node.get_clock().now()
 
-        return now - self.start_time > Duration(seconds=self.timeout) or \
-            now - self.start_state > Duration(seconds=self.timeout_per_state)
+        return now - self.start_time > Duration(seconds=self.config.timeout) or \
+            now - self.start_state > Duration(seconds=self.config.timeout_per_state)

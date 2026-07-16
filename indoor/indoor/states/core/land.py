@@ -4,13 +4,17 @@ from yasmin_ros.basic_outcomes import SUCCEED, ABORT
 
 from nectar.control import MavrosDrone
 
+from indoor import Config
+
 
 class Land(State):
-    def __init__(self):
+    def __init__(self, config: Config):
         super().__init__(outcomes=[SUCCEED, ABORT])
         """
         Land the drone.
         """
+
+        self.config = config
 
     def execute(self, blackboard: Blackboard):
         drone: MavrosDrone = blackboard.get('drone')

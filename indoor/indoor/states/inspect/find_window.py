@@ -9,20 +9,17 @@ from nectar.control import MavrosDrone
 from nectar.vision import ImageHandler
 from nectar.ai import DetectionResult
 
+from indoor import Config
+
 
 class FindWindow(State):
-    def __init__(self, color_window: str = 'blue'):
+    def __init__(self, config: Config, color_window: str = 'blue'):
         super().__init__(outcomes=[SUCCEED, TIMEOUT])
 
+        self.config = config
         self.color_window = color_window.strip().lower()
 
         self.node = YasminNode.get_instance()
-
-        self.timeout: int | float = self.node.get_parameter('timeout').value
-        self.timeout_per_state: int | float = self.node.get_parameter('timeout_per_state').value
-
-        self.find_tolerance: int | float = self.node.get_parameter('find_tolerance').value
-        self.back_speed: int | float = self.node.get_parameter('back_speed').value
 
     def execute(self, blackboard: Blackboard):
         drone: MavrosDrone = blackboard.get('drone')
@@ -49,15 +46,15 @@ class FindWindow(State):
             if window:
                 find += 1
 
-                if self.find_tolerance <= find:
+                if self.config.find_tolerance <= find:
                     yasmin.YASMIN_LOG_INFO('Completed successfully!!!')
                     return SUCCEED
             else:
                 find = 0
 
-            yasmin.YASMIN_LOG_INFO(f'Go Back ({find}/{self.find_tolerance})...')
+            yasmin.YASMIN_LOG_INFO(f'Go Back ({find}/{self.config.find_tolerance})...')
             drone.move_velocity(
-                vx = self.back_speed,
+                vx = self.config.back_speed,
                 vy = 0,
                 vz = 0,
                 vyaw = 0,
@@ -72,5 +69,5 @@ class FindWindow(State):
     def check_timeout(self):
         now = self.node.get_clock().now()
 
-        return now - self.start_time > Duration(seconds=self.timeout) or \
-            now - self.start_state > Duration(seconds=self.timeout_per_state)
+        return now - self.start_time > Duration(seconds=self.config.timeout) or \
+            now - self.start_state > Duration(seconds=self.config.timeout_per_state)

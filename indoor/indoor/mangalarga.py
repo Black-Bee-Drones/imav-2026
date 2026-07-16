@@ -21,10 +21,9 @@ def main(args=None):
     nectar.use_executor(YasminNode.get_instance()._executor)
 
     try:
-        config = Config(node=YasminNode.get_instance())
-        config.declare_parameters()
+        config = Config()
 
-        indoor_sm = IndoorSM()
+        indoor_sm = IndoorSM(config)
 
         final_outcome = indoor_sm()
 

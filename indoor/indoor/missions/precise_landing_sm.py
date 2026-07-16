@@ -5,12 +5,12 @@ from indoor.states import (
     GoToLandingBase,
     Center,
     Reacquire,
-    Land,
 )
+from indoor import Config
 
 
 class PreciseLandingSM(StateMachine):
-    def __init__(self):
+    def __init__(self, config: Config):
         super().__init__(outcomes=[SUCCEED, CANCEL, ABORT])
         """
         Precise landing state machine.
@@ -18,19 +18,19 @@ class PreciseLandingSM(StateMachine):
 
         self.add_state(
             'GO_TO_LAND',
-            GoToLandingBase(),
+            GoToLandingBase(config),
             transitions={SUCCEED: 'CENTER', TIMEOUT: ABORT},
         )
 
         self.add_state(
             'CENTER',
-            Center(),
+            Center(config),
             transitions={SUCCEED: SUCCEED, FAIL: 'REACQUIRE', TIMEOUT: ABORT},
         )
 
         self.add_state(
             'REACQUIRE',
-            Reacquire(),
+            Reacquire(config),
             transitions={SUCCEED: 'CENTER', CANCEL: ABORT},
         )
 
