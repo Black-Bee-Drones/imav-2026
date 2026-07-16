@@ -5,6 +5,7 @@ from indoor.states import (
     GoToWindow,
     FindWindow,
     Window,
+    CountBabies,
     GoOut,
 )
 
@@ -31,7 +32,13 @@ class InspectSM(StateMachine):
         self.add_state(
             'WINDOW',
             Window(),
-            transitions={SUCCEED: 'GO_OUT', TIMEOUT: CANCEL},
+            transitions={SUCCEED: 'COUNT_BABIES', TIMEOUT: CANCEL},
+        )
+
+        self.add_state(
+            'COUNT_BABIES',
+            CountBabies(),
+            transitions={SUCCEED: 'GO_OUT'},
         )
 
         self.add_state(

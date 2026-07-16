@@ -20,6 +20,7 @@ from .precise_landing import (
 from .inspect import (
     GoToWindow,
     FindWindow,
+    CountBabies,
     GoOut,    
 )
 
