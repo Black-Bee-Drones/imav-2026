@@ -8,7 +8,7 @@ You can pass any combination of mission tasks into the `config.missions` array. 
 
 For the competition, we are deploying two drones with distinct mission configurations. 
 
-### 1. First Drone: Obstacle & Inspection Mission
+### 1. Cleitinho: Mission 1 & Mission 3
 **Configuration:** `['OBSTACLESM', 'INSPECTSM', 'PRECISELANDINGSM']`
 
 Drone 1 is tasked with navigating the obstacle course and inspecting the designated room before returning for a precise landing.
@@ -54,7 +54,7 @@ stateDiagram-v2
 
 ---
 
-### 2. Second Drone: Payload Drop Mission
+### 2. Jorge: Mission 2
 
 **Configuration:** `['DROPPINGSM', 'PRECISELANDINGSM']`
 

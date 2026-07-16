@@ -1,15 +1,28 @@
 import pathlib
 from dataclasses import dataclass
+from enum import Enum
 
 from ament_index_python import get_package_share_directory
 
+models_path = pathlib.Path(get_package_share_directory('indoor')) / 'models'
 
 models_path = pathlib.Path(get_package_share_directory('indoor')) / 'models'
+
+class Mission(str, Enum):
+    OBSTACLES = 'OBSTACLESM'
+    INSPECT = 'INSPECTSM'
+    DROPPING = 'DROPPINGSM'
+    PRECISE_LANDING = 'PRECISELANDINGSM'
 
 @dataclass(frozen=True)
 class Config:
     ### Missions ###
-    missions: tuple[str] = ('OBSTACLESM', 'INSPECTSM', 'DROPPINGSM', 'PRECISELANDINGSM')
+    missions: tuple[Mission, ...] = (
+        Mission.OBSTACLES, 
+        Mission.INSPECT, 
+        Mission.DROPPING, 
+        Mission.PRECISE_LANDING
+    )
 
     ### Global ###
     timeout: int = 1800  # seconds
@@ -100,3 +113,18 @@ class Config:
     controller_z_output_max: float = 1.0
     controller_z_integral_min: float = -1.0
     controller_z_integral_max: float = 1.0
+
+@dataclass (frozen=True)
+class Cleitinho(Config):
+    missions: tuple[Mission, ...] = (
+        Mission.OBSTACLES, 
+        Mission.INSPECT, 
+        Mission.PRECISE_LANDING
+    )
+
+@dataclass (frozen=True)
+class Jorge(Config):
+    missions: tuple[Mission, ...] = (
+        Mission.DROPPING, 
+        Mission.PRECISE_LANDING
+    )
