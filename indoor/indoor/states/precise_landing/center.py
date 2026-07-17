@@ -269,7 +269,7 @@ class Center(State):
                         time_to_land = translation[2] / self.config.land_speed
                         if moving_towards_center and time_to_center <= time_to_land:
                             yasmin.YASMIN_LOG_INFO(
-                                f'Target synced! Dropping. time_to_center={time_to_center:.2f}s '
+                                f'Target synced! Landing. time_to_center={time_to_center:.2f}s '
                                 f'(time_to_land={time_to_land:.2f}s).'
                             )
 

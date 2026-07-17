@@ -1,5 +1,27 @@
 # IMAV 2026
 
+## Yasmin Blackboard Summaty
+
+
+| Blackboard Key | Object Type | Description |
+| --- | --- | --- |
+| **`start_time`** | `rclpy.time.Time` | The timestamp generated right when the `Initialize` state begins execution. |
+| **`drone`** | `Drone` (Mavros or Mavlink) | The primary drone control object instantiated via the `DroneFactory`. |
+| **`pid_x`** | `PIDController` | The configured PID controller handling X-axis movements. |
+| **`pid_y`** | `PIDController` | The configured PID controller handling Y-axis movements. |
+| **`pid_z`** | `PIDController` | The configured PID controller handling altitude/Z-axis movements. |
+| **`pid_yaw`** | `PIDController` | The configured PID controller handling the drone's rotation (yaw). |
+| **`detector_gate`** | `Detector` | The AI model loaded specifically to detect gates. |
+| **`callback_detector_gate`** | `method` | The callback function that runs gate detection and saves timestamped raw/annotated images to the `~/ros2_ws/` directory. |
+| **`detector_baby`** | `Detector` | The AI model loaded specifically to detect babies (for the indoor inspection mission). |
+| **`callback_detector_baby`** | `method` | The callback function that runs baby detection and logs the images. |
+| **`detector_box`** | `Detector` | The AI model loaded specifically to detect boxes/drop zones. |
+| **`callback_detector_box`** | `method` | The callback function that runs box detection and logs the images. |
+| **`aruco`** | `Aruco` | The ArUco marker detector configured with dictionary 5 and tag size 1.0. |
+| **`callback_aruco`** | `method` | The callback function that processes ArUco detection, draws bounding boxes, and logs the images. |
+| **`image_handler_front`** | `ImageHandler` | The camera interface managing the front-facing camera stream. |
+| **`image_handler_down`** | `ImageHandler` | The camera interface managing the downward-facing camera stream. |
+
 ## Indoor State Machine
 
 The `IndoorSM` is the main orchestrator for the IMAV 2026 Indoor Competition. Instead of being a hardcoded sequence of events, this state machine is **dynamically configurable**. 
