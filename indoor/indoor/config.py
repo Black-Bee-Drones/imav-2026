@@ -88,9 +88,11 @@ class Config:
 
     # Center
     center_threshold: int = 50  # pixels
+    yaw_threshold: float = 5 # degrees
     lost_tolerance: int = 10
     land_altitude: float = 1.0  # meters
     land_speed: float = -0.5  # meters per second
+    estimation_cycles: int = 3
 
     # Reacquire
     reacquire_step: float = 0.5  # meters
@@ -113,6 +115,15 @@ class Config:
     controller_z_output_max: float = 1.0
     controller_z_integral_min: float = -1.0
     controller_z_integral_max: float = 1.0
+
+    # PID yaw
+    controller_yaw_kp: float = 1.0
+    controller_yaw_kd: float = 1.0
+    controller_yaw_ki: float = 0
+    controller_yaw_output_min: float = -1.0
+    controller_yaw_output_max: float = 1.0
+    controller_yaw_integral_min: float = -1.0
+    controller_yaw_integral_max: float = 1.0
 
 @dataclass (frozen=True)
 class STILConfig(Config):

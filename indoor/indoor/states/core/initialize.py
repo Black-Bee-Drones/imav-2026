@@ -104,11 +104,19 @@ class Initialize(State):
                 output_limits = (self.config.controller_z_output_min, self.config.controller_z_output_max),
                 integral_limits = (self.config.controller_z_integral_min, self.config.controller_z_integral_max),
             )
+            pid_yaw = PIDController(
+                kp = self.config.controller_yaw_kp,
+                kd = self.config.controller_yaw_kd,
+                ki = self.config.controller_yaw_ki,
+                output_limits = (self.config.controller_yaw_output_min, self.config.controller_yaw_output_max),
+                integral_limits = (self.config.controller_yaw_integral_min, self.config.controller_yaw_integral_max),
+            )
 
             blackboard['pid_x'] = pid_x
             blackboard['pid_y'] = pid_y
             blackboard['pid_z'] = pid_z
-            yasmin.YASMIN_LOG_INFO(f'Successful start PID (x, y and z)!')
+            blackboard['pid_yaw'] = pid_yaw
+            yasmin.YASMIN_LOG_INFO(f'Successful start PID (x, y, z and yaw)!')
 
         except KeyboardInterrupt:
             yasmin.YASMIN_LOG_WARN('Execution interrupted by user.')
