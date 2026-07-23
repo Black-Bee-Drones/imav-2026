@@ -130,7 +130,7 @@ class Config:
 
 
 @dataclass(frozen=True)
-class STILConfig(Config):
+class SITLConfig(Config):
     connection_string: str = 'tcp:127.0.0.1:5762'
 
 
@@ -149,7 +149,7 @@ JORGE = Config(
     )
 )
 
-STIL_CLEITINHO = STILConfig(
+SITL_CLEITINHO = SITLConfig(
     missions=(
         Mission.OBSTACLES,
         Mission.INSPECT,
@@ -157,7 +157,7 @@ STIL_CLEITINHO = STILConfig(
     )
 )
 
-STIL_JORGE = STILConfig(
+SITL_JORGE = SITLConfig(
     missions=(
         Mission.DROPPING,
         Mission.PRECISE_LANDING

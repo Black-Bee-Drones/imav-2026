@@ -8,7 +8,7 @@ def generate_launch_description():
     config_arg = DeclareLaunchArgument(
         'config',
         default_value='default',
-        description='Configuration profile to load (e.g., stil, cleitinho, jorge)'
+        description='Configuration profile to load (e.g., sitl, cleitinho, jorge)'
     )
 
     mangalarga_node = Node(

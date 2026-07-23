@@ -1,10 +1,10 @@
 from .config import (
     Config,
-    STILConfig,
+    SITLConfig,
     CLEITINHO,
-    STIL_CLEITINHO,
+    SITL_CLEITINHO,
     JORGE,
-    STIL_JORGE,
+    SITL_JORGE,
 )
 
 from .indoor_sm import IndoorSM

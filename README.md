@@ -16,9 +16,9 @@ The state machine accepts a `--config` parameter to load specific mission arrays
 
 
 * **Simulation Profiles (TCP Connection):**
-* `stil`: The simulation equivalent of `default`. Connects via `tcp:127.0.0.1:5762`.
-* `stil_cleitinho`: Simulation equivalent for Cleitinho.
-* `stil_jorge`: Simulation equivalent for Jorge.
+* `sitl`: The simulation equivalent of `default`. Connects via `tcp:127.0.0.1:5762`.
+* `sitl_cleitinho`: Simulation equivalent for Cleitinho.
+* `sitl_jorge`: Simulation equivalent for Jorge.
 
 
 
@@ -28,7 +28,7 @@ The package includes several launch files to spin up the environment and state m
 
 * `sitl_gazebo.launch.py`: Launches the Nectar ArduPilot SITL and Gazebo indoor simulation environment. It includes the IMAV 2026 scenery and spawns the drone before the first gate.
 * `mangalarga.launch.py`: Launches the state machine node. It defaults to the `default` configuration profile but can be overridden. Best used for real-world flights.
-* `simulation.launch.py`: Identical to `mangalarga.launch.py`, but it defaults to the `stil` configuration profile. Best used when running against Gazebo.
+* `simulation.launch.py`: Identical to `mangalarga.launch.py`, but it defaults to the `sitl` configuration profile. Best used when running against Gazebo.
 
 ### How to Run
 
@@ -52,7 +52,7 @@ If you want to run the python script directly without the launch files, you can 
 ros2 run indoor mangalarga --config jorge
 
 # Simulated drone
-ros2 run indoor mangalarga --config stil_jorge
+ros2 run indoor mangalarga --config sitl_jorge
 ```
 
 ## Yasmin Blackboard Summary

@@ -11,21 +11,21 @@ import nectar
 
 from indoor import (
     Config,
-    STILConfig,
+    SITLConfig,
     CLEITINHO,
-    STIL_CLEITINHO,
+    SITL_CLEITINHO,
     JORGE,
-    STIL_JORGE,
+    SITL_JORGE,
     IndoorSM,
 )
 
 CONFIG_PROFILES = {
     'default': Config,
-    'stil': STILConfig,
+    'sitl': SITLConfig,
     'cleitinho': CLEITINHO,
-    'stil_cleitinho': STIL_CLEITINHO,
+    'sitl_cleitinho': SITL_CLEITINHO,
     'jorge': JORGE,
-    'stil_jorge': STIL_JORGE,
+    'sitl_jorge': SITL_JORGE,
 }
 
 
