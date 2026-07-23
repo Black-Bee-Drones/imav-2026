@@ -57,9 +57,9 @@ class Config:
 
     ### Obstacle ###
     # Window
-    first_color_window: str | None = 'blue'  # 'blue' or 'red'
-    second_color_window: str | None = 'blue'  # 'blue' or 'red'
-    room_color_window: str | None = 'blue'  # 'blue' or 'red'
+    first_color_window: str | None = 'blue'  # 'blue' or 'red' or None
+    second_color_window: str | None = 'blue'  # 'blue' or 'red' or None
+    room_color_window: str | None = 'blue'  # 'blue' or 'red' or None
     window_threshold: int = 50  # pixels
 
     # RedBar
@@ -87,12 +87,11 @@ class Config:
     mobile_base_y: float = -2.0  # meters
 
     # Center
-    center_threshold: int = 50  # pixels
-    yaw_threshold: float = 5 # degrees
+    center_threshold_xy: float = 0.2  # meters
+    center_threshold_z: float = 0.2  # meters
+    center_threshold_yaw: float = 5.0  # degrees
     lost_tolerance: int = 10
     land_altitude: float = 1.0  # meters
-    land_speed: float = -0.5  # meters per second
-    estimation_cycles: int = 3
 
     # Reacquire
     reacquire_step: float = 0.5  # meters

@@ -357,8 +357,8 @@ class Initialize(State):
 
         cv2.imwrite(raw_file, image)
 
-        bbox, id = self.aruco.detect(image, draw=True)
+        marker_id, translation, yaw = self.aruco.pose_estimate(image, draw=True)
 
         cv2.imwrite(annotated_file, image)
 
-        return image, bbox, id
+        return image, marker_id, translation, yaw
