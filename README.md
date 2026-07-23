@@ -1,6 +1,61 @@
 # IMAV 2026
 
-## Yasmin Blackboard Summaty
+
+## Running Missions
+
+The system uses configuration profiles to switch seamlessly between physical flights and simulation, as well as between different drone mission loadouts.
+
+### Configuration Profiles
+
+The state machine accepts a `--config` parameter to load specific mission arrays and connection strings. These are defined in `config.py`.
+
+* **Physical Drone Profiles (UDP Connection):**
+* `default`: Runs all 4 missions in sequence. Connects via `udp:127.0.0.1:14551`.
+* `cleitinho`: Runs Mission 1 (Obstacles) & Mission 3 (Inspect) + Landing.
+* `jorge`: Runs Mission 2 (Dropping) + Landing.
+
+
+* **Simulation Profiles (TCP Connection):**
+* `stil`: The simulation equivalent of `default`. Connects via `tcp:127.0.0.1:5762`.
+* `stil_cleitinho`: Simulation equivalent for Cleitinho.
+* `stil_jorge`: Simulation equivalent for Jorge.
+
+
+
+### Launch Files
+
+The package includes several launch files to spin up the environment and state machines.
+
+* `sitl_gazebo.launch.py`: Launches the Nectar ArduPilot SITL and Gazebo indoor simulation environment. It includes the IMAV 2026 scenery and spawns the drone before the first gate.
+* `mangalarga.launch.py`: Launches the state machine node. It defaults to the `default` configuration profile but can be overridden. Best used for real-world flights.
+* `simulation.launch.py`: Identical to `mangalarga.launch.py`, but it defaults to the `stil` configuration profile. Best used when running against Gazebo.
+
+### How to Run
+
+#### 1. Running in Simulation (SITL)
+For a detailed explanation of the simulation launch parameters and Gazebo setup, please refer to the [Simulation Launch Guide](indoor/simulation/README.md).
+
+#### 2. Running on the Physical Drone
+
+For physical flights, you only need to run the state machine launch file (assuming your camera/sensor nodes are launched separately or via a master launch file).
+
+```bash
+ros2 launch indoor mangalarga.launch.py config:=cleitinho
+```
+
+#### 3. Running via `ros2 run`
+
+If you want to run the python script directly without the launch files, you can use the `--config` flag:
+
+```bash
+# Physical drone
+ros2 run indoor mangalarga --config jorge
+
+# Simulated drone
+ros2 run indoor mangalarga --config stil_jorge
+```
+
+## Yasmin Blackboard Summary
 
 
 | Blackboard Key | Object Type | Description |
