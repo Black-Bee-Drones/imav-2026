@@ -31,11 +31,11 @@ class GoToWindow(State):
 
         yasmin.YASMIN_LOG_INFO('Flying to a safe altitude...')
         drone.move_to(
-            x = None,
-            y = None,
-            z = self.config.safe_altitude,
-            yaw = 0,
-            reference = MoveReference.TAKEOFF,  
+            x=None,
+            y=None,
+            z=self.config.safe_altitude,
+            yaw=0,
+            reference=MoveReference.TAKEOFF,
         )
 
         if self.check_timeout():
@@ -44,11 +44,11 @@ class GoToWindow(State):
 
         yasmin.YASMIN_LOG_INFO(f'fly to y={self.config.room_y}...')
         drone.move_to(
-            x = None,
-            y = self.config.room_y,
-            z = self.config.safe_altitude,
-            yaw = 0,
-            reference = MoveReference.TAKEOFF,  
+            x=None,
+            y=self.config.room_y,
+            z=self.config.safe_altitude,
+            yaw=0,
+            reference=MoveReference.TAKEOFF,
         )
 
         if self.check_timeout():
@@ -57,11 +57,11 @@ class GoToWindow(State):
 
         yasmin.YASMIN_LOG_INFO(f'fly to x={self.config.room_x}...')
         drone.move_to(
-            x = self.config.room_x,
-            y = self.config.room_y,
-            z = self.config.safe_altitude,
-            yaw = 0,
-            reference = MoveReference.TAKEOFF,  
+            x=self.config.room_x,
+            y=self.config.room_y,
+            z=self.config.safe_altitude,
+            yaw=0,
+            reference=MoveReference.TAKEOFF,
         )
 
         if self.check_timeout():
@@ -70,11 +70,11 @@ class GoToWindow(State):
 
         yasmin.YASMIN_LOG_INFO(f'fly up to window height...')
         drone.move_to(
-            x = self.config.room_x,
-            y = self.config.room_y,
-            z = 1.2,
-            yaw = 0,
-            reference = MoveReference.TAKEOFF,  
+            x=self.config.room_x,
+            y=self.config.room_y,
+            z=1.2,
+            yaw=0,
+            reference=MoveReference.TAKEOFF,
         )
 
         if self.check_timeout():
@@ -88,4 +88,5 @@ class GoToWindow(State):
         now = self.node.get_clock().now()
 
         return now - self.start_time > Duration(seconds=self.config.timeout) or \
-            now - self.start_state > Duration(seconds=self.config.timeout_per_state)
+            now - \
+            self.start_state > Duration(seconds=self.config.timeout_per_state)

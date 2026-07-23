@@ -18,7 +18,8 @@ class CountBabies(State):
 
     def execute(self, blackboard: Blackboard):
         image_handler_down: ImageHandler = blackboard.get('image_handler_down')
-        image_handler_down.image_processing_callback = blackboard.get('callback_detector_baby')
+        image_handler_down.image_processing_callback = blackboard.get(
+            'callback_detector_baby')
 
         result: DetectionResult = image_handler_down.take_photo()
         yasmin.YASMIN_LOG_INFO(f'Number of babies: {len(result)}.')

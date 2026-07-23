@@ -11,11 +11,12 @@ from yasmin import State, Blackboard
 from yasmin_ros.yasmin_node import YasminNode
 from yasmin_ros.basic_outcomes import SUCCEED, ABORT
 
-from nectar.control import DroneFactory, MavrosConfig, MavlinkConfig,PoseSource, PIDController
+from nectar.control import DroneFactory, MavrosConfig, MavlinkConfig, PoseSource, PIDController
 from nectar.vision import ImageHandler, Aruco, ROSConfig
 from nectar.ai import Detector, DetectionResult
 
 from indoor import Config
+
 
 class Initialize(State):
     def __init__(self, config: Config):
@@ -49,10 +50,11 @@ class Initialize(State):
 
         # Drone
         try:
-            yasmin.YASMIN_LOG_INFO(f'Initializing Drone("{self.config.drone_type}")...')
+            yasmin.YASMIN_LOG_INFO(
+                f'Initializing Drone("{self.config.drone_type}")...')
             if self.config.drone_type == 'mavros':
                 drone_config = MavrosConfig(
-                    pose_source = PoseSource.VISION,
+                    pose_source=PoseSource.VISION,
                     connection_string=self.config.connection_string
                 )
 
@@ -70,7 +72,8 @@ class Initialize(State):
             drone = DroneFactory.create(self.config.drone_type, drone_config)
 
             blackboard.set('drone', drone)
-            yasmin.YASMIN_LOG_INFO(f'Successful start Drone("{self.config.drone_type}")!')
+            yasmin.YASMIN_LOG_INFO(
+                f'Successful start Drone("{self.config.drone_type}")!')
 
         except KeyboardInterrupt:
             yasmin.YASMIN_LOG_WARN('Execution interrupted by user.')
@@ -84,32 +87,40 @@ class Initialize(State):
         try:
             yasmin.YASMIN_LOG_INFO(f'Initializing PID (x, y and z)...')
             pid_x = PIDController(
-                kp = self.config.controller_xy_kp,
-                kd = self.config.controller_xy_kd,
-                ki = self.config.controller_xy_ki,
-                output_limits = (self.config.controller_xy_output_min, self.config.controller_xy_output_max),
-                integral_limits = (self.config.controller_xy_integral_min, self.config.controller_xy_integral_max),
+                kp=self.config.controller_xy_kp,
+                kd=self.config.controller_xy_kd,
+                ki=self.config.controller_xy_ki,
+                output_limits=(self.config.controller_xy_output_min,
+                               self.config.controller_xy_output_max),
+                integral_limits=(self.config.controller_xy_integral_min,
+                                 self.config.controller_xy_integral_max),
             )
             pid_y = PIDController(
-                kp = self.config.controller_xy_kp,
-                kd = self.config.controller_xy_kd,
-                ki = self.config.controller_xy_ki,
-                output_limits = (self.config.controller_xy_output_min, self.config.controller_xy_output_max),
-                integral_limits = (self.config.controller_xy_integral_min, self.config.controller_xy_integral_max),
+                kp=self.config.controller_xy_kp,
+                kd=self.config.controller_xy_kd,
+                ki=self.config.controller_xy_ki,
+                output_limits=(self.config.controller_xy_output_min,
+                               self.config.controller_xy_output_max),
+                integral_limits=(self.config.controller_xy_integral_min,
+                                 self.config.controller_xy_integral_max),
             )
             pid_z = PIDController(
-                kp = self.config.controller_z_kp,
-                kd = self.config.controller_z_kd,
-                ki = self.config.controller_z_ki,
-                output_limits = (self.config.controller_z_output_min, self.config.controller_z_output_max),
-                integral_limits = (self.config.controller_z_integral_min, self.config.controller_z_integral_max),
+                kp=self.config.controller_z_kp,
+                kd=self.config.controller_z_kd,
+                ki=self.config.controller_z_ki,
+                output_limits=(self.config.controller_z_output_min,
+                               self.config.controller_z_output_max),
+                integral_limits=(self.config.controller_z_integral_min,
+                                 self.config.controller_z_integral_max),
             )
             pid_yaw = PIDController(
-                kp = self.config.controller_yaw_kp,
-                kd = self.config.controller_yaw_kd,
-                ki = self.config.controller_yaw_ki,
-                output_limits = (self.config.controller_yaw_output_min, self.config.controller_yaw_output_max),
-                integral_limits = (self.config.controller_yaw_integral_min, self.config.controller_yaw_integral_max),
+                kp=self.config.controller_yaw_kp,
+                kd=self.config.controller_yaw_kd,
+                ki=self.config.controller_yaw_ki,
+                output_limits=(self.config.controller_yaw_output_min,
+                               self.config.controller_yaw_output_max),
+                integral_limits=(self.config.controller_yaw_integral_min,
+                                 self.config.controller_yaw_integral_max),
             )
 
             blackboard.set('pid_x', pid_x)
@@ -130,15 +141,16 @@ class Initialize(State):
         try:
             yasmin.YASMIN_LOG_INFO('Initializing Detector(gate)...')
             self.detector_gate = Detector(
-                model_source = self.config.gate_model_source,
-                confidence_threshold = self.config.gate_conf,
+                model_source=self.config.gate_model_source,
+                confidence_threshold=self.config.gate_conf,
             )
 
             yasmin.YASMIN_LOG_INFO('Load Detector(gate)...')
             self.detector_gate.load()
 
             blackboard.set('detector_gate', self.detector_gate)
-            blackboard.set('callback_detector_gate', self.callback_detector_gate)
+            blackboard.set('callback_detector_gate',
+                           self.callback_detector_gate)
             yasmin.YASMIN_LOG_INFO('successful start Detector(gate)!')
 
         except KeyboardInterrupt:
@@ -153,15 +165,16 @@ class Initialize(State):
         try:
             yasmin.YASMIN_LOG_INFO('Initializing Detector(baby)...')
             self.detector_baby = Detector(
-                model_source = self.config.baby_model_source,
-                confidence_threshold = self.config.baby_conf,
+                model_source=self.config.baby_model_source,
+                confidence_threshold=self.config.baby_conf,
             )
 
             yasmin.YASMIN_LOG_INFO('Load Detector(baby)...')
             self.detector_baby.load()
 
             blackboard.set('detector_baby', self.detector_baby)
-            blackboard.set('callback_detector_baby', self.callback_detector_baby)
+            blackboard.set('callback_detector_baby',
+                           self.callback_detector_baby)
             yasmin.YASMIN_LOG_INFO('successful start Detector(baby)!')
 
         except KeyboardInterrupt:
@@ -176,8 +189,8 @@ class Initialize(State):
         try:
             yasmin.YASMIN_LOG_INFO('Initializing Detector(box)...')
             self.detector_box = Detector(
-                model_source = self.config.box_model_source,
-                confidence_threshold = self.config.box_conf,
+                model_source=self.config.box_model_source,
+                confidence_threshold=self.config.box_conf,
             )
 
             yasmin.YASMIN_LOG_INFO('Load Detector(box)...')
@@ -199,8 +212,8 @@ class Initialize(State):
         try:
             yasmin.YASMIN_LOG_INFO('Initializing Aruco...')
             self.aruco = Aruco(
-                marker_dict = self.config.marker_dict,
-                tag_size = 1.0,
+                marker_dict=self.config.marker_dict,
+                tag_size=self.config.aruco_size,
             )
 
             blackboard.set('aruco', self.aruco)
@@ -219,8 +232,10 @@ class Initialize(State):
         try:
             yasmin.YASMIN_LOG_INFO('Initializing ImageHandler(front)...')
             image_handler_front = ImageHandler(
-                image_source = self.config.front_image_source,
-                config = ROSConfig(topic=self.config.front_ros_topic) if self.config.front_image_source == 'ros' else None,
+                image_source=self.config.front_image_source,
+                config=(ROSConfig(topic=self.config.front_ros_topic)
+                        if self.config.front_image_source == 'ros'
+                        else None),
             )
 
             yasmin.YASMIN_LOG_INFO('Open camera (front)...')
@@ -244,8 +259,10 @@ class Initialize(State):
         try:
             yasmin.YASMIN_LOG_INFO('Initializing ImageHandler(down)...')
             image_handler_down = ImageHandler(
-                image_source = self.config.down_image_source,
-                config = ROSConfig(topic=self.config.down_ros_topic) if self.config.down_image_source == 'ros' else None,
+                image_source=self.config.down_image_source,
+                config=(ROSConfig(topic=self.config.down_ros_topic)
+                        if self.config.down_image_source == 'ros'
+                        else None),
             )
 
             yasmin.YASMIN_LOG_INFO('Open camera (down)...')
@@ -270,14 +287,17 @@ class Initialize(State):
 
     def callback_detector_gate(self, image: np.ndarray) -> DetectionResult:
         start = datetime.fromtimestamp(self.start_time.nanoseconds / 1e9)
-        now = datetime.fromtimestamp(self.node.get_clock().now().nanoseconds / 1e9)
+        now = datetime.fromtimestamp(
+            self.node.get_clock().now().nanoseconds / 1e9)
 
-        indoor_path = pathlib.Path.home() / 'ros2_ws' / start.strftime('indoor-%Y-%m-%d_%H-%M-%S')
+        indoor_path = pathlib.Path.home() / 'ros2_ws' / \
+            start.strftime('indoor-%Y-%m-%d_%H-%M-%S')
         raw_path = indoor_path / 'gate'
         annotated_path = indoor_path / 'gate_annotated'
 
         raw_file = raw_path / now.strftime('raw-%Y-%m-%d_%H-%M-%S-%f.png')
-        annotated_file = annotated_path / now.strftime('annotated-%Y-%m-%d_%H-%M-%S-%f.png')
+        annotated_file = annotated_path / \
+            now.strftime('annotated-%Y-%m-%d_%H-%M-%S-%f.png')
 
         os.makedirs(indoor_path, exist_ok=True)
         os.makedirs(raw_path, exist_ok=True)
@@ -285,7 +305,8 @@ class Initialize(State):
 
         result = self.detector_gate.detect(image)
         result.image = image
-        result.annotated_image = self.detector_gate.draw_detections(image, result)
+        result.annotated_image = self.detector_gate.draw_detections(
+            image, result)
 
         cv2.imwrite(raw_file, result.image)
         cv2.imwrite(annotated_file, result.annotated_image)
@@ -294,14 +315,17 @@ class Initialize(State):
 
     def callback_detector_box(self, image: np.ndarray) -> DetectionResult:
         start = datetime.fromtimestamp(self.start_time.nanoseconds / 1e9)
-        now = datetime.fromtimestamp(self.node.get_clock().now().nanoseconds / 1e9)
+        now = datetime.fromtimestamp(
+            self.node.get_clock().now().nanoseconds / 1e9)
 
-        indoor_path = pathlib.Path.home() / 'ros2_ws' / start.strftime('indoor-%Y-%m-%d_%H-%M-%S')
+        indoor_path = pathlib.Path.home() / 'ros2_ws' / \
+            start.strftime('indoor-%Y-%m-%d_%H-%M-%S')
         raw_path = indoor_path / 'box'
         annotated_path = indoor_path / 'box_annotated'
 
         raw_file = raw_path / now.strftime('raw-%Y-%m-%d_%H-%M-%S-%f.png')
-        annotated_file = annotated_path / now.strftime('annotated-%Y-%m-%d_%H-%M-%S-%f.png')
+        annotated_file = annotated_path / \
+            now.strftime('annotated-%Y-%m-%d_%H-%M-%S-%f.png')
 
         os.makedirs(indoor_path, exist_ok=True)
         os.makedirs(raw_path, exist_ok=True)
@@ -309,7 +333,8 @@ class Initialize(State):
 
         result = self.detector_box.detect(image)
         result.image = image
-        result.annotated_image = self.detector_box.draw_detections(image, result)
+        result.annotated_image = self.detector_box.draw_detections(
+            image, result)
 
         cv2.imwrite(raw_file, result.image)
         cv2.imwrite(annotated_file, result.annotated_image)
@@ -318,14 +343,17 @@ class Initialize(State):
 
     def callback_detector_baby(self, image: np.ndarray) -> DetectionResult:
         start = datetime.fromtimestamp(self.start_time.nanoseconds / 1e9)
-        now = datetime.fromtimestamp(self.node.get_clock().now().nanoseconds / 1e9)
+        now = datetime.fromtimestamp(
+            self.node.get_clock().now().nanoseconds / 1e9)
 
-        indoor_path = pathlib.Path.home() / 'ros2_ws' / start.strftime('indoor-%Y-%m-%d_%H-%M-%S')
+        indoor_path = pathlib.Path.home() / 'ros2_ws' / \
+            start.strftime('indoor-%Y-%m-%d_%H-%M-%S')
         raw_path = indoor_path / 'baby'
         annotated_path = indoor_path / 'baby_annotated'
 
         raw_file = raw_path / now.strftime('raw-%Y-%m-%d_%H-%M-%S-%f.png')
-        annotated_file = annotated_path / now.strftime('annotated-%Y-%m-%d_%H-%M-%S-%f.png')
+        annotated_file = annotated_path / \
+            now.strftime('annotated-%Y-%m-%d_%H-%M-%S-%f.png')
 
         os.makedirs(indoor_path, exist_ok=True)
         os.makedirs(raw_path, exist_ok=True)
@@ -333,7 +361,8 @@ class Initialize(State):
 
         result = self.detector_baby.detect(image)
         result.image = image
-        result.annotated_image = self.detector_baby.draw_detections(image, result)
+        result.annotated_image = self.detector_baby.draw_detections(
+            image, result)
 
         cv2.imwrite(raw_file, result.image)
         cv2.imwrite(annotated_file, result.annotated_image)
@@ -342,14 +371,17 @@ class Initialize(State):
 
     def callback_aruco(self, image: np.ndarray):
         start = datetime.fromtimestamp(self.start_time.nanoseconds / 1e9)
-        now = datetime.fromtimestamp(self.node.get_clock().now().nanoseconds / 1e9)
+        now = datetime.fromtimestamp(
+            self.node.get_clock().now().nanoseconds / 1e9)
 
-        indoor_path = pathlib.Path.home() / 'ros2_ws' / start.strftime('indoor-%Y-%m-%d_%H-%M-%S')
+        indoor_path = pathlib.Path.home() / 'ros2_ws' / \
+            start.strftime('indoor-%Y-%m-%d_%H-%M-%S')
         raw_path = indoor_path / 'aruco'
         annotated_path = indoor_path / 'aruco_annotated'
 
         raw_file = raw_path / now.strftime('raw-%Y-%m-%d_%H-%M-%S-%f.png')
-        annotated_file = annotated_path / now.strftime('annotated-%Y-%m-%d_%H-%M-%S-%f.png')
+        annotated_file = annotated_path / \
+            now.strftime('annotated-%Y-%m-%d_%H-%M-%S-%f.png')
 
         os.makedirs(indoor_path, exist_ok=True)
         os.makedirs(raw_path, exist_ok=True)
@@ -357,7 +389,8 @@ class Initialize(State):
 
         cv2.imwrite(raw_file, image)
 
-        marker_id, translation, yaw = self.aruco.pose_estimate(image, draw=True)
+        marker_id, translation, yaw = self.aruco.pose_estimate(
+            image, draw=True)
 
         cv2.imwrite(annotated_file, image)
 

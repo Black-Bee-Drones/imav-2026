@@ -24,8 +24,10 @@ class FindWindow(State):
     def execute(self, blackboard: Blackboard):
         drone: MavrosDrone = blackboard.get('drone')
 
-        image_handler_front: ImageHandler = blackboard.get('image_handler_front')
-        image_handler_front.image_processing_callback = blackboard.get('callback_detector_gate')
+        image_handler_front: ImageHandler = blackboard.get(
+            'image_handler_front')
+        image_handler_front.image_processing_callback = blackboard.get(
+            'callback_detector_gate')
 
         self.start_time: Time = blackboard.get('start_time')
         self.start_state = self.node.get_clock().now()
@@ -41,7 +43,8 @@ class FindWindow(State):
 
             result: DetectionResult = image_handler_front.take_photo()
 
-            window = result.filter_by_class(['blue_window' if self.color_window == 'blue' else 'red_window'])
+            window = result.filter_by_class(
+                ['blue_window' if self.color_window == 'blue' else 'red_window'])
 
             if window:
                 find += 1
@@ -52,12 +55,13 @@ class FindWindow(State):
             else:
                 find = 0
 
-            yasmin.YASMIN_LOG_INFO(f'Go Back ({find}/{self.config.find_tolerance})...')
+            yasmin.YASMIN_LOG_INFO(
+                f'Go Back ({find}/{self.config.find_tolerance})...')
             drone.move_velocity(
-                vx = self.config.back_speed,
-                vy = 0,
-                vz = 0,
-                vyaw = 0,
+                vx=self.config.back_speed,
+                vy=0,
+                vz=0,
+                vyaw=0,
             )
 
             if self.check_timeout():
@@ -70,4 +74,5 @@ class FindWindow(State):
         now = self.node.get_clock().now()
 
         return now - self.start_time > Duration(seconds=self.config.timeout) or \
-            now - self.start_state > Duration(seconds=self.config.timeout_per_state)
+            now - \
+            self.start_state > Duration(seconds=self.config.timeout_per_state)

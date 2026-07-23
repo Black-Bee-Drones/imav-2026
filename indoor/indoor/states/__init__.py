@@ -21,7 +21,7 @@ from .inspect import (
     GoToWindow,
     FindWindow,
     CountBabies,
-    GoOut,    
+    GoOut,
 )
 
 from .dropping import (

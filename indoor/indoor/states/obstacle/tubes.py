@@ -34,12 +34,12 @@ class Tubes(State):
 
         yasmin.YASMIN_LOG_INFO('Correcting drone altitude and move closer...')
         drone.move_to(
-            x = 4.75,
-            y = 0,
-            z = altitude,
-            yaw = 0,
-            reference = MoveReference.TAKEOFF,
-            precision = 0.05,
+            x=4.75,
+            y=0,
+            z=altitude,
+            yaw=0,
+            reference=MoveReference.TAKEOFF,
+            precision=0.05,
         )
 
         if self.check_timeout():
@@ -48,12 +48,12 @@ class Tubes(State):
 
         yasmin.YASMIN_LOG_INFO('Fly through the tube...')
         drone.move_to(
-            x = 5.75,
-            y = 0,
-            z = altitude,
-            yaw = 0,
-            reference = MoveReference.TAKEOFF,
-            precision = 0.05,
+            x=5.75,
+            y=0,
+            z=altitude,
+            yaw=0,
+            reference=MoveReference.TAKEOFF,
+            precision=0.05,
         )
 
         if self.check_timeout():
@@ -62,10 +62,10 @@ class Tubes(State):
 
         yasmin.YASMIN_LOG_INFO('Fly to the side of the tube...')
         drone.move_to(
-            x = 5.25,
-            y = offset,
-            z = altitude,
-            yaw = 0,
+            x=5.25,
+            y=offset,
+            z=altitude,
+            yaw=0,
         )
 
         if self.check_timeout():
@@ -74,10 +74,10 @@ class Tubes(State):
 
         yasmin.YASMIN_LOG_INFO('Fly to the past the tube...')
         drone.move_to(
-            x = 6.25,
-            y = offset,
-            z = 0,
-            yaw = 0,
+            x=6.25,
+            y=offset,
+            z=0,
+            yaw=0,
         )
 
         if self.check_timeout():
@@ -86,10 +86,10 @@ class Tubes(State):
 
         yasmin.YASMIN_LOG_INFO('Fly to the front of the tube...')
         drone.move_to(
-            x = 6.25,
-            y = 0,
-            z = 0,
-            yaw = 0,
+            x=6.25,
+            y=0,
+            z=0,
+            yaw=0,
         )
 
         if self.check_timeout():
@@ -103,4 +103,5 @@ class Tubes(State):
         now = self.node.get_clock().now()
 
         return now - self.start_time > Duration(seconds=self.config.timeout) or \
-            now - self.start_state > Duration(seconds=self.config.timeout_per_state)
+            now - \
+            self.start_state > Duration(seconds=self.config.timeout_per_state)

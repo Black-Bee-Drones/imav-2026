@@ -35,10 +35,10 @@ class Reacquire(State):
 
         yasmin.YASMIN_LOG_INFO(f'Up {self.config.reacquire_step} m...')
         drone.move_to(
-            x = 0,
-            y = 0,
-            z = self.config.reacquire_step,
-            yaw = 0,
+            x=0,
+            y=0,
+            z=self.config.reacquire_step,
+            yaw=0,
         )
 
         yasmin.YASMIN_LOG_INFO('Completed successfully.')
@@ -48,4 +48,5 @@ class Reacquire(State):
         now = self.node.get_clock().now()
 
         return now - self.start_time > Duration(seconds=self.config.timeout) or \
-            now - self.start_state > Duration(seconds=self.config.timeout_per_state)
+            now - \
+            self.start_state > Duration(seconds=self.config.timeout_per_state)

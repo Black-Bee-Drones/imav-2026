@@ -27,8 +27,10 @@ class Window(State):
         pid_y: PIDController = blackboard.get('pid_y')
         pid_z: PIDController = blackboard.get('pid_z')
 
-        image_handler_front: ImageHandler = blackboard.get('image_handler_front')
-        image_handler_front.image_processing_callback = blackboard.get('callback_detector_gate')
+        image_handler_front: ImageHandler = blackboard.get(
+            'image_handler_front')
+        image_handler_front.image_processing_callback = blackboard.get(
+            'callback_detector_gate')
 
         self.start_time: Time = blackboard.get('start_time')
         self.start_state = self.node.get_clock().now()
@@ -50,12 +52,12 @@ class Window(State):
 
         yasmin.YASMIN_LOG_INFO('Correcting drone altitude...')
         drone.move_to(
-            x = None,
-            y = 0,
-            z = 1.2,
-            yaw = 0,
-            reference = MoveReference.TAKEOFF,
-            precision = 0.05,
+            x=None,
+            y=0,
+            z=1.2,
+            yaw=0,
+            reference=MoveReference.TAKEOFF,
+            precision=0.05,
         )
 
         if self.check_timeout():
@@ -68,7 +70,8 @@ class Window(State):
 
             result: DetectionResult = image_handler_front.take_photo()
 
-            window = result.filter_by_class(['blue_window' if color_window == 'blue' else 'red_window'])
+            window = result.filter_by_class(
+                ['blue_window' if color_window == 'blue' else 'red_window'])
 
             if window:
                 lost = 0
@@ -88,12 +91,13 @@ class Window(State):
                 output_y = pid_y.update(error_y)
                 output_z = pid_z.update(error_z)
 
-                yasmin.YASMIN_LOG_INFO(f'Centering: error_y={error_y:.0f}; error_z={error_z:.0f}; output_y={output_y:.1f}; output_z={output_z:.1f}.')
+                yasmin.YASMIN_LOG_INFO(
+                    f'Centering: error_y={error_y:.0f}; error_z={error_z:.0f}; output_y={output_y:.1f}; output_z={output_z:.1f}.')
                 drone.move_velocity(
-                    vx = 0,
-                    vy = output_y,
-                    vz = output_z,
-                    vyaw = 0,
+                    vx=0,
+                    vy=output_y,
+                    vz=output_z,
+                    vyaw=0,
                 )
             else:
                 yasmin.YASMIN_LOG_ERROR(f'Lost detection {lost}.')
@@ -108,11 +112,11 @@ class Window(State):
         else:
             yasmin.YASMIN_LOG_INFO('Fly the drone to safe altitude.')
             drone.move_to(
-                x = 0,
-                y = 0,
-                z = self.config.safe_altitude,
-                yaw = 0,
-                precision = 0.05,
+                x=0,
+                y=0,
+                z=self.config.safe_altitude,
+                yaw=0,
+                precision=0.05,
             )
 
         self.node.get_clock().sleep_for(Duration(seconds=1))
@@ -122,11 +126,11 @@ class Window(State):
 
         yasmin.YASMIN_LOG_INFO('Fly the drone through the window.')
         drone.move_to(
-            x = 1.25,
-            y = 0,
-            z = 0,
-            yaw = 0,
-            precision = 0.05,
+            x=1.25,
+            y=0,
+            z=0,
+            yaw=0,
+            precision=0.05,
         )
 
         self.node.get_clock().sleep_for(Duration(seconds=1))
@@ -141,4 +145,5 @@ class Window(State):
         now = self.node.get_clock().now()
 
         return now - self.start_time > Duration(seconds=self.config.timeout) or \
-            now - self.start_state > Duration(seconds=self.config.timeout_per_state)
+            now - \
+            self.start_state > Duration(seconds=self.config.timeout_per_state)

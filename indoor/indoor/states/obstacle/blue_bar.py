@@ -9,6 +9,7 @@ from nectar.control import MavrosDrone, MoveReference
 
 from indoor import Config
 
+
 class BlueBar(State):
     def __init__(self, config: Config):
         super().__init__(outcomes=[SUCCEED, TIMEOUT])
@@ -28,17 +29,20 @@ class BlueBar(State):
             yasmin.YASMIN_LOG_ERROR('Timeout.')
             return TIMEOUT
 
-        altitude1 = [.4, .8, 1.2][self.config.bleu_step_-1] / 2 if self.config.bleu_step_1 else self.config.safe_altitude
-        altitude2 = [.4, .8, 1.2][self.config.bleu_step_-1] / 2 if self.config.bleu_step_1 else self.config.safe_altitude
+        altitude1 = [.4, .8, 1.2][self.config.bleu_step_-1] / \
+            2 if self.config.bleu_step_1 else self.config.safe_altitude
+        altitude2 = [.4, .8, 1.2][self.config.bleu_step_-1] / \
+            2 if self.config.bleu_step_1 else self.config.safe_altitude
 
-        yasmin.YASMIN_LOG_INFO(f'Step 1 - Correcting drone altitude by z={altitude1:.1f} m...')
+        yasmin.YASMIN_LOG_INFO(
+            f'Step 1 - Correcting drone altitude by z={altitude1:.1f} m...')
         drone.move_to(
-            x = 2.25,
-            y = 0,
-            z = altitude1,
-            yaw = 0,
-            reference = MoveReference.TAKEOFF,
-            precision = 0.05,
+            x=2.25,
+            y=0,
+            z=altitude1,
+            yaw=0,
+            reference=MoveReference.TAKEOFF,
+            precision=0.05,
         )
 
         if self.check_timeout():
@@ -47,26 +51,27 @@ class BlueBar(State):
 
         yasmin.YASMIN_LOG_INFO('Step 1 - Fly under the first blue bar...')
         drone.move_to(
-            x = 3.25,
-            y = 0,
-            z = altitude1,
-            yaw = 0,
-            reference = MoveReference.TAKEOFF,
-            precision = 0.5
+            x=3.25,
+            y=0,
+            z=altitude1,
+            yaw=0,
+            reference=MoveReference.TAKEOFF,
+            precision=0.5
         )
 
         if self.check_timeout():
             yasmin.YASMIN_LOG_ERROR('Timeout.')
             return TIMEOUT
 
-        yasmin.YASMIN_LOG_INFO(f'Step 2 - Correcting drone altitude by z={altitude2:.1f} m...')
+        yasmin.YASMIN_LOG_INFO(
+            f'Step 2 - Correcting drone altitude by z={altitude2:.1f} m...')
         drone.move_to(
-            x = 3.25,
-            y = 0,
-            z = altitude2,
-            yaw = 0,
-            reference = MoveReference.TAKEOFF,
-            precision = 0.05,
+            x=3.25,
+            y=0,
+            z=altitude2,
+            yaw=0,
+            reference=MoveReference.TAKEOFF,
+            precision=0.05,
         )
 
         if self.check_timeout():
@@ -75,12 +80,12 @@ class BlueBar(State):
 
         yasmin.YASMIN_LOG_INFO('Step 2 - Fly under the second blue bar...')
         drone.move_to(
-            x = 4.25,
-            y = 0,
-            z = altitude2,
-            yaw = 0,
-            reference = MoveReference.TAKEOFF,
-            precision = 0.5
+            x=4.25,
+            y=0,
+            z=altitude2,
+            yaw=0,
+            reference=MoveReference.TAKEOFF,
+            precision=0.5
         )
 
         if self.check_timeout():
@@ -94,4 +99,5 @@ class BlueBar(State):
         now = self.node.get_clock().now()
 
         return now - self.start_time > Duration(seconds=self.config.timeout) or \
-            now - self.start_state > Duration(seconds=self.config.timeout_per_state)
+            now - \
+            self.start_state > Duration(seconds=self.config.timeout_per_state)

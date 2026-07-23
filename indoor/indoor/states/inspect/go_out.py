@@ -31,10 +31,10 @@ class GoOut(State):
 
         yasmin.YASMIN_LOG_INFO('Fly the drone through the window.')
         drone.move_to(
-            x = -1.25 - 0.2,
-            y = 0,
-            z = 0,
-            yaw = 0,
+            x=-1.25 - 0.2,
+            y=0,
+            z=0,
+            yaw=0,
         )
 
         if self.check_timeout():
@@ -48,4 +48,5 @@ class GoOut(State):
         now = self.node.get_clock().now()
 
         return now - self.start_time > Duration(seconds=self.config.timeout) or \
-            now - self.start_state > Duration(seconds=self.config.timeout_per_state)
+            now - \
+            self.start_state > Duration(seconds=self.config.timeout_per_state)

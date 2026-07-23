@@ -50,7 +50,8 @@ def generate_launch_description():
             ),
             IncludeLaunchDescription(
                 PythonLaunchDescriptionSource(
-                    os.path.join(nectar_share, "launch", "sitl_gazebo.launch.py")
+                    os.path.join(nectar_share, "launch",
+                                 "sitl_gazebo.launch.py")
                 ),
                 launch_arguments={
                     "world": "indoor",

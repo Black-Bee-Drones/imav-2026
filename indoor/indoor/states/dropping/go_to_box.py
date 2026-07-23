@@ -31,11 +31,11 @@ class GoToBox(State):
 
         yasmin.YASMIN_LOG_INFO('Flying to a safe altitude...')
         drone.move_to(
-            x = None,
-            y = None,
-            z = self.config.safe_altitude,
-            yaw = 0,
-            reference = MoveReference.TAKEOFF,  
+            x=None,
+            y=None,
+            z=self.config.safe_altitude,
+            yaw=0,
+            reference=MoveReference.TAKEOFF,
         )
 
         if self.check_timeout():
@@ -44,11 +44,11 @@ class GoToBox(State):
 
         yasmin.YASMIN_LOG_INFO(f'fly to y={self.config.box_y}...')
         drone.move_to(
-            x = None,
-            y = self.config.box_y,
-            z = self.config.safe_altitude,
-            yaw = 0,
-            reference = MoveReference.TAKEOFF,  
+            x=None,
+            y=self.config.box_y,
+            z=self.config.safe_altitude,
+            yaw=0,
+            reference=MoveReference.TAKEOFF,
         )
 
         if self.check_timeout():
@@ -57,11 +57,11 @@ class GoToBox(State):
 
         yasmin.YASMIN_LOG_INFO(f'fly to x={self.config.box_x}...')
         drone.move_to(
-            x = self.config.box_x,
-            y = self.config.box_y,
-            z = self.config.safe_altitude,
-            yaw = 0,
-            reference = MoveReference.TAKEOFF,  
+            x=self.config.box_x,
+            y=self.config.box_y,
+            z=self.config.safe_altitude,
+            yaw=0,
+            reference=MoveReference.TAKEOFF,
         )
 
         if self.check_timeout():
@@ -75,4 +75,5 @@ class GoToBox(State):
         now = self.node.get_clock().now()
 
         return now - self.start_time > Duration(seconds=self.config.timeout) or \
-            now - self.start_state > Duration(seconds=self.config.timeout_per_state)
+            now - \
+            self.start_state > Duration(seconds=self.config.timeout_per_state)

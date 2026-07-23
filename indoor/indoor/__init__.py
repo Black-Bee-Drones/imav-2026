@@ -4,7 +4,7 @@ from .config import (
     CLEITINHO,
     STIL_CLEITINHO,
     JORGE,
-    STIL_JORGE
+    STIL_JORGE,
 )
 
 from .indoor_sm import IndoorSM

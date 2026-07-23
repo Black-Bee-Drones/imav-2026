@@ -6,7 +6,6 @@ from ament_index_python import get_package_share_directory
 
 models_path = pathlib.Path(get_package_share_directory('indoor')) / 'models'
 
-models_path = pathlib.Path(get_package_share_directory('indoor')) / 'models'
 
 class Mission(str, Enum):
     OBSTACLES = 'OBSTACLESM'
@@ -14,13 +13,14 @@ class Mission(str, Enum):
     DROPPING = 'DROPPINGSM'
     PRECISE_LANDING = 'PRECISELANDINGSM'
 
+
 @dataclass(frozen=True)
 class Config:
     ### Missions ###
     missions: tuple[Mission, ...] = (
-        Mission.OBSTACLES, 
-        Mission.INSPECT, 
-        Mission.DROPPING, 
+        Mission.OBSTACLES,
+        Mission.INSPECT,
+        Mission.DROPPING,
         Mission.PRECISE_LANDING
     )
 
@@ -38,13 +38,14 @@ class Config:
     # Detector
     gate_model_source: str = str(models_path / 'gate.pt')
     gate_conf: float = 0.5
-    baby_model_source: str = str(models_path /'best.pt')
+    baby_model_source: str = str(models_path / 'best.pt')
     baby_conf: float = 0.5
     box_model_source: str = str(models_path / 'package.pt')
     box_conf: float = 0.5
 
     # Aruco
     marker_dict: int = 5  # 5x5
+    aruco_size: float = 1.0  # meters
 
     # ImageHandler
     front_image_source: str = 'ros'
@@ -124,36 +125,38 @@ class Config:
     controller_yaw_integral_min: float = -1.0
     controller_yaw_integral_max: float = 1.0
 
-@dataclass (frozen=True)
+
+@dataclass(frozen=True)
 class STILConfig(Config):
     connection_string: str = 'tcp:127.0.0.1:5762'
 
+
 CLEITINHO = Config(
-    missions = (
-        Mission.OBSTACLES, 
-        Mission.INSPECT, 
+    missions=(
+        Mission.OBSTACLES,
+        Mission.INSPECT,
         Mission.PRECISE_LANDING
     )
 )
 
 JORGE = Config(
-    missions = (
-        Mission.DROPPING, 
+    missions=(
+        Mission.DROPPING,
         Mission.PRECISE_LANDING
     )
 )
 
 STIL_CLEITINHO = STILConfig(
-    missions = (
-        Mission.OBSTACLES, 
-        Mission.INSPECT, 
+    missions=(
+        Mission.OBSTACLES,
+        Mission.INSPECT,
         Mission.PRECISE_LANDING
     )
 )
 
 STIL_JORGE = STILConfig(
-    missions = (
-        Mission.DROPPING, 
+    missions=(
+        Mission.DROPPING,
         Mission.PRECISE_LANDING
     )
 )

@@ -29,41 +29,44 @@ class GoToLandingBase(State):
             yasmin.YASMIN_LOG_ERROR('Timeout.')
             return TIMEOUT
 
-        yasmin.YASMIN_LOG_INFO(f'Fly to a {"fixed" if self.config.fixed_base else "mobile"} landing base...')
+        yasmin.YASMIN_LOG_INFO(
+            f'Fly to a {"fixed" if self.config.fixed_base else "mobile"} landing base...')
 
         yasmin.YASMIN_LOG_INFO('Flying to a safe altitude...')
         drone.move_to(
-            x = None,
-            y = None,
-            z = self.config.safe_altitude,
-            yaw = 0,
-            reference = MoveReference.TAKEOFF,  
+            x=None,
+            y=None,
+            z=self.config.safe_altitude,
+            yaw=0,
+            reference=MoveReference.TAKEOFF,
         )
 
         if self.check_timeout():
             yasmin.YASMIN_LOG_ERROR('Timeout.')
             return TIMEOUT
 
-        yasmin.YASMIN_LOG_INFO(f'fly to y={self.config.base_y} from the {"fixed" if self.config.fixed_base else "mobile"} base...')
+        yasmin.YASMIN_LOG_INFO(
+            f'fly to y={self.config.base_y} from the {"fixed" if self.config.fixed_base else "mobile"} base...')
         drone.move_to(
-            x = None,
-            y = self.config.base_y,
-            z = self.config.safe_altitude,
-            yaw = 0,
-            reference = MoveReference.TAKEOFF,  
+            x=None,
+            y=self.config.base_y,
+            z=self.config.safe_altitude,
+            yaw=0,
+            reference=MoveReference.TAKEOFF,
         )
 
         if self.check_timeout():
             yasmin.YASMIN_LOG_ERROR('Timeout.')
             return TIMEOUT
 
-        yasmin.YASMIN_LOG_INFO(f'fly to x={self.config.base_x} from the {"fixed" if self.config.fixed_base else "mobile"} base...')
+        yasmin.YASMIN_LOG_INFO(
+            f'fly to x={self.config.base_x} from the {"fixed" if self.config.fixed_base else "mobile"} base...')
         drone.move_to(
-            x = self.config.base_x,
-            y = self.config.base_y,
-            z = self.config.safe_altitude,
-            yaw = 0,
-            reference = MoveReference.TAKEOFF,  
+            x=self.config.base_x,
+            y=self.config.base_y,
+            z=self.config.safe_altitude,
+            yaw=0,
+            reference=MoveReference.TAKEOFF,
         )
 
         if self.check_timeout():
@@ -77,4 +80,5 @@ class GoToLandingBase(State):
         now = self.node.get_clock().now()
 
         return now - self.start_time > Duration(seconds=self.config.timeout) or \
-            now - self.start_state > Duration(seconds=self.config.timeout_per_state)
+            now - \
+            self.start_state > Duration(seconds=self.config.timeout_per_state)

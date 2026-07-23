@@ -19,16 +19,6 @@ from indoor import (
     IndoorSM,
 )
 
-from indoor import (
-    Config,
-    STILConfig,
-    CLEITINHO,
-    STIL_CLEITINHO,
-    JORGE,
-    STIL_JORGE,
-    IndoorSM,
-)
-
 CONFIG_PROFILES = {
     'default': Config,
     'stil': STILConfig,
@@ -38,11 +28,12 @@ CONFIG_PROFILES = {
     'stil_jorge': STIL_JORGE,
 }
 
+
 def main(args=None):
     parser = argparse.ArgumentParser(description='Indoor Drone State Machine')
     parser.add_argument(
-        '--config', 
-        type=str, 
+        '--config',
+        type=str,
         default='default',
         choices=CONFIG_PROFILES.keys(),
         help='Which drone configuration profile to load'
@@ -57,7 +48,8 @@ def main(args=None):
     nectar.use_executor(YasminNode.get_instance()._executor)
 
     try:
-        yasmin.YASMIN_LOG_INFO(f"Loading configuration profile: {parsed_args.config.upper()}")
+        yasmin.YASMIN_LOG_INFO(
+            f"Loading configuration profile: {parsed_args.config.upper()}")
         config_class = CONFIG_PROFILES[parsed_args.config]
         config = config_class()
 
@@ -70,11 +62,6 @@ def main(args=None):
 
     except Exception as e:
         yasmin.YASMIN_LOG_ERROR(f'Indoor state machine failed: {e}')
-
-    except rclpy.exceptions.ParameterUninitializedException as e:
-        yasmin.YASMIN_LOG_ERROR("Required parameter is not configured!")
-        yasmin.YASMIN_LOG_ERROR(f"Details: {e}")
-        yasmin.YASMIN_LOG_ERROR("Check the YAML parameter file.")
 
     else:
         if final_outcome == SUCCEED:

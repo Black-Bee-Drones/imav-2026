@@ -26,7 +26,8 @@ class CenterBox(State):
         pid_y: PIDController = blackboard.get('pid_y')
 
         image_handler_down: ImageHandler = blackboard.get('image_handler_down')
-        image_handler_down.image_processing_callback = blackboard.get('callback_box')
+        image_handler_down.image_processing_callback = blackboard.get(
+            'callback_box')
 
         self.start_time: Time = blackboard.get('start_time')
         self.start_state = self.node.get_clock().now()
@@ -63,15 +64,18 @@ class CenterBox(State):
                 output_x = pid_x.update(error_x)
                 output_y = pid_y.update(error_y)
 
-                yasmin.YASMIN_LOG_INFO(f'Centering: error_x={error_x:.0f}; error_y={error_y:.0f}; output_x={output_x:.1f}; output_y={output_y:.1f}.')
+                yasmin.YASMIN_LOG_INFO(
+                    f'Centering: error_x={error_x:.0f}; error_y={error_y:.0f}; output_x={output_x:.1f}; output_y={output_y:.1f}.')
                 drone.move_velocity(
-                    vx = output_x,
-                    vy = output_y,
-                    vz = self.config.land_speed if ((error_x**2 + error_y**2) <= 4*self.config.center_threshold**2) else 0,
-                    vyaw = 0,
+                    vx=output_x,
+                    vy=output_y,
+                    vz=self.config.land_speed if (
+                        (error_x**2 + error_y**2) <= 4*self.config.center_threshold**2) else 0,
+                    vyaw=0,
                 )
             else:
-                yasmin.YASMIN_LOG_ERROR(f'Lost detection ({lost}/{self.config.lost_tolerance}).')
+                yasmin.YASMIN_LOG_ERROR(
+                    f'Lost detection ({lost}/{self.config.lost_tolerance}).')
                 lost += 1
 
                 if self.config.lost_tolerance <= lost:
@@ -90,4 +94,5 @@ class CenterBox(State):
         now = self.node.get_clock().now()
 
         return now - self.start_time > Duration(seconds=self.config.timeout) or \
-            now - self.start_state > Duration(seconds=self.config.timeout_per_state)
+            now - \
+            self.start_state > Duration(seconds=self.config.timeout_per_state)
