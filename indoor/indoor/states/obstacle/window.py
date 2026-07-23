@@ -52,12 +52,12 @@ class Window(State):
 
         yasmin.YASMIN_LOG_INFO('Correcting drone altitude...')
         drone.move_to(
-            x=None,
-            y=0,
-            z=1.2,
-            yaw=0,
-            reference=MoveReference.TAKEOFF,
-            precision=0.05,
+            x = None,
+            y = None,
+            z = 1.2,
+            yaw = 0,
+            reference = MoveReference.TAKEOFF,
+            precision = 0.05,
         )
 
         if self.check_timeout():

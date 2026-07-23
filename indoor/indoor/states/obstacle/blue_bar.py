@@ -29,9 +29,9 @@ class BlueBar(State):
             yasmin.YASMIN_LOG_ERROR('Timeout.')
             return TIMEOUT
 
-        altitude1 = [.4, .8, 1.2][self.config.bleu_step_-1] / \
+        altitude1 = [.4, .8, 1.2][self.config.blue_step_-1] / \
             2 if self.config.bleu_step_1 else self.config.safe_altitude
-        altitude2 = [.4, .8, 1.2][self.config.bleu_step_-1] / \
+        altitude2 = [.4, .8, 1.2][self.config.blue_step_-1] / \
             2 if self.config.bleu_step_1 else self.config.safe_altitude
 
         yasmin.YASMIN_LOG_INFO(

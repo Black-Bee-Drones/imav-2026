@@ -57,6 +57,9 @@ class Config:
     takeoff_altitude: float = 1.2  # meters
 
     ### Obstacle ###
+    # GoToWindow
+    start_y : float = -3.5
+
     # Window
     first_color_window: str | None = 'blue'  # 'blue' or 'red' or None
     second_color_window: str | None = 'blue'  # 'blue' or 'red' or None
@@ -71,7 +74,7 @@ class Config:
     blue_step2: int | None = 3
 
     ### Inspect ###
-    # GoToWindown
+    # GoToWindow
     room_x: float = 10.0  # meters
     room_y: float = 2.0  # meters
 

@@ -42,16 +42,22 @@ def main(args=None):
     input_args = args if args is not None else sys.argv[1:]
     parsed_args, remaining_args = parser.parse_known_args(input_args)
 
-    rclpy.init(args=sys.argv)
+    ros_args = [sys.argv[0]] + remaining_args
+    rclpy.init(args=ros_args)
     set_ros_loggers()
 
     nectar.use_executor(YasminNode.get_instance()._executor)
 
     try:
         yasmin.YASMIN_LOG_INFO(
-            f"Loading configuration profile: {parsed_args.config.upper()}")
-        config_class = CONFIG_PROFILES[parsed_args.config]
-        config = config_class()
+        f"Loading configuration profile: {parsed_args.config.upper()}"
+        )
+
+        profile_obj = CONFIG_PROFILES[parsed_args.config]
+        if isinstance(profile_obj, type):
+            config = profile_obj()
+        else:
+            config = profile_obj
 
         indoor_sm = IndoorSM(config)
         final_outcome = indoor_sm()

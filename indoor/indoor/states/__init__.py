@@ -5,6 +5,7 @@ from .core import (
 )
 
 from .obstacle import (
+    GoToObstacles,
     Window,
     RedBar,
     BlueBar,

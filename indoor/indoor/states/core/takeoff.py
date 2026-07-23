@@ -20,10 +20,10 @@ class Takeoff(State):
         drone: MavrosDrone = blackboard.get('drone')
 
         yasmin.YASMIN_LOG_INFO(
-            f'Taking off to altitude: {self.config.altitude} m...')
+            f'Taking off to altitude: {self.config.takeoff_altitude} m...')
 
         try:
-            drone.takeoff(self.config.altitude)
+            drone.takeoff(self.config.takeoff_altitude)
 
         except KeyboardInterrupt:
             yasmin.YASMIN_LOG_WARN('Execution interrupted by user.')

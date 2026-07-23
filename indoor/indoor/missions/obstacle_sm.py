@@ -2,6 +2,7 @@ from yasmin import StateMachine
 from yasmin_ros.basic_outcomes import SUCCEED, TIMEOUT, CANCEL, ABORT
 
 from indoor.states import (
+    GoToObstacles,
     Window,
     RedBar,
     BlueBar,
@@ -16,6 +17,11 @@ class ObstacleSM(StateMachine):
         """
         Obstacle course state machine.
         """
+        self.add_state(
+            'GO_TO_OBSTACLES',
+            GoToObstacles(config),
+            transitions={SUCCEED: 'FIRST_WINDOW', TIMEOUT: CANCEL}
+        )
 
         self.add_state(
             'FIRST_WINDOW',
@@ -47,4 +53,4 @@ class ObstacleSM(StateMachine):
             transitions={SUCCEED: SUCCEED, TIMEOUT: CANCEL},
         )
 
-        self.set_start_state('FIRST_WINDOW')
+        self.set_start_state('GO_TO_OBSTACLES')
