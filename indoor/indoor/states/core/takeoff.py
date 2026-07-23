@@ -17,7 +17,7 @@ class Takeoff(State):
         self.config = config
 
     def execute(self, blackboard: Blackboard):
-        drone: MavrosDrone = blackboard['drone']
+        drone: MavrosDrone = blackboard.get('drone')
 
         yasmin.YASMIN_LOG_INFO(f'Taking off to altitude: {self.config.altitude} m...')
 

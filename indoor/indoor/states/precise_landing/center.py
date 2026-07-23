@@ -16,7 +16,6 @@ import time
 
 
 class Center(State):
-
     def __init__(self, config: Config):
         super().__init__(outcomes=[SUCCEED, FAIL, TIMEOUT])
 

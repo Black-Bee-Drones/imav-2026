@@ -69,7 +69,7 @@ class Initialize(State):
 
             drone = DroneFactory.create(self.config.drone_type, drone_config)
 
-            blackboard['drone'] = drone
+            blackboard.set('drone', drone)
             yasmin.YASMIN_LOG_INFO(f'Successful start Drone("{self.config.drone_type}")!')
 
         except KeyboardInterrupt:
@@ -112,10 +112,10 @@ class Initialize(State):
                 integral_limits = (self.config.controller_yaw_integral_min, self.config.controller_yaw_integral_max),
             )
 
-            blackboard['pid_x'] = pid_x
-            blackboard['pid_y'] = pid_y
-            blackboard['pid_z'] = pid_z
-            blackboard['pid_yaw'] = pid_yaw
+            blackboard.set('pid_x', pid_x)
+            blackboard.set('pid_y', pid_y)
+            blackboard.set('pid_z', pid_z)
+            blackboard.set('pid_yaw', pid_yaw)
             yasmin.YASMIN_LOG_INFO(f'Successful start PID (x, y, z and yaw)!')
 
         except KeyboardInterrupt:
@@ -137,8 +137,8 @@ class Initialize(State):
             yasmin.YASMIN_LOG_INFO('Load Detector(gate)...')
             self.detector_gate.load()
 
-            blackboard['detector_gate'] = self.detector_gate
-            blackboard['callback_detector_gate'] = self.callback_detector_gate
+            blackboard.set('detector_gate', self.detector_gate)
+            blackboard.set('callback_detector_gate', self.callback_detector_gate)
             yasmin.YASMIN_LOG_INFO('successful start Detector(gate)!')
 
         except KeyboardInterrupt:
@@ -160,8 +160,8 @@ class Initialize(State):
             yasmin.YASMIN_LOG_INFO('Load Detector(baby)...')
             self.detector_baby.load()
 
-            blackboard['detector_baby'] = self.detector_baby
-            blackboard['callback_detector_baby'] = self.callback_detector_baby
+            blackboard.set('detector_baby', self.detector_baby)
+            blackboard.set('callback_detector_baby', self.callback_detector_baby)
             yasmin.YASMIN_LOG_INFO('successful start Detector(baby)!')
 
         except KeyboardInterrupt:
@@ -183,8 +183,8 @@ class Initialize(State):
             yasmin.YASMIN_LOG_INFO('Load Detector(box)...')
             self.detector_box.load()
 
-            blackboard['detector_box'] = self.detector_box
-            blackboard['callback_detector_box'] = self.callback_detector_box
+            blackboard.set('detector_box', self.detector_box)
+            blackboard.set('callback_detector_box', self.callback_detector_box)
             yasmin.YASMIN_LOG_INFO('successful start Detector(box)!')
 
         except KeyboardInterrupt:
@@ -203,8 +203,8 @@ class Initialize(State):
                 tag_size = 1.0,
             )
 
-            blackboard['aruco'] = self.aruco
-            blackboard['callback_aruco'] = self.callback_aruco
+            blackboard.set('aruco', self.aruco)
+            blackboard.set('callback_aruco', self.callback_aruco)
             yasmin.YASMIN_LOG_INFO('successful start Aruco!')
 
         except KeyboardInterrupt:
@@ -229,7 +229,7 @@ class Initialize(State):
             yasmin.YASMIN_LOG_INFO('Take testing photo (front)...')
             image_handler_front.take_photo()
 
-            blackboard['image_handler_front'] = image_handler_front
+            blackboard.set('image_handler_front', image_handler_front)
             yasmin.YASMIN_LOG_INFO('successful start ImageHandler(front)!')
 
         except KeyboardInterrupt:
@@ -254,7 +254,7 @@ class Initialize(State):
             yasmin.YASMIN_LOG_INFO('Take testing photo (down)...')
             image_handler_down.take_photo()
 
-            blackboard['image_handler_down'] = image_handler_down
+            blackboard.set('image_handler_down', image_handler_down)
             yasmin.YASMIN_LOG_INFO('successful start ImageHandler(down)!')
 
         except KeyboardInterrupt:

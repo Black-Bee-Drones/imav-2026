@@ -20,7 +20,6 @@ class GoToLandingBase(State):
 
     def execute(self, blackboard: Blackboard):
         drone: MavrosDrone = blackboard.get('drone')
-        safe_altitude: int = blackboard.get('safe_altitude')
 
         self.start_time: Time = blackboard.get('start_time')
         self.start_state = self.node.get_clock().now()
@@ -36,7 +35,7 @@ class GoToLandingBase(State):
         drone.move_to(
             x = None,
             y = None,
-            z = safe_altitude,
+            z = self.config.safe_altitude,
             yaw = 0,
             reference = MoveReference.TAKEOFF,  
         )
@@ -49,7 +48,7 @@ class GoToLandingBase(State):
         drone.move_to(
             x = None,
             y = self.config.base_y,
-            z = safe_altitude,
+            z = self.config.safe_altitude,
             yaw = 0,
             reference = MoveReference.TAKEOFF,  
         )
@@ -62,7 +61,7 @@ class GoToLandingBase(State):
         drone.move_to(
             x = self.config.base_x,
             y = self.config.base_y,
-            z = safe_altitude,
+            z = self.config.safe_altitude,
             yaw = 0,
             reference = MoveReference.TAKEOFF,  
         )
