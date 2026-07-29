@@ -11,7 +11,14 @@ class Mission(str, Enum):
     OBSTACLES = 'OBSTACLESM'
     INSPECT = 'INSPECTSM'
     DROPPING = 'DROPPINGSM'
-    PRECISE_LANDING = 'PRECISELANDINGSM'
+
+
+class LandingMode(str, Enum):
+    """How the drone should end its flight once selected missions are done."""
+    LAND = 'LAND'                        # land in place after completion
+    RTL = 'RTL'                          # return to launch
+    PRECISION_FIXED = 'PRECISION_FIXED'   # precision land, fixed platform
+    PRECISION_MOVING = 'PRECISION_MOVING'  # precision land, moving platform
 
 
 @dataclass(frozen=True)
@@ -21,8 +28,10 @@ class Config:
         Mission.OBSTACLES,
         Mission.INSPECT,
         Mission.DROPPING,
-        Mission.PRECISE_LANDING
     )
+
+    ### Landing behavior (used by the `custom` profile; see customization.py) ###
+    landing_mode: LandingMode = LandingMode.LAND
 
     ### Global ###
     timeout: int = 1800  # seconds
@@ -73,14 +82,32 @@ class Config:
     blue_step1: int | None = 3
     blue_step2: int | None = 3
 
+    # Obstacle (tube passage) - set False to skip this checker entirely
+    obstacle_avoid_enabled: bool = True
+
     ### Inspect ###
     # GoToWindow
     room_x: float = 10.0  # meters
     room_y: float = 2.0  # meters
 
+    # Entry/exit window colors for Mission 2 (independent of each other).
+    # `room_color_window` above is kept for backward compatibility with any
+    # existing code that reads a single color; these two let the custom
+    # wizard set entry and exit independently. None skips that checker.
+    room_entry_color: str | None = 'blue'  # 'blue' or 'red' or None
+    room_exit_color: str | None = 'blue'   # 'blue' or 'red' or None
+
+    # Whether to run the baby-counting inference during Mission 2
+    run_baby_inference: bool = True
+
     # FindWindow
     find_tolerance: int = 2
     back_speed: float = -0.5  # meters per second
+
+    ### Dropping ###
+    # Whether to actually drop the cone during Mission 3 (False = fly the
+    # mission but withhold the drop)
+    drop_cone_enabled: bool = True
 
     ### Precise landing ###
     # GoToLandingBase
@@ -138,14 +165,12 @@ CLEITINHO = Config(
     missions=(
         Mission.OBSTACLES,
         Mission.INSPECT,
-        Mission.PRECISE_LANDING
     )
 )
 
 JORGE = Config(
     missions=(
         Mission.DROPPING,
-        Mission.PRECISE_LANDING
     )
 )
 
@@ -153,13 +178,11 @@ SITL_CLEITINHO = SITLConfig(
     missions=(
         Mission.OBSTACLES,
         Mission.INSPECT,
-        Mission.PRECISE_LANDING
     )
 )
 
 SITL_JORGE = SITLConfig(
     missions=(
         Mission.DROPPING,
-        Mission.PRECISE_LANDING
     )
 )

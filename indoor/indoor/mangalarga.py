@@ -26,6 +26,7 @@ CONFIG_PROFILES = {
     'sitl_cleitinho': SITL_CLEITINHO,
     'jorge': JORGE,
     'sitl_jorge': SITL_JORGE,
+    'custom': None,
 }
 
 
@@ -48,22 +49,28 @@ def main(args=None):
 
     nectar.use_executor(YasminNode.get_instance()._executor)
 
+    indoor_sm = None
+
     try:
         yasmin.YASMIN_LOG_INFO(
         f"Loading configuration profile: {parsed_args.config.upper()}"
         )
 
-        profile_obj = CONFIG_PROFILES[parsed_args.config]
-        if isinstance(profile_obj, type):
-            config = profile_obj()
+        if parsed_args.config == 'custom':
+            from .customization import run_customization_wizard
+            config = run_customization_wizard()
         else:
-            config = profile_obj
+            profile_obj = CONFIG_PROFILES[parsed_args.config]
+            if isinstance(profile_obj, type):
+                config = profile_obj()
+            else:
+                config = profile_obj
 
         indoor_sm = IndoorSM(config)
         final_outcome = indoor_sm()
 
     except KeyboardInterrupt:
-        if indoor_sm.is_running():
+        if indoor_sm is not None and indoor_sm.is_running():
             indoor_sm.cancel_state()
 
     except Exception as e:

@@ -1,4 +1,5 @@
 from .config import (
+    Mission,
     Config,
     SITLConfig,
     CLEITINHO,
