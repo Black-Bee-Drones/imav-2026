@@ -11,7 +11,7 @@ from nectar.vision import ImageHandler
 from indoor import Config
 
 
-class Center(State):
+class CenterFixed(State):
     def __init__(self, config: Config):
         super().__init__(outcomes=[SUCCEED, FAIL, TIMEOUT])
 

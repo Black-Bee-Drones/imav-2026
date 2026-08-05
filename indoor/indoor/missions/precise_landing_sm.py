@@ -3,7 +3,8 @@ from yasmin_ros.basic_outcomes import SUCCEED, TIMEOUT, FAIL, CANCEL, ABORT
 
 from indoor.states import (
     GoToLandingBase,
-    Center,
+    CenterFixed,
+    CenterMoving,
     Reacquire,
 )
 from indoor import Config
@@ -24,7 +25,8 @@ class PreciseLandingSM(StateMachine):
 
         self.add_state(
             'CENTER',
-            Center(config),
+            CenterFixed(
+                config) if config.landing_mode == "PRECISION_FIXED" else CenterMoving(config),
             transitions={SUCCEED: SUCCEED, FAIL: 'REACQUIRE', TIMEOUT: ABORT},
         )
 

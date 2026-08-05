@@ -16,8 +16,8 @@ class Mission(str, Enum):
 class LandingMode(str, Enum):
     LAND = 'LAND'                        
     RTL = 'RTL'                          
-    PRECISION_FIXED = 'PRECISION_FIXED'
-    PRECISION_MOVING = 'PRECISION_MOVING'
+    PRECISION_FIXED = 'PRECISION_FIXEDSM'
+    PRECISION_MOVING = 'PRECISION_MOVINGSM'
 
 
 @dataclass(frozen=True)

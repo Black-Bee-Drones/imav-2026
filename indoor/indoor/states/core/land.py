@@ -22,7 +22,10 @@ class Land(State):
         yasmin.YASMIN_LOG_INFO('Landing...')
 
         try:
-            drone.land()
+            if self.config.landing_mode == 'RTL':
+                drone.rtl()
+            else:
+                drone.land()
 
         except KeyboardInterrupt:
             yasmin.YASMIN_LOG_WARN('Execution interrupted by user.')

@@ -14,7 +14,8 @@ from .obstacle import (
 
 from .precise_landing import (
     GoToLandingBase,
-    Center,
+    CenterFixed,
+    CenterMoving,
     Reacquire,
 )
 

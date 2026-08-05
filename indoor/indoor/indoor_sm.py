@@ -28,7 +28,8 @@ class IndoorSM(StateMachine):
             'OBSTACLESM': ObstacleSM,
             'INSPECTSM': InspectSM,
             'DROPPINGSM': DroppingSM,
-            'PRECISELANDINGSM': PreciseLandingSM,
+            'PRECISION_FIXEDSM': PreciseLandingSM,
+            'PRECISION_MOVINGSM': PreciseLandingSM,
         }
 
         self.add_state(
