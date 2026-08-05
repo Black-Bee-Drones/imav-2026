@@ -40,7 +40,7 @@ class IndoorSM(StateMachine):
         self.add_state(
             'TAKEOFF',
             Takeoff(config),
-            transitions={SUCCEED: 'OBSTACLESM', ABORT: 'LAND'},
+            transitions={SUCCEED: config.missions[0], ABORT: 'LAND'},
         )
 
         for i, mission in enumerate(config.missions):
@@ -49,7 +49,7 @@ class IndoorSM(StateMachine):
                 missions_sm.get(mission)(config),
                 transitions={
                     SUCCEED: config.missions[i + 1] if i < len(config.missions)-1 else 'LAND',
-                    CANCEL: 'PRECISELANDINGSM',
+                    CANCEL: config.landing_mode,
                     ABORT: 'LAND',
                     TIMEOUT: ABORT,
                 },

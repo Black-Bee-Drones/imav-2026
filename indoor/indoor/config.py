@@ -14,11 +14,10 @@ class Mission(str, Enum):
 
 
 class LandingMode(str, Enum):
-    """How the drone should end its flight once selected missions are done."""
-    LAND = 'LAND'                        # land in place after completion
-    RTL = 'RTL'                          # return to launch
-    PRECISION_FIXED = 'PRECISION_FIXED'   # precision land, fixed platform
-    PRECISION_MOVING = 'PRECISION_MOVING'  # precision land, moving platform
+    LAND = 'LAND'                        
+    RTL = 'RTL'                          
+    PRECISION_FIXED = 'PRECISION_FIXED'
+    PRECISION_MOVING = 'PRECISION_MOVING'
 
 
 @dataclass(frozen=True)
@@ -30,7 +29,7 @@ class Config:
         Mission.DROPPING,
     )
 
-    ### Landing behavior (used by the `custom` profile; see customization.py) ###
+    ### Landing behavior  ###
     landing_mode: LandingMode = LandingMode.LAND
 
     ### Global ###
@@ -90,14 +89,9 @@ class Config:
     room_x: float = 10.0  # meters
     room_y: float = 2.0  # meters
 
-    # Entry/exit window colors for Mission 2 (independent of each other).
-    # `room_color_window` above is kept for backward compatibility with any
-    # existing code that reads a single color; these two let the custom
-    # wizard set entry and exit independently. None skips that checker.
     room_entry_color: str | None = 'blue'  # 'blue' or 'red' or None
     room_exit_color: str | None = 'blue'   # 'blue' or 'red' or None
 
-    # Whether to run the baby-counting inference during Mission 2
     run_baby_inference: bool = True
 
     # FindWindow
@@ -105,8 +99,6 @@ class Config:
     back_speed: float = -0.5  # meters per second
 
     ### Dropping ###
-    # Whether to actually drop the cone during Mission 3 (False = fly the
-    # mission but withhold the drop)
     drop_cone_enabled: bool = True
 
     ### Precise landing ###
@@ -161,28 +153,3 @@ class SITLConfig(Config):
     connection_string: str = 'tcp:127.0.0.1:5762'
 
 
-CLEITINHO = Config(
-    missions=(
-        Mission.OBSTACLES,
-        Mission.INSPECT,
-    )
-)
-
-JORGE = Config(
-    missions=(
-        Mission.DROPPING,
-    )
-)
-
-SITL_CLEITINHO = SITLConfig(
-    missions=(
-        Mission.OBSTACLES,
-        Mission.INSPECT,
-    )
-)
-
-SITL_JORGE = SITLConfig(
-    missions=(
-        Mission.DROPPING,
-    )
-)

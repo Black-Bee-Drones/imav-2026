@@ -1,9 +1,14 @@
+import importlib
+import inspect
 import os
+import pathlib
+import re
 import sys
 import termios
 import tty
 
-from indoor import Config, Mission
+from indoor import Config, SITLConfig, Mission
+from indoor import presets
 from indoor.config import LandingMode
 
 
@@ -157,8 +162,138 @@ def customize_landing():
     )
 
 
+# --- Discovering and reusing pre-built profiles ---------------------------
+
+def discover_saved_profiles():
+    profiles = {}
+    for name, obj in inspect.getmembers(presets):
+        if name.startswith('_'):
+            continue
+        if isinstance(obj, Config):
+            profiles[name] = obj
+    return profiles
+
+
+def _describe_profile(name, profile):
+    missions_str = ", ".join(m.value for m in profile.missions)
+    return f"{name}  [{missions_str}]"
+
+
+def select_initial_profile():
+    profiles = discover_saved_profiles()
+    options = [("Start a new custom configuration", None)]
+    for name in sorted(profiles):
+        options.append((_describe_profile(name, profiles[name]), name))
+
+    chosen_name = select_single(
+        "Custom configuration - start fresh or reuse an existing one?",
+        options,
+    )
+    return chosen_name, profiles
+
+
+# --- Saving a freshly-built configuration back into config.py -------------
+
+def _format_value(value):
+    if isinstance(value, Mission):
+        return f"Mission.{value.name}"
+    if isinstance(value, LandingMode):
+        return f"LandingMode.{value.name}"
+    if isinstance(value, tuple):
+        inner = ", ".join(_format_value(v) for v in value)
+        return f"({inner},)" if len(value) == 1 else f"({inner})"
+    return repr(value)
+
+
+def _sanitize_variable_name(raw_name):
+    """Turn free-typed input into a valid, SCREAMING_SNAKE_CASE Python
+    module-level variable name."""
+    name = re.sub(r"[^A-Za-z0-9_]", "_", raw_name.strip()).upper()
+    name = name.strip("_") or "CUSTOM"
+    if name[0].isdigit():
+        name = f"CFG_{name}"
+    return name
+
+
+def render_config_block(var_name, overrides, class_name):
+    """Render `VAR_NAME = ClassName(...)` source text ready to append to
+    config.py, matching the style of CLEITINHO/JORGE/etc."""
+    lines = [f"\n\n{var_name} = {class_name}("]
+    for key, value in overrides.items():
+        lines.append(f"    {key}={_format_value(value)},")
+    lines.append(")\n")
+    return "\n".join(lines)
+
+
+def save_profile_to_config(var_name, overrides, class_name):
+    """Append the new profile to the end of presets.py on disk."""
+    presets_file = pathlib.Path(presets.__file__).resolve()
+    if presets_file.suffix in ('.pyc', '.pyo'):
+        presets_file = presets_file.with_suffix('.py')
+
+    block = render_config_block(var_name, overrides, class_name)
+    with presets_file.open("a") as f:
+        f.write(block)
+
+    importlib.reload(presets)
+
+
+def prompt_save(overrides, class_name):
+    """Ask whether to persist this run's configuration, and if so, under
+    what name. Writes it to config.py so it shows up in
+    select_initial_profile() on future runs."""
+    save = select_single("Save this configuration for future runs?", _YES_NO)
+    if not save:
+        return
+
+    while True:
+        os.system('clear')
+        print("=" * 50)
+        print("Save configuration")
+        print("=" * 50)
+        raw_name = input("\nName for this configuration (e.g. custom1): ").strip()
+        if not raw_name:
+            print("Name cannot be empty.")
+            input("Press Enter to try again...")
+            continue
+
+        var_name = _sanitize_variable_name(raw_name)
+        if hasattr(presets, var_name):
+            print(f"\n'{var_name}' is already used in config.py.")
+            retry = select_single("Pick a different name?", _YES_NO)
+            if retry:
+                continue
+            return
+        break
+
+    save_profile_to_config(var_name, overrides, class_name)
+    os.system('clear')
+    print(f"Saved as {var_name} in config.py.")
+    print(f"Run with --config custom and pick '{var_name}' next time to reuse it.")
+    input("\nPress Enter to continue...")
+
+
 def run_customization_wizard():
-    """Full interactive wizard used by `--config custom`. Returns a Config."""
+    """Full interactive wizard used by `--config custom`.
+
+    First offers a choice between reusing an existing profile (built-in or
+    previously saved) and building a new one from scratch. Building a new
+    one ends with an optional save step that appends it to config.py.
+    Returns a Config either way.
+    """
+    chosen_name, profiles = select_initial_profile()
+    if chosen_name is not None:
+        return profiles[chosen_name]
+
+    # Added selection for Environment Type (Config vs SITLConfig)
+    config_class = select_single(
+        "Select Environment Type",
+        [
+            ("Real Hardware (Config)", Config),
+            ("Simulation (SITLConfig)", SITLConfig),
+        ]
+    )
+
     mission_choices = select_multi(
         "Select missions to attempt (Space to toggle, Enter to confirm)",
         [
@@ -189,5 +324,11 @@ def run_customization_wizard():
 
     overrides["missions"] = tuple(mission_choices)
 
+    # Instantiate using the user-selected class
+    config = config_class(**overrides)
+
+    # Pass the class name so it writes correctly to config.py
+    prompt_save(overrides, config_class.__name__)
+
     os.system('clear')
-    return Config(**overrides)
+    return config
