@@ -5,7 +5,7 @@ from yasmin import State, Blackboard
 from yasmin_ros.yasmin_node import YasminNode
 from yasmin_ros.basic_outcomes import SUCCEED, TIMEOUT
 
-from nectar.control import MavrosDrone
+from nectar.control import MavlinkDrone
 from nectar.vision import ImageHandler
 from nectar.ai import DetectionResult
 
@@ -22,7 +22,7 @@ class FindWindow(State):
         self.node = YasminNode.get_instance()
 
     def execute(self, blackboard: Blackboard):
-        drone: MavrosDrone = blackboard.get('drone')
+        drone: MavlinkDrone = blackboard.get('drone')
 
         image_handler_front: ImageHandler = blackboard.get(
             'image_handler_front')

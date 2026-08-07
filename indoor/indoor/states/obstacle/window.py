@@ -5,7 +5,7 @@ from yasmin import State, Blackboard
 from yasmin_ros.yasmin_node import YasminNode
 from yasmin_ros.basic_outcomes import SUCCEED, TIMEOUT
 
-from nectar.control import MavrosDrone, PIDController, MoveReference
+from nectar.control import MavlinkDrone, PIDController, MoveReference
 from nectar.vision import ImageHandler
 from nectar.ai import DetectionResult
 
@@ -14,7 +14,7 @@ from indoor import Config
 
 class Window(State):
     def __init__(self, config: Config, position: str):
-        super().__init__(outcomes=[SUCCEED, TIMEOUT])
+        super().__init__(outcomes=[SUCCEED, TIMEOUT, 'reacquire'])
 
         self.config = config
         self.position = position
@@ -22,7 +22,7 @@ class Window(State):
         self.node = YasminNode.get_instance()
 
     def execute(self, blackboard: Blackboard):
-        drone: MavrosDrone = blackboard.get('drone')
+        drone: MavlinkDrone = blackboard.get('drone')
 
         pid_y: PIDController = blackboard.get('pid_y')
         pid_z: PIDController = blackboard.get('pid_z')
@@ -64,6 +64,11 @@ class Window(State):
             yasmin.YASMIN_LOG_ERROR('Timeout.')
             return TIMEOUT
 
+        result: DetectionResult = image_handler_front.take_photo()
+        window = result.filter_by_class(
+            ['blue_window' if color_window == 'blue' else 'red_window'])
+
+
         lost = 0
         while color_window:
             now = self.node.get_clock().now()
@@ -102,6 +107,10 @@ class Window(State):
             else:
                 yasmin.YASMIN_LOG_ERROR(f'Lost detection {lost}.')
                 lost += 1
+
+            if lost > self.config.find_tolerance:
+                yasmin.YASMIN_LOG_ERROR('Blue window not found. Reacquiring...')
+                return 'reacquire'
 
             if self.check_timeout():
                 yasmin.YASMIN_LOG_ERROR('Timeout.')

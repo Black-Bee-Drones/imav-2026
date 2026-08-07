@@ -5,7 +5,7 @@ from yasmin import State, Blackboard
 from yasmin_ros.yasmin_node import YasminNode
 from yasmin_ros.basic_outcomes import SUCCEED, TIMEOUT, CANCEL
 
-from nectar.control import MavrosDrone
+from nectar.control import MavlinkDrone
 
 from indoor import Config
 
@@ -19,7 +19,7 @@ class Reacquire(State):
         self.node = YasminNode.get_instance()
 
     def execute(self, blackboard: Blackboard):
-        drone: MavrosDrone = blackboard['drone']
+        drone: MavlinkDrone = blackboard['drone']
 
         self.start_time: Time = blackboard.get('start_time')
         self.start_state = self.node.get_clock().now()

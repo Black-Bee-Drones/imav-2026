@@ -7,7 +7,7 @@ from yasmin import State, Blackboard
 from yasmin_ros.yasmin_node import YasminNode
 from yasmin_ros.basic_outcomes import SUCCEED, FAIL, TIMEOUT
 
-from nectar.control import MavrosDrone, PIDController
+from nectar.control import MavlinkDrone, PIDController
 from nectar.vision import ImageHandler, Aruco
 
 from indoor import Config
@@ -25,7 +25,7 @@ class CenterMoving(State):
         self.node = YasminNode.get_instance()
 
     def execute(self, blackboard: Blackboard):
-        drone: MavrosDrone = blackboard.get('drone')
+        drone: MavlinkDrone = blackboard.get('drone')
 
         pid_x: PIDController = blackboard.get('pid_x')
         pid_y: PIDController = blackboard.get('pid_y')

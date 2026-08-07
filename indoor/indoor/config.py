@@ -95,7 +95,7 @@ class Config:
     run_baby_inference: bool = True
 
     # FindWindow
-    find_tolerance: int = 2
+    find_tolerance: int = 5
     back_speed: float = -0.5  # meters per second
 
     ### Dropping ###

@@ -4,6 +4,7 @@ from yasmin_ros.basic_outcomes import SUCCEED, TIMEOUT, CANCEL, ABORT
 from indoor.states import (
     GoToObstacles,
     Window,
+    ReacquireWindow,
     RedBar,
     BlueBar,
     Tubes,
@@ -26,7 +27,13 @@ class ObstacleSM(StateMachine):
         self.add_state(
             'FIRST_WINDOW',
             Window(config, 'first'),
-            transitions={SUCCEED: 'RED_BAR', TIMEOUT: CANCEL},
+            transitions={SUCCEED: 'RED_BAR', TIMEOUT: CANCEL, 'reacquire': 'REACQUIRE_WINDOW'},
+        )
+
+        self.add_state(
+            'REACQUIRE_WINDOW',
+            ReacquireWindow(config),
+            transitions={SUCCEED: 'FIRST_WINDOW', TIMEOUT: CANCEL},
         )
 
         self.add_state(

@@ -7,6 +7,7 @@ from .core import (
 from .obstacle import (
     GoToObstacles,
     Window,
+    ReacquireWindow,
     RedBar,
     BlueBar,
     Tubes,
