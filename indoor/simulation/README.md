@@ -35,7 +35,7 @@ ros2 launch indoor sitl_gazebo.launch.py
 Override spawn if needed:
 
 ```bash
-ros2 launch indoor sitl_gazebo.launch.py spawn_pose:="-6.0 0 0.25 0 0 0"
+ros2 launch indoor sitl_gazebo.launch.py spawn_pose:="-6.0 3 0.25 0 0 0"
 ```
 
 Equivalent via nectar `make` (explicit args):
