@@ -48,7 +48,7 @@ class Config:
     connection_string: str = 'udp:127.0.0.1:14551'
 
     # Detector
-    gate_model_source: str = str(models_path / 'gate.pt')
+    gate_model_source: str = str(models_path / 'gate2.pt')
     gate_conf: float = 0.5
     baby_model_source: str = str(models_path / 'best.pt')
     baby_conf: float = 0.5
