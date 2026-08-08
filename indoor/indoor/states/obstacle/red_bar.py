@@ -55,6 +55,12 @@ class RedBar(State):
             yaw=0,
             reference=MoveReference.TAKEOFF,
             precision=self.config.precision,
+            x=2.25,
+            y=None,
+            z=altitude,
+            yaw=0,
+            reference=MoveReference.TAKEOFF,
+            precision=self.config.move_precision,
         )
 
         self.node.get_clock().sleep_for(Duration(seconds=1))

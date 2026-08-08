@@ -63,7 +63,13 @@ class IndoorSM(StateMachine):
         )
 
         self.add_state(
-            'PRECISELANDINGSM',
+            'PRECISION_FIXEDSM',
+            PreciseLandingSM(config),
+            transitions={SUCCEED: SUCCEED, ABORT: ABORT},
+        )
+
+        self.add_state(
+            'PRECISION_MOVINGSM',
             PreciseLandingSM(config),
             transitions={SUCCEED: SUCCEED, ABORT: ABORT},
         )

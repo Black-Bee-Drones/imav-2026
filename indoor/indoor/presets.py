@@ -25,3 +25,15 @@ SITL_JORGE = SITLConfig(
         Mission.DROPPING,
     )
 )
+
+
+SKIP_WINDOW = SITLConfig(
+    first_color_window=None,
+    red_step=3,
+    blue_step1=2,
+    blue_step2=2,
+    obstacle_avoid_enabled=True,
+    second_color_window=None,
+    landing_mode=LandingMode.LAND,
+    missions=(Mission.OBSTACLES,),
+)

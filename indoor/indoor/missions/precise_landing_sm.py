@@ -26,7 +26,7 @@ class PreciseLandingSM(StateMachine):
         self.add_state(
             'CENTER',
             CenterFixed(
-                config) if config.landing_mode == "PRECISION_FIXED" else CenterMoving(config),
+                config) if config.landing_mode == "PRECISION_FIXEDSM" else CenterMoving(config),
             transitions={SUCCEED: SUCCEED, FAIL: 'REACQUIRE', TIMEOUT: ABORT},
         )
 
