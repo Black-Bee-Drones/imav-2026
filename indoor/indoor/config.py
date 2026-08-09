@@ -57,9 +57,11 @@ class Config:
 
     # ImageHandler
     front_image_source: str = 'ros'
-    front_ros_topic: str = '/camera/camera/color/image_raw'
+    front_ros_topic: str = '/front_camera/image'
+    front_camera_id: int = 6
     down_image_source: str = 'opencv'
-    down_ros_topic: str = '/down_camera/image'
+    down_ros_topic: str = '/down_camera'
+    down_camera_id: int = 6
 
     ### Takeoff ###
     takeoff_altitude: float = 1.2  # meters

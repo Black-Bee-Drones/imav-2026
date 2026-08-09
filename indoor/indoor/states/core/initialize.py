@@ -12,7 +12,7 @@ from yasmin_ros.yasmin_node import YasminNode
 from yasmin_ros.basic_outcomes import SUCCEED, ABORT
 
 from nectar.control import DroneFactory, MavrosConfig, MavlinkConfig, PoseSource, PIDController
-from nectar.vision import ImageHandler, Aruco, ROSConfig
+from nectar.vision import ImageHandler, Aruco, ROSConfig, OpenCVConfig
 from nectar.ai import Detector, DetectionResult
 
 from indoor import Config
@@ -235,7 +235,7 @@ class Initialize(State):
                 image_source=self.config.front_image_source,
                 config=(ROSConfig(topic=self.config.front_ros_topic)
                         if self.config.front_image_source == 'ros'
-                        else None),
+                        else OpenCVConfig(device_index=self.config.down_camera_id)),
             )
 
             yasmin.YASMIN_LOG_INFO('Open camera (front)...')
@@ -262,7 +262,7 @@ class Initialize(State):
                 image_source=self.config.down_image_source,
                 config=(ROSConfig(topic=self.config.down_ros_topic)
                         if self.config.down_image_source == 'ros'
-                        else None),
+                        else OpenCVConfig(device_index=self.config.down_camera_id)),
             )
 
             yasmin.YASMIN_LOG_INFO('Open camera (down)...')
