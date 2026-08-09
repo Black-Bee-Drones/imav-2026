@@ -29,18 +29,17 @@ class RedBar(State):
             yasmin.YASMIN_LOG_ERROR('Timeout.')
             return TIMEOUT
 
-        altitude = 0.5 + [1.2, 1.6, 1.98][self.config.red_step -
-                                          1] if self.config.red_step else self.config.safe_altitude
+        altitude = self.config.red_alt[self.config.red_step - 1] if self.config.red_step else self.config.safe_altitude
 
         yasmin.YASMIN_LOG_INFO(
             f'Correcting drone altitude by z={altitude:.1f} m...')
         drone.move_to(
-            x=1.25,
-            y=0,
+            x=self.config.start_obstacle_x + 1.25,
+            y=self.config.start_obstacle_y,
             z=altitude,
             yaw=0,
             reference=MoveReference.TAKEOFF,
-            precision=0.05,
+            precision=self.config.precision,
         )
 
         self.node.get_clock().sleep_for(Duration(seconds=1))
@@ -50,12 +49,12 @@ class RedBar(State):
 
         yasmin.YASMIN_LOG_INFO('Fly over the red bar...')
         drone.move_to(
-            x=2.25,
-            y=0,
+            x=self.config.start_obstacle_x + 2.25,
+            y=self.config.start_obstacle_y,
             z=altitude,
             yaw=0,
             reference=MoveReference.TAKEOFF,
-            precision=0.05,
+            precision=self.config.precision,
         )
 
         self.node.get_clock().sleep_for(Duration(seconds=1))

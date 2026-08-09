@@ -24,13 +24,26 @@ class GoToObstacles(State):
         self.start_time: Time = blackboard.get('start_time')
         self.start_state = self.node.get_clock().now()
 
-        yasmin.YASMIN_LOG_INFO(f'fly to y={self.config.start_y}...')
+        yasmin.YASMIN_LOG_INFO(f'fly to x={self.config.start_obstacle_x}...')
         drone.move_to(
-            x = None,
-            y = self.config.start_y,
-            z = self.config.takeoff_altitude,
-            yaw = 0,
-            reference = MoveReference.TAKEOFF,  
+            x=self.config.start_obstacle_x,
+            y=None,
+            z=self.config.safe_altitude,
+            yaw=0,
+            reference=MoveReference.TAKEOFF,
+            precision=self.config.precision,
+            method=self.config.gate_alt,
+        )
+
+        yasmin.YASMIN_LOG_INFO(f'fly to x={self.config.start_obstacle_x} y={self.config.start_obstacle_y}...')
+        drone.move_to(
+            x=self.config.start_obstacle_x,
+            y=self.config.start_obstacle_y,
+            z=self.config.safe_altitude,
+            yaw=0,
+            reference=MoveReference.TAKEOFF,
+            precision=self.config.precision,
+            method=self.config.gate_alt,
         )
 
         if self.check_timeout():

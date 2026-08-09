@@ -4,6 +4,8 @@ from enum import Enum
 
 from ament_index_python import get_package_share_directory
 
+from nectar.control import NavigationMethod
+
 models_path = pathlib.Path(get_package_share_directory('indoor')) / 'models'
 
 
@@ -14,8 +16,8 @@ class Mission(str, Enum):
 
 
 class LandingMode(str, Enum):
-    LAND = 'LAND'                        
-    RTL = 'RTL'                          
+    LAND = 'LAND'
+    RTL = 'RTL'
     PRECISION_FIXED = 'PRECISION_FIXEDSM'
     PRECISION_MOVING = 'PRECISION_MOVINGSM'
 
@@ -33,10 +35,12 @@ class Config:
     landing_mode: LandingMode = LandingMode.LAND
 
     ### Global ###
-    timeout: int = 1800  # seconds
+    timeout: int = 360  # seconds
     timeout_per_state: int = 300  # seconds
     safe_altitude: float = 3.0  # meters
     max_altitude: float = 7.0  # meters
+    precision = 0.2  # meters
+    navigation_method = NavigationMethod.POSITION
 
     ### Initialize ###
     # Drone
@@ -67,24 +71,37 @@ class Config:
     takeoff_altitude: float = 1.2  # meters
 
     ### Obstacle ###
-    # GoToWindow
-    start_y : float = -3.2
+    start_obstacle_x: float = .0  # meters
+    start_obstacle_y: float = .0  # meters
 
     # Window
-    first_color_window: str | None = 'blue'  # 'blue' or 'red' or None
-    second_color_window: str | None = 'blue'  # 'blue' or 'red' or None
-    room_color_window: str | None = 'blue'  # 'blue' or 'red' or None
+    gate_alt: float = 1.2  # meters
+    first_color_window: str | None = None  # 'blue' or 'red' or None
+    second_color_window: str | None = None  # 'blue' or 'red' or None
+    room_color_window: str | None = None  # 'blue' or 'red' or None
     window_threshold: int = 50  # pixels
 
     # RedBar
-    red_step: int | None = 3
+    red_alt: list[float, float, float] = (
+        1.7,
+        2.1,
+        2.5,
+    )  # meters (bar_alt + 0.5)
+    red_step: int | None = 3  # step ou jump
 
     # BlueBar
-    blue_step1: int | None = 3
-    blue_step2: int | None = 3
+    blue_alt: list[float, float, float] = (
+        0.2,
+        0.4,
+        0.6,
+    )  # meters (bar_alt / 2)
+    blue_step_1: int | None = 3  # step ou jump
+    blue_step_2: int | None = 3  # step ou jump
 
-    # Obstacle (tube passage) - set False to skip this checker entirely
-    obstacle_avoid_enabled: bool = True
+    # Tubes
+    tubes_skip: bool = False
+    tubes_alt: float = 0.7  # meters
+    tubes_offset = 1.5  # meters
 
     ### Inspect ###
     # GoToWindow
@@ -152,10 +169,9 @@ class Config:
 
 @dataclass(frozen=True)
 class SITLConfig(Config):
-    connection_string: str = 'tcp:127.0.0.1:5762'
+    connection_string: str = 'tcp:127.0.0.1:5763'
 
     front_image_source: str = 'ros'
     front_ros_topic: str = '/front_camera/image'
     down_image_source: str = 'ros'
-    down_ros_topic: str = '/down_camera/image'
-
+    down_ros_topic: str = '/down_camera'

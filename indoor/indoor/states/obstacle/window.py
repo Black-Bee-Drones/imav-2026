@@ -5,7 +5,7 @@ from yasmin import State, Blackboard
 from yasmin_ros.yasmin_node import YasminNode
 from yasmin_ros.basic_outcomes import SUCCEED, TIMEOUT
 
-from nectar.control import MavlinkDrone, PIDController, MoveReference
+from nectar.control import MavlinkDrone, PIDController
 from nectar.vision import ImageHandler
 from nectar.ai import DetectionResult
 
@@ -52,27 +52,20 @@ class Window(State):
 
         yasmin.YASMIN_LOG_INFO('Correcting drone altitude...')
         drone.move_to(
-            x = None,
-            y = None,
-            z = 1.2,
-            yaw = 0,
-            reference = MoveReference.TAKEOFF,
-            precision = 0.05,
+            x=0,
+            y=0,
+            z=self.config.gate_alt - drone.get_altitude(),
+            yaw=0,
+            precision=self.config.precision,
+            method=self.config.navigation_method,
         )
 
         if self.check_timeout():
             yasmin.YASMIN_LOG_ERROR('Timeout.')
             return TIMEOUT
 
-        result: DetectionResult = image_handler_front.take_photo()
-        window = result.filter_by_class(
-            ['blue_window' if color_window == 'blue' else 'red_window'])
-
-
         lost = 0
         while color_window:
-            now = self.node.get_clock().now()
-
             result: DetectionResult = image_handler_front.take_photo()
 
             window = result.filter_by_class(
@@ -94,7 +87,7 @@ class Window(State):
                     break
 
                 output_y = pid_y.update(error_y)
-                output_z = pid_z.update(error_z)
+                output_z = pid_z.update(error_z)  # Usar altura fixa?
 
                 yasmin.YASMIN_LOG_INFO(
                     f'Centering: error_y={error_y:.0f}; error_z={error_z:.0f}; output_y={output_y:.1f}; output_z={output_z:.1f}.')
@@ -104,28 +97,29 @@ class Window(State):
                     vz=output_z,
                     vyaw=0,
                 )
+
             else:
                 yasmin.YASMIN_LOG_ERROR(f'Lost detection {lost}.')
                 lost += 1
 
             if lost > self.config.find_tolerance:
-                yasmin.YASMIN_LOG_ERROR('Blue window not found. Reacquiring...')
+                yasmin.YASMIN_LOG_ERROR(
+                    'Blue window not found. Reacquiring...')
                 return 'reacquire'
 
             if self.check_timeout():
                 yasmin.YASMIN_LOG_ERROR('Timeout.')
                 return TIMEOUT
 
-            self.node.get_clock().sleep_until(now + Duration(seconds=1/30))
-
         else:
             yasmin.YASMIN_LOG_INFO('Fly the drone to safe altitude.')
             drone.move_to(
                 x=0,
                 y=0,
-                z=self.config.safe_altitude,
+                z=self.config.safe_altitude - drone.get_altitude(),
                 yaw=0,
-                precision=0.05,
+                precision=self.config.precision,
+                method=self.config.navigation_method,
             )
 
         self.node.get_clock().sleep_for(Duration(seconds=1))
@@ -139,7 +133,8 @@ class Window(State):
             y=0,
             z=0,
             yaw=0,
-            precision=0.05,
+            precision=self.config.precision,
+            method=self.config.navigation_method,
         )
 
         self.node.get_clock().sleep_for(Duration(seconds=1))

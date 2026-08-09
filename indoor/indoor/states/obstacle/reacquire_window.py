@@ -5,7 +5,7 @@ from yasmin import State, Blackboard
 from yasmin_ros.yasmin_node import YasminNode
 from yasmin_ros.basic_outcomes import SUCCEED, TIMEOUT
 
-from nectar.control import MavlinkDrone, MoveReference
+from nectar.control import MavlinkDrone
 from nectar.vision import ImageHandler
 from nectar.ai import DetectionResult
 
