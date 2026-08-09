@@ -54,3 +54,9 @@ cd ~/ros2_ws/src/imav-2026/indoor
 export GZ_SIM_RESOURCE_PATH=$PWD/simulation/models:$PWD/simulation:${GZ_SIM_RESOURCE_PATH:-}
 gz sim -v4 -r simulation/imav_scenery.sdf
 ```
+
+## Vslam
+**Terminal 3**: 
+```bash
+python3 ~/ros2_ws/src/nectar-sdk/scripts/simulation/gz_vision_source.py 
+```
