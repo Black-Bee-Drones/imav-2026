@@ -169,7 +169,7 @@ class Config:
 
 @dataclass(frozen=True)
 class SITLConfig(Config):
-    connection_string: str = 'tcp:127.0.0.1:5763'
+    connection_string: str = 'tcp:127.0.0.1:5762'
 
     front_image_source: str = 'ros'
     front_ros_topic: str = '/front_camera/image'

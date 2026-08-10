@@ -37,9 +37,14 @@ For a detailed explanation of the simulation launch parameters and Gazebo setup,
 
 #### 2. Running on the Physical Drone
 
-For physical flights, you only need to run the state machine launch file (assuming your camera/sensor nodes are launched separately or via a master launch file).
+Start the vision feeder first, leave it running, then the mission. Black Bee
+MAVProxy: feeder `14552`, mission `14551`.
 
 ```bash
+# T1 — nectar-sdk
+make driver DRONE=mavlink ENV=indoor # == ros2 launch nectar vision_pose.launch.py backend:=mavlink mavlink_url:=udp:127.0.0.1:14552
+
+# T2
 ros2 launch indoor mangalarga.launch.py config:=cleitinho
 ```
 

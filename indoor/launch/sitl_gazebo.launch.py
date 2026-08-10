@@ -1,8 +1,11 @@
 """
 IMAV 2026 indoor arena on Nectar ArduPilot SITL.
 
-Loads the custom imav_world.sdf directly.
-Note: spawn_pose must be edited directly inside imav_world.sdf when loading a full world.
+Loads the custom imav_world.sdf directly (full world with iris + arena).
+vision:=true is required because world is a path, not world:=indoor.
+resource_path points at simulation/models so model://imav meshes resolve.
+
+Note: spawn pose is edited inside imav_world.sdf (path worlds ignore spawn_pose).
 
 Prerequisites:
     Terminal 1:  make sim-start FIRMWARE=ardupilot ENV=indoor  (from nectar-sdk)
@@ -21,11 +24,13 @@ from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration
 
+
 def generate_launch_description():
     nectar_share = get_package_share_directory("nectar")
     indoor_share = get_package_share_directory("indoor")
-    
-    imav_world_path = os.path.join(indoor_share, "simulation", "models", "imav", "imav_world.sdf")
+
+    models_dir = os.path.join(indoor_share, "simulation", "models")
+    imav_world_path = os.path.join(models_dir, "imav", "imav_world.sdf")
 
     return LaunchDescription(
         [
@@ -46,7 +51,7 @@ def generate_launch_description():
                 launch_arguments={
                     "world": imav_world_path,
                     "vision": "true",
-                    "spawn_pose": "-6.0 3.0 0.25 0 0 0", 
+                    "resource_path": models_dir,
                     "mavros": LaunchConfiguration("mavros"),
                     "headless": LaunchConfiguration("headless"),
                 }.items(),
