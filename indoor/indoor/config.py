@@ -50,7 +50,7 @@ class Config:
     # Detector
     gate_model_source: str = str(models_path / 'gate2.pt')
     gate_conf: float = 0.5
-    baby_model_source: str = str('yolo26n.pt')
+    baby_model_source: str = str(models_path / 'yolo26n.pt')
     baby_conf: float = 0.25
     box_model_source: str = str(models_path / 'package.pt')
     box_conf: float = 0.5
