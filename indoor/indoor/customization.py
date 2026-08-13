@@ -123,9 +123,9 @@ def customize_mission1():
     return {
         "first_color_window": window1,
         "red_step": red_bar,
-        "blue_step1": blue_bar1,
-        "blue_step2": blue_bar2,
-        "obstacle_avoid_enabled": obstacle,
+        "blue_step_1": blue_bar1,
+        "blue_step_2": blue_bar2,
+        "tubes_avoid_enabled": obstacle,
         "second_color_window": window2,
     }
 

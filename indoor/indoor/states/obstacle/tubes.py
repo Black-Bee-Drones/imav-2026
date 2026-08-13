@@ -29,7 +29,7 @@ class Tubes(State):
             yasmin.YASMIN_LOG_ERROR('Timeout.')
             return TIMEOUT
 
-        if self.config.tubes_skip:
+        if self.config.tubes_avoid_enabled:
             yasmin.YASMIN_LOG_INFO('Up to skip of the tubes...')
             drone.move_to(
                 x=self.config.start_obstacle_x + 4.75,

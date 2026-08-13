@@ -127,15 +127,15 @@ class Window(State):
             yasmin.YASMIN_LOG_ERROR('Timeout.')
             return TIMEOUT
 
-        yasmin.YASMIN_LOG_INFO('Fly the drone through the window.')
-        drone.move_to(
-            x=1.25,
-            y=0,
-            z=0,
-            yaw=0,
-            precision=self.config.precision,
-            method=self.config.navigation_method,
-        )
+        # yasmin.YASMIN_LOG_INFO('Fly the drone through the window.')
+        # drone.move_to(
+        #     x=1.25,
+        #     y=0,
+        #     z=0,
+        #     yaw=0,
+        #     precision=self.config.precision,
+        #     method=self.config.navigation_method,
+        # )
 
         self.node.get_clock().sleep_for(Duration(seconds=1))
         if self.check_timeout():

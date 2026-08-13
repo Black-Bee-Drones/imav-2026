@@ -27,12 +27,12 @@ SITL_JORGE = SITLConfig(
 )
 
 
-SKIP_WINDOW = SITLConfig(
-    first_color_window=None,
-    red_step=3,
-    blue_step1=2,
-    blue_step2=2,
-    obstacle_avoid_enabled=True,
+TESTGATE = Config(
+    first_color_window='blue',
+    red_step=None,
+    blue_step_1=None,
+    blue_step_2=None,
+    tubes_avoid_enabled=False,
     second_color_window=None,
     landing_mode=LandingMode.LAND,
     missions=(Mission.OBSTACLES,),

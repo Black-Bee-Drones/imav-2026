@@ -99,7 +99,7 @@ class Config:
     blue_step_2: int | None = 3  # step ou jump
 
     # Tubes
-    tubes_skip: bool = False
+    tubes_avoid_enabled: bool = False
     tubes_alt: float = 0.7  # meters
     tubes_offset = 1.5  # meters
 
