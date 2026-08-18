@@ -10,6 +10,8 @@ from nectar.vision import ImageHandler
 from nectar.ai import DetectionResult
 
 from indoor import Config
+import cv2
+import time
 
 
 class Window(State):
@@ -98,9 +100,14 @@ class Window(State):
                     vyaw=0,
                 )
 
+            
+
             else:
                 yasmin.YASMIN_LOG_ERROR(f'Lost detection {lost}.')
                 lost += 1
+
+            filename = f"{time.time()}.jpg"
+            cv2.imwrite(filename=filename, img=result)
 
             if lost > self.config.find_tolerance:
                 yasmin.YASMIN_LOG_ERROR(

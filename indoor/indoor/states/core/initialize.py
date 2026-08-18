@@ -162,28 +162,28 @@ class Initialize(State):
             return ABORT
 
         # Detector - baby
-        try:
-            yasmin.YASMIN_LOG_INFO('Initializing Detector(baby)...')
-            self.detector_baby = Detector(
-                model_source=self.config.baby_model_source,
-                confidence_threshold=self.config.baby_conf,
-            )
+        # try:
+        #     yasmin.YASMIN_LOG_INFO('Initializing Detector(baby)...')
+        #     self.detector_baby = Detector(
+        #         model_source=self.config.baby_model_source,
+        #         confidence_threshold=self.config.baby_conf,
+        #     )
 
-            yasmin.YASMIN_LOG_INFO('Load Detector(baby)...')
-            self.detector_baby.load()
+        #     yasmin.YASMIN_LOG_INFO('Load Detector(baby)...')
+        #     self.detector_baby.load()
 
-            blackboard.set('detector_baby', self.detector_baby)
-            blackboard.set('callback_detector_baby',
-                           self.callback_detector_baby)
-            yasmin.YASMIN_LOG_INFO('successful start Detector(baby)!')
+        #     blackboard.set('detector_baby', self.detector_baby)
+        #     blackboard.set('callback_detector_baby',
+        #                    self.callback_detector_baby)
+        #     yasmin.YASMIN_LOG_INFO('successful start Detector(baby)!')
 
-        except KeyboardInterrupt:
-            yasmin.YASMIN_LOG_WARN('Execution interrupted by user.')
-            return ABORT
+        # except KeyboardInterrupt:
+        #     yasmin.YASMIN_LOG_WARN('Execution interrupted by user.')
+        #     return ABORT
 
-        except Exception as e:
-            yasmin.YASMIN_LOG_ERROR(f'Detector(baby) failed: {e}')
-            return ABORT
+        # except Exception as e:
+        #     yasmin.YASMIN_LOG_ERROR(f'Detector(baby) failed: {e}')
+        #     return ABORT
 
         # Detector - box
         try:
@@ -233,7 +233,7 @@ class Initialize(State):
             yasmin.YASMIN_LOG_INFO('Initializing ImageHandler(front)...')
 
             if self.config.front_image_source == 'ros':
-                front_handler_config = ROSConfig(topic=self.config.front_ros_topic)
+                front_handler_config = ROSConfig(topic=self.config.front_ros_topic, compressed=True)
             elif self.config.front_ros_topic == 'realsense':
                 front_handler_config = RealSenseConfig()
             else:
@@ -248,7 +248,7 @@ class Initialize(State):
             image_handler_front.open()
 
             yasmin.YASMIN_LOG_INFO('Take testing photo (front)...')
-            image_handler_front.take_photo()
+            frame = image_handler_front.take_photo(tim)
 
             blackboard.set('image_handler_front', image_handler_front)
             yasmin.YASMIN_LOG_INFO('successful start ImageHandler(front)!')
