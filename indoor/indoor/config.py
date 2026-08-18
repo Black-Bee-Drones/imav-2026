@@ -61,7 +61,7 @@ class Config:
 
     # ImageHandler
     front_image_source: str = 'ros'
-    front_ros_topic: str = '/front_camera/image'
+    front_ros_topic: str = '/camera/color/image_raw/compressed'
     front_camera_id: int = 6
     down_image_source: str = 'opencv'
     down_ros_topic: str = '/down_camera'

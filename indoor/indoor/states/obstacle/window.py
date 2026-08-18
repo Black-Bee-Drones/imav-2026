@@ -71,7 +71,7 @@ class Window(State):
             result: DetectionResult = image_handler_front.take_photo()
 
             window = result.filter_by_class(
-                ['blue_window' if color_window == 'blue' else 'red_window'])
+                ['blue' if color_window == 'blue' else 'red_window'])
 
             if window:
                 lost = 0
@@ -80,13 +80,13 @@ class Window(State):
 
                 center = window[0].center
 
-                error_y = (center[0] - (h / 2))
-                error_z = (center[1] - (w / 2))
+                error_y = (center[0] - (w / 2))
+                error_z = (center[1] - ((h + 20)/ 2))
 
                 if (error_y**2 + error_z**2) <= self.config.window_threshold**2:
                     yasmin.YASMIN_LOG_INFO('successful alignment!')
                     drone.move_velocity()
-                    break
+                    
 
                 output_y = pid_y.update(error_y)
                 output_z = pid_z.update(error_z)  # Usar altura fixa?

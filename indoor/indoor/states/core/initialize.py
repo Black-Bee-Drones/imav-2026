@@ -234,7 +234,9 @@ class Initialize(State):
 
             if self.config.front_image_source == 'ros':
                 front_handler_config = ROSConfig(topic=self.config.front_ros_topic, compressed=True)
-            elif self.config.front_ros_topic == 'realsense':
+
+            elif self.config.front_image_source == 'realsense':
+
                 front_handler_config = RealSenseConfig()
             else:
                 front_handler_config = OpenCVConfig()
@@ -248,8 +250,8 @@ class Initialize(State):
             image_handler_front.open()
 
             yasmin.YASMIN_LOG_INFO('Take testing photo (front)...')
-            frame = image_handler_front.take_photo(tim)
 
+            frame = image_handler_front.take_photo()
             blackboard.set('image_handler_front', image_handler_front)
             yasmin.YASMIN_LOG_INFO('successful start ImageHandler(front)!')
 
@@ -259,33 +261,6 @@ class Initialize(State):
 
         except Exception as e:
             yasmin.YASMIN_LOG_ERROR(f'ImageHandler(front) failed: {e}')
-            return ABORT
-
-        # ImageHandler - down
-        try:
-            yasmin.YASMIN_LOG_INFO('Initializing ImageHandler(down)...')
-            image_handler_down = ImageHandler(
-                image_source=self.config.down_image_source,
-                config=(ROSConfig(topic=self.config.down_ros_topic)
-                        if self.config.down_image_source == 'ros'
-                        else OpenCVConfig(device_index=self.config.down_camera_id)),
-            )
-
-            yasmin.YASMIN_LOG_INFO('Open camera (down)...')
-            image_handler_down.open()
-
-            yasmin.YASMIN_LOG_INFO('Take testing photo (down)...')
-            image_handler_down.take_photo()
-
-            blackboard.set('image_handler_down', image_handler_down)
-            yasmin.YASMIN_LOG_INFO('successful start ImageHandler(down)!')
-
-        except KeyboardInterrupt:
-            yasmin.YASMIN_LOG_WARN('Execution interrupted by user.')
-            return ABORT
-
-        except Exception as e:
-            yasmin.YASMIN_LOG_ERROR(f'ImageHandler(down) failed: {e}')
             return ABORT
 
         yasmin.YASMIN_LOG_INFO('Completed successfully!!!')
