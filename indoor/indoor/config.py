@@ -140,31 +140,31 @@ class Config:
 
     ### PIDController ###
     # PID xy
-    controller_xy_kp: float = 1.0
-    controller_xy_kd: float = 1.0
-    controller_xy_ki: float = 1.0
-    controller_xy_output_min: float = -1.0
-    controller_xy_output_max: float = 1.0
-    controller_xy_integral_min: float = -1.0
-    controller_xy_integral_max: float = 1.0
+    controller_xy_kp: float = 0.000511
+    controller_xy_kd: float = 0.0
+    controller_xy_ki: float = 0.0
+    controller_xy_output_min: float = -0.1
+    controller_xy_output_max: float = 0.1
+    controller_xy_integral_min: float = -0.1
+    controller_xy_integral_max: float = 0.1
 
     # PID z
-    controller_z_kp: float = 1.0
-    controller_z_kd: float = 1.0
-    controller_z_ki: float = 1.0
-    controller_z_output_min: float = -1.0
-    controller_z_output_max: float = 1.0
-    controller_z_integral_min: float = -1.0
-    controller_z_integral_max: float = 1.0
+    controller_z_kp: float = 0.000711
+    controller_z_kd: float = 0.0
+    controller_z_ki: float = 0.0
+    controller_z_output_min: float = -0.1
+    controller_z_output_max: float = 0.1
+    controller_z_integral_min: float = -0.1
+    controller_z_integral_max: float = 0.1
 
     # PID yaw
-    controller_yaw_kp: float = 1.0
-    controller_yaw_kd: float = 1.0
+    controller_yaw_kp: float = 0.0000111
+    controller_yaw_kd: float = 0.0
     controller_yaw_ki: float = 0
-    controller_yaw_output_min: float = -1.0
-    controller_yaw_output_max: float = 1.0
-    controller_yaw_integral_min: float = -1.0
-    controller_yaw_integral_max: float = 1.0
+    controller_yaw_output_min: float = -0.1
+    controller_yaw_output_max: float = 0.1
+    controller_yaw_integral_min: float = -0.1
+    controller_yaw_integral_max: float = 0.1
 
 
 @dataclass(frozen=True)

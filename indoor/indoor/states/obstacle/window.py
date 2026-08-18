@@ -5,7 +5,7 @@ from yasmin import State, Blackboard
 from yasmin_ros.yasmin_node import YasminNode
 from yasmin_ros.basic_outcomes import SUCCEED, TIMEOUT
 
-from nectar.control import MavlinkDrone, PIDController
+from nectar.control import MavlinkDrone, PIDController, MoveReference
 from nectar.vision import ImageHandler
 from nectar.ai import DetectionResult
 
@@ -67,6 +67,7 @@ class Window(State):
             return TIMEOUT
 
         lost = 0
+        detected = 0
         while color_window:
             result: DetectionResult = image_handler_front.take_photo()
 
@@ -75,21 +76,28 @@ class Window(State):
 
             if window:
                 lost = 0
+                detected += 1
 
                 h, w = result.image.shape[:2]
 
                 center = window[0].center
 
                 error_y = (center[0] - (w / 2))
-                error_z = (center[1] - ((h + 20)/ 2))
+                error_z = (center[1] - ((h + 25)/ 2)) # mudar para offset na config
 
                 if (error_y**2 + error_z**2) <= self.config.window_threshold**2:
-                    yasmin.YASMIN_LOG_INFO('successful alignment!')
-                    drone.move_velocity()
+                    yasmin.YASMIN_LOG_INFO(f'successful alignment! Detection {detected}')
+                    drone.move_velocity(
+                        vx=0.15,
+                        vy=0.0,
+                        vz=0.0,
+                        vyaw=0.0,
+                        duration=0.7,
+                    )
                     
 
                 output_y = pid_y.update(error_y)
-                output_z = pid_z.update(error_z)  # Usar altura fixa?
+                output_z = pid_z.update(error_z)  
 
                 yasmin.YASMIN_LOG_INFO(
                     f'Centering: error_y={error_y:.0f}; error_z={error_z:.0f}; output_y={output_y:.1f}; output_z={output_z:.1f}.')
@@ -100,14 +108,19 @@ class Window(State):
                     vyaw=0,
                 )
 
-            
+
+            elif detected >= 15: # mudar para tolerance na config
+                drone.move_to(
+                    x=1.5,
+                    y=0,
+                    z=0,
+                    yaw=0,
+                    reference=MoveReference.BODY,
+                )
 
             else:
                 yasmin.YASMIN_LOG_ERROR(f'Lost detection {lost}.')
                 lost += 1
-
-            filename = f"{time.time()}.jpg"
-            cv2.imwrite(filename=filename, img=result)
 
             if lost > self.config.find_tolerance:
                 yasmin.YASMIN_LOG_ERROR(
