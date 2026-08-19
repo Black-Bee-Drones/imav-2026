@@ -60,4 +60,4 @@ class ObstacleSM(StateMachine):
             transitions={SUCCEED: SUCCEED, TIMEOUT: CANCEL},
         )
 
-        self.set_start_state('GO_TO_WINDOW')
+        self.set_start_state('GO_TO_OBSTACLES')
