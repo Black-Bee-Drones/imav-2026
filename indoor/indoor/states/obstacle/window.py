@@ -72,46 +72,37 @@ class Window(State):
             result: DetectionResult = image_handler_front.take_photo()
 
             window = result.filter_by_class(
-                ['blue' if color_window == 'blue' else 'red_window'])
+                ['blue' if color_window == 'blue' else 'red'])
+
+            h, w = result.image.shape[:2]
+
+            pid_y.set_setpoint((w + self.config.y_offset) / 2)
+            pid_z.set_setpoint((h + self.config.z_offset) / 2)
 
             if window:
                 lost = 0
                 detected += 1
 
-                h, w = result.image.shape[:2]
-
                 center = window[0].center
 
-                error_y = (center[0] - ((w + self.config.y_offset)/ 2))
-                error_z = (center[1] - ((h + self.config.z_offset)/ 2))
+                output_y = pid_y.update(center[0])
+                output_z = pid_z.update(center[1])
 
-                if (error_y**2 + error_z**2) <= self.config.window_threshold**2:
-                    yasmin.YASMIN_LOG_INFO(f'successful alignment! Detection {detected}')
-                    drone.move_velocity(
-                        vx=0.15,
-                        vy=0.0,
-                        vz=0.0,
-                        vyaw=0.0,
-                        duration=0.7,
-                    )
-                    
-
-                output_y = pid_y.update(error_y)
-                output_z = pid_z.update(error_z)  
+                error_y = pid_y.setpoint - center[0]
+                error_z = pid_z.setpoint - center[1]
 
                 yasmin.YASMIN_LOG_INFO(
-                    f'Centering: error_y={error_y:.0f}; error_z={error_z:.0f}; output_y={output_y:.1f}; output_z={output_z:.1f}.')
+                    f'Centering: error_y={error_y:.0f}; error_z={error_z:.0f}; output_y={output_y:.1f}; output_z={output_z:.1f}; detected={detected}.')
                 drone.move_velocity(
-                    vx=0,
+                    vx=0.2,
                     vy=output_y,
                     vz=output_z,
                     vyaw=0,
                 )
 
-
             elif detected >= self.config.gate_detection_tolerance:
                 drone.move_to(
-                    x=1.5,
+                    x=0.75,
                     y=0,
                     z=0,
                     yaw=0,
