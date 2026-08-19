@@ -82,8 +82,8 @@ class Window(State):
 
                 center = window[0].center
 
-                error_y = (center[0] - (w / 2))
-                error_z = (center[1] - ((h + 25)/ 2)) # mudar para offset na config
+                error_y = (center[0] - ((w + self.config.y_offset)/ 2))
+                error_z = (center[1] - ((h + self.config.z_offset)/ 2))
 
                 if (error_y**2 + error_z**2) <= self.config.window_threshold**2:
                     yasmin.YASMIN_LOG_INFO(f'successful alignment! Detection {detected}')
@@ -109,7 +109,7 @@ class Window(State):
                 )
 
 
-            elif detected >= 15: # mudar para tolerance na config
+            elif detected >= self.config.gate_detection_tolerance:
                 drone.move_to(
                     x=1.5,
                     y=0,
@@ -146,16 +146,6 @@ class Window(State):
         if self.check_timeout():
             yasmin.YASMIN_LOG_ERROR('Timeout.')
             return TIMEOUT
-
-        # yasmin.YASMIN_LOG_INFO('Fly the drone through the window.')
-        # drone.move_to(
-        #     x=1.25,
-        #     y=0,
-        #     z=0,
-        #     yaw=0,
-        #     precision=self.config.precision,
-        #     method=self.config.navigation_method,
-        # )
 
         self.node.get_clock().sleep_for(Duration(seconds=1))
         if self.check_timeout():

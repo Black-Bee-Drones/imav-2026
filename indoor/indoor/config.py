@@ -80,6 +80,9 @@ class Config:
     second_color_window: str | None = None  # 'blue' or 'red' or None
     room_color_window: str | None = None  # 'blue' or 'red' or None
     window_threshold: int = 50  # pixels
+    y_offset: int = 0 # pixels
+    z_offset: int = 25 # pixels
+    gate_detection_tolerance: int = 15
 
     # RedBar
     red_alt: list[float, float, float] = (

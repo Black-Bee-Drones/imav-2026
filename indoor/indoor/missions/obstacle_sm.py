@@ -27,7 +27,7 @@ class ObstacleSM(StateMachine):
         self.add_state(
             'FIRST_WINDOW',
             Window(config, 'first'),
-            transitions={SUCCEED: SUCCEED, TIMEOUT: CANCEL, 'reacquire': 'REACQUIRE_WINDOW'},
+            transitions={SUCCEED: 'RED_BAR', TIMEOUT: CANCEL, 'reacquire': 'REACQUIRE_WINDOW'},
         )
 
         self.add_state(
@@ -60,4 +60,4 @@ class ObstacleSM(StateMachine):
             transitions={SUCCEED: SUCCEED, TIMEOUT: CANCEL},
         )
 
-        self.set_start_state('FIRST_WINDOW')
+        self.set_start_state('GO_TO_WINDOW')
