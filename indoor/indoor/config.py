@@ -52,6 +52,7 @@ class Config:
     gate_conf: float = 0.5
     baby_model_source: str = str('yolo26n.pt')
     baby_conf: float = 0.25
+    baby_overlap_iou: float = 0.3  # IoU threshold
     box_model_source: str = str(models_path / 'package.pt')
     box_conf: float = 0.5
 
@@ -119,6 +120,9 @@ class Config:
     # FindWindow
     find_tolerance: int = 5
     back_speed: float = -0.5  # meters per second
+
+    # Count Babies
+    baby_classes = ['person', 'teddy bear']
 
     ### Dropping ###
     drop_cone_enabled: bool = True
