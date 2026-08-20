@@ -64,16 +64,15 @@ class Config:
     front_image_source: str = 'ros'
     front_ros_topic: str = '/camera/color/image_raw/compressed'
     front_camera_id: int = 6
-    down_image_source: str = 'opencv'
-    down_ros_topic: str = '/down_camera'
-    down_camera_id: int = 6
+    down_image_source: str = 'webcam'
+    down_camera_id: int = 2
 
     ### Takeoff ###
     takeoff_altitude: float = 1.2  # meters
 
     ### Obstacle ###
-    start_obstacle_x: float = .0  # meters
-    start_obstacle_y: float = .0  # meters
+    start_obstacle_x: float = -1.0  # meters
+    start_obstacle_y: float = -5.0  # meters
 
     # Window
     gate_alt: float = 1.2  # meters

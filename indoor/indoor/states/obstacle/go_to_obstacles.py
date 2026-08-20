@@ -45,14 +45,14 @@ class GoToObstacles(State):
             method=config.gate_alt,
         )
 
-        if self.check_timeout():
+        if self.check_timeout(config):
             yasmin.YASMIN_LOG_ERROR('Timeout.')
             return TIMEOUT
 
         yasmin.YASMIN_LOG_INFO('Completed successfully!!!')
         return SUCCEED
 
-    def check_timeout(self):
+    def check_timeout(self, config):
         now = self.node.get_clock().now()
 
         return now - self.start_time > Duration(seconds=config.timeout) or \
