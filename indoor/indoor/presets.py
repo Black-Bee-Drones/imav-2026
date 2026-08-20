@@ -37,3 +37,12 @@ TESTGATE = Config(
     landing_mode=LandingMode.LAND,
     missions=(Mission.OBSTACLES,),
 )
+
+
+TESTBABIES = Config(
+    room_entry_color=None,
+    run_baby_inference=True,
+    room_exit_color=None,
+    landing_mode=LandingMode.LAND,
+    missions=(Mission.INSPECT,),
+)
