@@ -109,8 +109,8 @@ class Config:
 
     ### Inspect ###
     # GoToWindow
-    room_x: float = 10.0  # meters
-    room_y: float = 2.0  # meters
+    room_x: float = 9.0  # meters
+    room_y: float = 0.0  # meters
 
     room_entry_color: str | None = 'blue'  # 'blue' or 'red' or None
     room_exit_color: str | None = 'blue'   # 'blue' or 'red' or None

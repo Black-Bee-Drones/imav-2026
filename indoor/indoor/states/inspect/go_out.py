@@ -5,7 +5,7 @@ from yasmin import State, Blackboard
 from yasmin_ros.yasmin_node import YasminNode
 from yasmin_ros.basic_outcomes import SUCCEED, TIMEOUT
 
-from nectar.control import MavlinkDrone
+from nectar.control import MavlinkDrone, MoveReference
 
 from indoor import Config
 
@@ -30,10 +30,11 @@ class GoOut(State):
 
         yasmin.YASMIN_LOG_INFO('Fly the drone through the window.')
         drone.move_to(
-            x=-1.25 - 0.2,
+            x=-1.25,
             y=0,
             z=0,
             yaw=0,
+            reference=MoveReference.BODY
         )
 
         if self.check_timeout():

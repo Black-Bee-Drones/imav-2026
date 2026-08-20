@@ -21,7 +21,7 @@ class InspectSM(StateMachine):
         self.add_state(
             'GO_TO_WINDOW',
             GoToWindow(),
-            transitions={SUCCEED: 'FIND_WINDOW', TIMEOUT: CANCEL},
+            transitions={SUCCEED: 'COUNT_BABIES', TIMEOUT: CANCEL},
         )
 
         self.add_state(
