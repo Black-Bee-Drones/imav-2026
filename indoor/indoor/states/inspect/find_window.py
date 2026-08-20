@@ -33,7 +33,7 @@ class FindWindow(State):
         self.start_state = self.node.get_clock().now()
 
         yasmin.YASMIN_LOG_INFO('Start.')
-        if self.check_timeout():
+        if self.check_timeout(config):
             yasmin.YASMIN_LOG_ERROR('Timeout.')
             return TIMEOUT
 
@@ -64,13 +64,13 @@ class FindWindow(State):
                 vyaw=0,
             )
 
-            if self.check_timeout():
+            if self.check_timeout(config):
                 yasmin.YASMIN_LOG_ERROR('Timeout.')
                 return TIMEOUT
 
             self.node.get_clock().sleep_until(now + Duration(seconds=1/30))
 
-    def check_timeout(self):
+    def check_timeout(self, config):
         now = self.node.get_clock().now()
 
         return now - self.start_time > Duration(seconds=config.timeout) or \

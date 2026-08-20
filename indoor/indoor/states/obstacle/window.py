@@ -48,7 +48,7 @@ class Window(State):
             color_window = config.room_color_window
 
         yasmin.YASMIN_LOG_INFO('Start.')
-        if self.check_timeout():
+        if self.check_timeout(config):
             yasmin.YASMIN_LOG_ERROR('Timeout.')
             return TIMEOUT
 
@@ -62,7 +62,7 @@ class Window(State):
             method=config.navigation_method,
         )
 
-        if self.check_timeout():
+        if self.check_timeout(config):
             yasmin.YASMIN_LOG_ERROR('Timeout.')
             return TIMEOUT
 
@@ -94,10 +94,12 @@ class Window(State):
                 yasmin.YASMIN_LOG_INFO(
                     f'Centering: error_y={error_y:.0f}; error_z={error_z:.0f}; output_y={output_y:.1f}; output_z={output_z:.1f}; detected={detected}.')
                 drone.move_velocity(
-                    vx=0.2,
+                    vx=0.1,
                     vy=output_y,
                     vz=output_z,
                     vyaw=0,
+                    duration=0.5,
+                    reference=MoveReference.BODY
                 )
 
             elif detected >= config.gate_detection_tolerance:
@@ -118,7 +120,7 @@ class Window(State):
                     'Blue window not found. Reacquiring...')
                 return 'reacquire'
 
-            if self.check_timeout():
+            if self.check_timeout(config):
                 yasmin.YASMIN_LOG_ERROR('Timeout.')
                 return TIMEOUT
 
@@ -134,19 +136,19 @@ class Window(State):
             )
 
         self.node.get_clock().sleep_for(Duration(seconds=1))
-        if self.check_timeout():
+        if self.check_timeout(config):
             yasmin.YASMIN_LOG_ERROR('Timeout.')
             return TIMEOUT
 
         self.node.get_clock().sleep_for(Duration(seconds=1))
-        if self.check_timeout():
+        if self.check_timeout(config):
             yasmin.YASMIN_LOG_ERROR('Timeout.')
             return TIMEOUT
 
         yasmin.YASMIN_LOG_INFO('Completed successfully!!!')
         return SUCCEED
 
-    def check_timeout(self):
+    def check_timeout(self, config):
         now = self.node.get_clock().now()
 
         return now - self.start_time > Duration(seconds=config.timeout) or \

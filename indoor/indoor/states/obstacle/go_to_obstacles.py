@@ -31,7 +31,6 @@ class GoToObstacles(State):
             yaw=0,
             reference=MoveReference.TAKEOFF,
             precision=config.precision,
-            method=config.gate_alt,
         )
 
         yasmin.YASMIN_LOG_INFO(f'fly to x={config.start_obstacle_x} y={config.start_obstacle_y}...')
@@ -42,8 +41,19 @@ class GoToObstacles(State):
             yaw=0,
             reference=MoveReference.TAKEOFF,
             precision=config.precision,
-            method=config.gate_alt,
         )
+
+        yasmin.YASMIN_LOG_INFO(f'fly to gate_alt={config.gate_alt}')
+        drone.move_to(
+            x=config.start_obstacle_x,
+            y=config.start_obstacle_y,
+            z=config.gate_alt,
+            yaw=0,
+            reference=MoveReference.TAKEOFF,
+            precision=config.precision,
+        )
+
+
 
         if self.check_timeout(config):
             yasmin.YASMIN_LOG_ERROR('Timeout.')

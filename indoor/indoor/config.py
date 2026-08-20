@@ -37,7 +37,7 @@ class Config:
     ### Global ###
     timeout: int = 360  # seconds
     timeout_per_state: int = 300  # seconds
-    safe_altitude: float = 3.0  # meters
+    safe_altitude: float = 2.5  # meters
     max_altitude: float = 7.0  # meters
     precision = 0.2  # meters
     navigation_method = NavigationMethod.POSITION
@@ -50,7 +50,7 @@ class Config:
     # Detector
     gate_model_source: str = str(models_path / 'gate2.pt')
     gate_conf: float = 0.5
-    baby_model_source: str = str('yolo26n.pt')
+    baby_model_source: str = str(models_path / 'yolo26n.pt')
     baby_conf: float = 0.25
     baby_overlap_iou: float = 0.3  # IoU threshold
     box_model_source: str = str(models_path / 'package.pt')
@@ -72,7 +72,7 @@ class Config:
 
     ### Obstacle ###
     start_obstacle_x: float = -1.0  # meters
-    start_obstacle_y: float = -5.0  # meters
+    start_obstacle_y: float = -3.5  # meters
 
     # Window
     gate_alt: float = 1.2  # meters

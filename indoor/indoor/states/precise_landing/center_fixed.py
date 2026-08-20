@@ -40,7 +40,7 @@ class CenterFixed(State):
 
         yasmin.YASMIN_LOG_INFO(
             'Center state started: beginning yaw alignment phase.')
-        if self.check_timeout():
+        if self.check_timeout(config):
             yasmin.YASMIN_LOG_ERROR(
                 'Timeout before yaw alignment could start.')
             return TIMEOUT
@@ -102,14 +102,14 @@ class CenterFixed(State):
                     drone.move_velocity()
                     return FAIL
 
-            if self.check_timeout():
+            if self.check_timeout(config):
                 yasmin.YASMIN_LOG_ERROR('Timeout during yaw alignment.')
                 drone.move_velocity()
                 return TIMEOUT
 
             self.node.get_clock().sleep_until(now + Duration(seconds=1 / 30))
 
-    def check_timeout(self):
+    def check_timeout(self, config):
         now = self.node.get_clock().now()
 
         return now - self.start_time > Duration(seconds=config.timeout) or \

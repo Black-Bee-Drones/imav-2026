@@ -51,7 +51,7 @@ class CenterMoving(State):
 
         yasmin.YASMIN_LOG_INFO(
             'Center state started: beginning yaw alignment phase.')
-        if self.check_timeout():
+        if self.check_timeout(config):
             yasmin.YASMIN_LOG_ERROR(
                 'Timeout before yaw alignment could start.')
             return TIMEOUT
@@ -99,7 +99,7 @@ class CenterMoving(State):
                     drone.move_velocity()
                     return FAIL
 
-            if self.check_timeout():
+            if self.check_timeout(config):
                 yasmin.YASMIN_LOG_ERROR('Timeout during yaw alignment.')
                 drone.move_velocity()
                 return TIMEOUT
@@ -242,14 +242,14 @@ class CenterMoving(State):
                         'Marker not detected while waiting for center sync; holding position.')
                     drone.move_velocity(vx=0.0, vy=0.0, vz=0.0, vyaw=0.0)
 
-                if self.check_timeout():
+                if self.check_timeout(config):
                     yasmin.YASMIN_LOG_ERROR('Timeout waiting for target sync.')
                     drone.move_velocity()
                     return TIMEOUT
 
                 self.node.get_clock().sleep_until(loop_start + Duration(seconds=1 / 30))
 
-    def check_timeout(self):
+    def check_timeout(self, config):
         """
         Returns True if either the overall mission timeout or this state's
         own per-state timeout has been exceeded.
