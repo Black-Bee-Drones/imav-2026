@@ -11,15 +11,14 @@ from indoor import Config
 
 
 class Reacquire(State):
-    def __init__(self, config: Config):
+    def __init__(self):
         super().__init__(outcomes=[SUCCEED, TIMEOUT, CANCEL])
-
-        self.config = config
 
         self.node = YasminNode.get_instance()
 
     def execute(self, blackboard: Blackboard):
-        drone: MavlinkDrone = blackboard['drone']
+        drone: MavlinkDrone = blackboard.get('drone')
+        config: Config = blackboard.get('config')
 
         self.start_time: Time = blackboard.get('start_time')
         self.start_state = self.node.get_clock().now()
@@ -29,15 +28,15 @@ class Reacquire(State):
             yasmin.YASMIN_LOG_ERROR('Timeout.')
             return TIMEOUT
 
-        if self.config.reacquire_step + drone.get_altitude() >= self.config.max_altitude:
+        if config.reacquire_step + drone.get_altitude() >= config.max_altitude:
             yasmin.YASMIN_LOG_ERROR('Altitude limit.')
             return CANCEL
 
-        yasmin.YASMIN_LOG_INFO(f'Up {self.config.reacquire_step} m...')
+        yasmin.YASMIN_LOG_INFO(f'Up {config.reacquire_step} m...')
         drone.move_to(
             x=0,
             y=0,
-            z=self.config.reacquire_step,
+            z=config.reacquire_step,
             yaw=0,
         )
 
@@ -47,6 +46,6 @@ class Reacquire(State):
     def check_timeout(self):
         now = self.node.get_clock().now()
 
-        return now - self.start_time > Duration(seconds=self.config.timeout) or \
+        return now - self.start_time > Duration(seconds=config.timeout) or \
             now - \
-            self.start_state > Duration(seconds=self.config.timeout_per_state)
+            self.start_state > Duration(seconds=config.timeout_per_state)

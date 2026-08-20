@@ -40,7 +40,7 @@ class IndoorSM(StateMachine):
 
         self.add_state(
             'TAKEOFF',
-            Takeoff(config),
+            Takeoff(),
             transitions={SUCCEED: config.missions[0], ABORT: 'LAND'},
         )
 
@@ -58,19 +58,19 @@ class IndoorSM(StateMachine):
 
         self.add_state(
             'LAND',
-            Land(config),
+            Land(),
             transitions={SUCCEED: SUCCEED, ABORT: ABORT},
         )
 
         self.add_state(
             'PRECISION_FIXEDSM',
-            PreciseLandingSM(config),
+            PreciseLandingSM(config=config),
             transitions={SUCCEED: SUCCEED, ABORT: ABORT},
         )
 
         self.add_state(
             'PRECISION_MOVINGSM',
-            PreciseLandingSM(config),
+            PreciseLandingSM(config=config),
             transitions={SUCCEED: SUCCEED, ABORT: ABORT},
         )
 

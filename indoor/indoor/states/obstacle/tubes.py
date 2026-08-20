@@ -11,15 +11,14 @@ from indoor import Config
 
 
 class Tubes(State):
-    def __init__(self, config: Config):
+    def __init__(self):
         super().__init__(outcomes=[SUCCEED, TIMEOUT])
-
-        self.config = config
 
         self.node = YasminNode.get_instance()
 
     def execute(self, blackboard: Blackboard):
         drone: MavlinkDrone = blackboard.get('drone')
+        config: Config = blackboard.get('config')
 
         self.start_time: Time = blackboard.get('start_time')
         self.start_state = self.node.get_clock().now()
@@ -29,39 +28,39 @@ class Tubes(State):
             yasmin.YASMIN_LOG_ERROR('Timeout.')
             return TIMEOUT
 
-        if self.config.tubes_avoid_enabled:
+        if config.tubes_avoid_enabled:
             yasmin.YASMIN_LOG_INFO('Up to skip of the tubes...')
             drone.move_to(
-                x=self.config.start_obstacle_x + 4.75,
-                y=self.config.start_obstacle_y,
-                z=self.config.safe_altitude,
+                x=config.start_obstacle_x + 4.75,
+                y=config.start_obstacle_y,
+                z=config.safe_altitude,
                 yaw=0,
                 reference=MoveReference.TAKEOFF,
-                precision=self.config.precision,
-                method=self.config.navigation_method,
+                precision=config.precision,
+                method=config.navigation_method,
             )
             yasmin.YASMIN_LOG_INFO('Fly to skip of the tubes...')
             drone.move_to(
-                x=self.config.start_obstacle_x + 6.25,
-                y=self.config.start_obstacle_y,
-                z=self.config.safe_altitude,
+                x=config.start_obstacle_x + 6.25,
+                y=config.start_obstacle_y,
+                z=config.safe_altitude,
                 yaw=0,
                 reference=MoveReference.TAKEOFF,
-                precision=self.config.precision,
-                method=self.config.navigation_method,
+                precision=config.precision,
+                method=config.navigation_method,
             )
             yasmin.YASMIN_LOG_INFO('Completed successfully!!!')
             return SUCCEED
 
         yasmin.YASMIN_LOG_INFO('Correcting drone altitude and move closer...')
         drone.move_to(
-            x=self.config.start_obstacle_x + 4.75,
-            y=self.config.start_obstacle_y,
-            z=self.config.tubes_alt,
+            x=config.start_obstacle_x + 4.75,
+            y=config.start_obstacle_y,
+            z=config.tubes_alt,
             yaw=0,
             reference=MoveReference.TAKEOFF,
-            precision=self.config.precision,
-            method=self.config.navigation_method,
+            precision=config.precision,
+            method=config.navigation_method,
         )
 
         if self.check_timeout():
@@ -70,13 +69,13 @@ class Tubes(State):
 
         yasmin.YASMIN_LOG_INFO('Fly through the tube...')
         drone.move_to(
-            x=self.config.start_obstacle_x + 5.75,
-            y=self.config.start_obstacle_y,
-            z=self.config.tubes_alt,
+            x=config.start_obstacle_x + 5.75,
+            y=config.start_obstacle_y,
+            z=config.tubes_alt,
             yaw=0,
             reference=MoveReference.TAKEOFF,
-            precision=self.config.precision,
-            method=self.config.navigation_method,
+            precision=config.precision,
+            method=config.navigation_method,
         )
 
         if self.check_timeout():
@@ -85,13 +84,13 @@ class Tubes(State):
 
         yasmin.YASMIN_LOG_INFO('Fly to the side of the tube...')
         drone.move_to(
-            x=self.config.start_obstacle_x + 5.75,
-            y=self.config.start_obstacle_y + self.config.tubes_offset,
-            z=self.config.tubes_alt,
+            x=config.start_obstacle_x + 5.75,
+            y=config.start_obstacle_y + config.tubes_offset,
+            z=config.tubes_alt,
             yaw=0,
             reference=MoveReference.TAKEOFF,
-            precision=self.config.precision,
-            method=self.config.navigation_method,
+            precision=config.precision,
+            method=config.navigation_method,
         )
 
         if self.check_timeout():
@@ -100,13 +99,13 @@ class Tubes(State):
 
         yasmin.YASMIN_LOG_INFO('Fly to the past the tube...')
         drone.move_to(
-            x=self.config.start_obstacle_x + 6.25,
-            y=self.config.start_obstacle_y + self.config.tubes_offset,
+            x=config.start_obstacle_x + 6.25,
+            y=config.start_obstacle_y + config.tubes_offset,
             z=0,
             yaw=0,
             reference=MoveReference.TAKEOFF,
-            precision=self.config.precision,
-            method=self.config.navigation_method,
+            precision=config.precision,
+            method=config.navigation_method,
         )
 
         if self.check_timeout():
@@ -115,13 +114,13 @@ class Tubes(State):
 
         yasmin.YASMIN_LOG_INFO('Fly to the front of the tube...')
         drone.move_to(
-            x=self.config.start_obstacle_x + 6.25,
-            y=self.config.start_obstacle_y,
+            x=config.start_obstacle_x + 6.25,
+            y=config.start_obstacle_y,
             z=0,
             yaw=0,
             reference=MoveReference.TAKEOFF,
-            precision=self.config.precision,
-            method=self.config.navigation_method,
+            precision=config.precision,
+            method=config.navigation_method,
         )
 
         if self.check_timeout():
@@ -134,6 +133,6 @@ class Tubes(State):
     def check_timeout(self):
         now = self.node.get_clock().now()
 
-        return now - self.start_time > Duration(seconds=self.config.timeout) or \
+        return now - self.start_time > Duration(seconds=config.timeout) or \
             now - \
-            self.start_state > Duration(seconds=self.config.timeout_per_state)
+            self.start_state > Duration(seconds=config.timeout_per_state)

@@ -19,25 +19,25 @@ class DroppingSM(StateMachine):
 
         self.add_state(
             'GO_TO_BOX',
-            GoToBox(config),
+            GoToBox(),
             transitions={SUCCEED: SUCCEED, TIMEOUT: CANCEL},
         )
 
         self.add_state(
             'CENTER',
-            CenterBox(config),
+            CenterBox(),
             transitions={SUCCEED: 'DROP', FAIL: 'REACQUIRE', TIMEOUT: CANCEL},
         )
 
         self.add_state(
             'REACQUIRE',
-            Reacquire(config),
+            Reacquire(),
             transitions={SUCCEED: 'CENTER', TIMEOUT: TIMEOUT, CANCEL: CANCEL},
         )
 
         self.add_state(
             'DROP',
-            Drop(config),
+            Drop(),
             transitions={SUCCEED: SUCCEED, CANCEL: CANCEL},
         )
 

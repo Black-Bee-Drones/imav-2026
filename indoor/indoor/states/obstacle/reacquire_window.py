@@ -13,14 +13,14 @@ from indoor import Config
 
 
 class ReacquireWindow(State):
-    def __init__(self, config: Config):
+    def __init__(self):
         super().__init__(outcomes=[SUCCEED, TIMEOUT])
 
-        self.config = config
         self.node = YasminNode.get_instance()
 
     def execute(self, blackboard: Blackboard):
         drone: MavlinkDrone = blackboard.get('drone')
+        config: Config = blackboard.get('config')
 
         image_handler_front: ImageHandler = blackboard.get(
             'image_handler_front')
@@ -74,6 +74,6 @@ class ReacquireWindow(State):
     def check_timeout(self):
         now = self.node.get_clock().now()
 
-        return now - self.start_time > Duration(seconds=self.config.timeout) or \
+        return now - self.start_time > Duration(seconds=config.timeout) or \
             now - \
-            self.start_state > Duration(seconds=self.config.timeout_per_state)
+            self.start_state > Duration(seconds=config.timeout_per_state)

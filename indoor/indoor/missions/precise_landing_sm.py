@@ -19,20 +19,20 @@ class PreciseLandingSM(StateMachine):
 
         self.add_state(
             'GO_TO_LAND',
-            GoToLandingBase(config),
+            GoToLandingBase(),
             transitions={SUCCEED: 'CENTER', TIMEOUT: ABORT},
         )
 
         self.add_state(
             'CENTER',
             CenterFixed(
-                config) if config.landing_mode == "PRECISION_FIXEDSM" else CenterMoving(config),
+                ) if config.landing_mode == "PRECISION_FIXEDSM" else CenterMoving(),
             transitions={SUCCEED: SUCCEED, FAIL: 'REACQUIRE', TIMEOUT: ABORT},
         )
 
         self.add_state(
             'REACQUIRE',
-            Reacquire(config),
+            Reacquire(),
             transitions={SUCCEED: 'CENTER', CANCEL: ABORT},
         )
 

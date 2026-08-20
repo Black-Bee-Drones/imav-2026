@@ -8,22 +8,21 @@ from indoor import Config
 
 
 class Takeoff(State):
-    def __init__(self, config: Config):
+    def __init__(self):
         super().__init__(outcomes=[SUCCEED, ABORT])
         """
         Take off the drone to the target altitude.
         """
 
-        self.config = config
-
     def execute(self, blackboard: Blackboard):
         drone: MavlinkDrone = blackboard.get('drone')
+        config: Config = blackboard.get('config')
 
         yasmin.YASMIN_LOG_INFO(
-            f'Taking off to altitude: {self.config.takeoff_altitude} m...')
+            f'Taking off to altitude: {config.takeoff_altitude} m...')
 
         try:
-            drone.takeoff(self.config.takeoff_altitude)
+            drone.takeoff(config.takeoff_altitude)
 
         except KeyboardInterrupt:
             yasmin.YASMIN_LOG_WARN('Execution interrupted by user.')

@@ -11,39 +11,38 @@ from indoor import Config
 
 
 class GoToObstacles(State):
-    def __init__(self, config: Config):
+    def __init__(self):
         super().__init__(outcomes=[SUCCEED, TIMEOUT])
-
-        self.config = config
 
         self.node = YasminNode.get_instance()
 
     def execute(self, blackboard: Blackboard):
         drone: MavrosDrone = blackboard.get('drone')
+        config: Config = blackboard.get('config')
 
         self.start_time: Time = blackboard.get('start_time')
         self.start_state = self.node.get_clock().now()
 
-        yasmin.YASMIN_LOG_INFO(f'fly to x={self.config.start_obstacle_x}...')
+        yasmin.YASMIN_LOG_INFO(f'fly to x={config.start_obstacle_x}...')
         drone.move_to(
-            x=self.config.start_obstacle_x,
+            x=config.start_obstacle_x,
             y=None,
-            z=self.config.safe_altitude,
+            z=config.safe_altitude,
             yaw=0,
             reference=MoveReference.TAKEOFF,
-            precision=self.config.precision,
-            method=self.config.gate_alt,
+            precision=config.precision,
+            method=config.gate_alt,
         )
 
-        yasmin.YASMIN_LOG_INFO(f'fly to x={self.config.start_obstacle_x} y={self.config.start_obstacle_y}...')
+        yasmin.YASMIN_LOG_INFO(f'fly to x={config.start_obstacle_x} y={config.start_obstacle_y}...')
         drone.move_to(
-            x=self.config.start_obstacle_x,
-            y=self.config.start_obstacle_y,
-            z=self.config.safe_altitude,
+            x=config.start_obstacle_x,
+            y=config.start_obstacle_y,
+            z=config.safe_altitude,
             yaw=0,
             reference=MoveReference.TAKEOFF,
-            precision=self.config.precision,
-            method=self.config.gate_alt,
+            precision=config.precision,
+            method=config.gate_alt,
         )
 
         if self.check_timeout():
@@ -56,5 +55,5 @@ class GoToObstacles(State):
     def check_timeout(self):
         now = self.node.get_clock().now()
 
-        return now - self.start_time > Duration(seconds=self.config.timeout) or \
-            now - self.start_state > Duration(seconds=self.config.timeout_per_state)
+        return now - self.start_time > Duration(seconds=config.timeout) or \
+            now - self.start_state > Duration(seconds=config.timeout_per_state)

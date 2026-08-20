@@ -8,21 +8,21 @@ from indoor import Config
 
 
 class Land(State):
-    def __init__(self, config: Config):
+    def __init__(self):
         super().__init__(outcomes=[SUCCEED, ABORT])
         """
         Land the drone.
         """
 
-        self.config = config
 
     def execute(self, blackboard: Blackboard):
         drone: MavlinkDrone = blackboard.get('drone')
+        config: Config = blackboard.get('config')
 
         yasmin.YASMIN_LOG_INFO('Landing...')
 
         try:
-            if self.config.landing_mode == 'RTL':
+            if config.landing_mode == 'RTL':
                 drone.rtl()
             else:
                 drone.land()

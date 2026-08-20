@@ -10,13 +10,15 @@ from indoor import Config
 
 
 class CountBabies(State):
-    def __init__(self, config: Config):
+    def __init__(self):
         super().__init__(outcomes=[SUCCEED])
 
-        self.config = config
         self.node = YasminNode.get_instance()
 
     def execute(self, blackboard: Blackboard):
+
+        config: Config = blackboard.get('config')
+
         image_handler_down: ImageHandler = blackboard.get('image_handler_down')
         image_handler_down.image_processing_callback = blackboard.get(
             'callback_detector_baby')

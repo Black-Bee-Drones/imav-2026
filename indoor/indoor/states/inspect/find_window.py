@@ -13,16 +13,16 @@ from indoor import Config
 
 
 class FindWindow(State):
-    def __init__(self, config: Config, color_window: str = 'blue'):
+    def __init__(self, color_window: str = 'blue'):
         super().__init__(outcomes=[SUCCEED, TIMEOUT])
 
-        self.config = config
         self.color_window = color_window.strip().lower()
 
         self.node = YasminNode.get_instance()
 
     def execute(self, blackboard: Blackboard):
         drone: MavlinkDrone = blackboard.get('drone')
+        config: Config = blackboard.get('config')
 
         image_handler_front: ImageHandler = blackboard.get(
             'image_handler_front')
@@ -49,16 +49,16 @@ class FindWindow(State):
             if window:
                 find += 1
 
-                if self.config.find_tolerance <= find:
+                if config.find_tolerance <= find:
                     yasmin.YASMIN_LOG_INFO('Completed successfully!!!')
                     return SUCCEED
             else:
                 find = 0
 
             yasmin.YASMIN_LOG_INFO(
-                f'Go Back ({find}/{self.config.find_tolerance})...')
+                f'Go Back ({find}/{config.find_tolerance})...')
             drone.move_velocity(
-                vx=self.config.back_speed,
+                vx=config.back_speed,
                 vy=0,
                 vz=0,
                 vyaw=0,
@@ -73,6 +73,6 @@ class FindWindow(State):
     def check_timeout(self):
         now = self.node.get_clock().now()
 
-        return now - self.start_time > Duration(seconds=self.config.timeout) or \
+        return now - self.start_time > Duration(seconds=config.timeout) or \
             now - \
-            self.start_state > Duration(seconds=self.config.timeout_per_state)
+            self.start_state > Duration(seconds=config.timeout_per_state)

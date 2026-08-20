@@ -12,15 +12,14 @@ from indoor import Config
 
 
 class CenterBox(State):
-    def __init__(self, config: Config):
+    def __init__(self):
         super().__init__(outcomes=[SUCCEED, FAIL, TIMEOUT])
-
-        self.config = config
 
         self.node = YasminNode.get_instance()
 
     def execute(self, blackboard: Blackboard):
         drone: MavlinkDrone = blackboard.get('drone')
+        config: Config = blackboard.get('config')
 
         pid_x: PIDController = blackboard.get('pid_x')
         pid_y: PIDController = blackboard.get('pid_y')
@@ -56,7 +55,7 @@ class CenterBox(State):
                 error_x = (center[1] - (w / 2))
                 error_y = (center[0] - (h / 2))
 
-                if (error_x**2 + error_y**2) <= self.config.center_threshold**2 and drone.get_altitude() < self.config.land_altitude:
+                if (error_x**2 + error_y**2) <= config.center_threshold**2 and drone.get_altitude() < config.land_altitude:
                     yasmin.YASMIN_LOG_INFO('Completed successfully!!!')
                     drone.move_velocity()
                     return SUCCEED
@@ -69,16 +68,16 @@ class CenterBox(State):
                 drone.move_velocity(
                     vx=output_x,
                     vy=output_y,
-                    vz=self.config.land_speed if (
-                        (error_x**2 + error_y**2) <= 4*self.config.center_threshold**2) else 0,
+                    vz=config.land_speed if (
+                        (error_x**2 + error_y**2) <= 4*config.center_threshold**2) else 0,
                     vyaw=0,
                 )
             else:
                 yasmin.YASMIN_LOG_ERROR(
-                    f'Lost detection ({lost}/{self.config.lost_tolerance}).')
+                    f'Lost detection ({lost}/{config.lost_tolerance}).')
                 lost += 1
 
-                if self.config.lost_tolerance <= lost:
+                if config.lost_tolerance <= lost:
                     yasmin.YASMIN_LOG_ERROR('Lost detection exceeded.')
                     drone.move_velocity()
                     return FAIL
@@ -93,6 +92,6 @@ class CenterBox(State):
     def check_timeout(self):
         now = self.node.get_clock().now()
 
-        return now - self.start_time > Duration(seconds=self.config.timeout) or \
+        return now - self.start_time > Duration(seconds=config.timeout) or \
             now - \
-            self.start_state > Duration(seconds=self.config.timeout_per_state)
+            self.start_state > Duration(seconds=config.timeout_per_state)

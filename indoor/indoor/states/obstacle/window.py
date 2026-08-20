@@ -15,16 +15,16 @@ import time
 
 
 class Window(State):
-    def __init__(self, config: Config, position: str):
+    def __init__(self, position: str):
         super().__init__(outcomes=[SUCCEED, TIMEOUT, 'reacquire'])
 
-        self.config = config
         self.position = position
 
         self.node = YasminNode.get_instance()
 
     def execute(self, blackboard: Blackboard):
         drone: MavlinkDrone = blackboard.get('drone')
+        config: Config = blackboard.get('config')
 
         pid_y: PIDController = blackboard.get('pid_y')
         pid_z: PIDController = blackboard.get('pid_z')
@@ -41,11 +41,11 @@ class Window(State):
         pid_z.reset()
 
         if self.position == 'first':
-            color_window = self.config.first_color_window
+            color_window = config.first_color_window
         elif self.position == 'second':
-            color_window = self.config.second_color_window
+            color_window = config.second_color_window
         elif self.position == 'room':
-            color_window = self.config.room_color_window
+            color_window = config.room_color_window
 
         yasmin.YASMIN_LOG_INFO('Start.')
         if self.check_timeout():
@@ -56,10 +56,10 @@ class Window(State):
         drone.move_to(
             x=0,
             y=0,
-            z=self.config.gate_alt - drone.get_altitude(),
+            z=config.gate_alt - drone.get_altitude(),
             yaw=0,
-            precision=self.config.precision,
-            method=self.config.navigation_method,
+            precision=config.precision,
+            method=config.navigation_method,
         )
 
         if self.check_timeout():
@@ -76,8 +76,8 @@ class Window(State):
 
             h, w = result.image.shape[:2]
 
-            pid_y.set_setpoint((w + self.config.y_offset) / 2)
-            pid_z.set_setpoint((h + self.config.z_offset) / 2)
+            pid_y.set_setpoint((w + config.y_offset) / 2)
+            pid_z.set_setpoint((h + config.z_offset) / 2)
 
             if window:
                 lost = 0
@@ -100,7 +100,7 @@ class Window(State):
                     vyaw=0,
                 )
 
-            elif detected >= self.config.gate_detection_tolerance:
+            elif detected >= config.gate_detection_tolerance:
                 drone.move_to(
                     x=0.75,
                     y=0,
@@ -113,7 +113,7 @@ class Window(State):
                 yasmin.YASMIN_LOG_ERROR(f'Lost detection {lost}.')
                 lost += 1
 
-            if lost > self.config.find_tolerance:
+            if lost > config.find_tolerance:
                 yasmin.YASMIN_LOG_ERROR(
                     'Blue window not found. Reacquiring...')
                 return 'reacquire'
@@ -127,10 +127,10 @@ class Window(State):
             drone.move_to(
                 x=0,
                 y=0,
-                z=self.config.safe_altitude - drone.get_altitude(),
+                z=config.safe_altitude - drone.get_altitude(),
                 yaw=0,
-                precision=self.config.precision,
-                method=self.config.navigation_method,
+                precision=config.precision,
+                method=config.navigation_method,
             )
 
         self.node.get_clock().sleep_for(Duration(seconds=1))
@@ -149,6 +149,6 @@ class Window(State):
     def check_timeout(self):
         now = self.node.get_clock().now()
 
-        return now - self.start_time > Duration(seconds=self.config.timeout) or \
+        return now - self.start_time > Duration(seconds=config.timeout) or \
             now - \
-            self.start_state > Duration(seconds=self.config.timeout_per_state)
+            self.start_state > Duration(seconds=config.timeout_per_state)

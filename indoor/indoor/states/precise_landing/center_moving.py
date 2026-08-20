@@ -17,15 +17,14 @@ import time
 
 class CenterMoving(State):
 
-    def __init__(self, config: Config):
+    def __init__(self):
         super().__init__(outcomes=[SUCCEED, FAIL, TIMEOUT])
-
-        self.config = config
 
         self.node = YasminNode.get_instance()
 
     def execute(self, blackboard: Blackboard):
         drone: MavlinkDrone = blackboard.get('drone')
+        config: Config = blackboard.get('config')
 
         pid_x: PIDController = blackboard.get('pid_x')
         pid_y: PIDController = blackboard.get('pid_y')
@@ -69,7 +68,7 @@ class CenterMoving(State):
                 lost_count = 0
                 yaw_error = yaw
 
-                if abs(yaw_error) <= self.config.yaw_threshold:
+                if abs(yaw_error) <= config.yaw_threshold:
                     yasmin.YASMIN_LOG_INFO(
                         'Yaw aligned successfully; proceeding to centering phase.')
                     drone.move_velocity()
@@ -90,11 +89,11 @@ class CenterMoving(State):
                 )
             else:
                 yasmin.YASMIN_LOG_ERROR(
-                    f'Marker not detected during yaw alignment ({lost_count}/{self.config.lost_tolerance}).'
+                    f'Marker not detected during yaw alignment ({lost_count}/{config.lost_tolerance}).'
                 )
                 lost_count += 1
 
-                if self.config.lost_tolerance <= lost_count:
+                if config.lost_tolerance <= lost_count:
                     yasmin.YASMIN_LOG_ERROR(
                         'Lost-detection tolerance exceeded during yaw alignment. Aborting.')
                     drone.move_velocity()
@@ -131,10 +130,10 @@ class CenterMoving(State):
             turning_point_positions = []
 
             yasmin.YASMIN_LOG_INFO(
-                f'Beginning motion estimation over {self.config.estimation_cycles * 2} half-cycles.'
+                f'Beginning motion estimation over {config.estimation_cycles * 2} half-cycles.'
             )
 
-            for cycle in range(self.config.estimation_cycles * 2):
+            for cycle in range(config.estimation_cycles * 2):
 
                 x_samples = np.array([translation_1[0], translation_2[0]])
                 t_samples = np.array([sample_time_1, sample_time_2])
@@ -155,7 +154,7 @@ class CenterMoving(State):
                 turning_point_positions.append(x_samples[-1])
 
                 yasmin.YASMIN_LOG_INFO(
-                    f'Motion estimation cycle {cycle + 1}/{self.config.estimation_cycles * 2}: '
+                    f'Motion estimation cycle {cycle + 1}/{config.estimation_cycles * 2}: '
                     f'speed={abs(slope):.3f}; turning_point={x_samples[-1]:.1f}.'
                 )
 
@@ -175,7 +174,7 @@ class CenterMoving(State):
                 error_x = (marker_center[1] - (frame_w / 2))
                 error_y = (marker_center[0] - (frame_h / 2))
 
-                if (error_x**2 + error_y**2) <= self.config.center_threshold**2 and drone.get_altitude() < self.config.land_altitude:
+                if (error_x**2 + error_y**2) <= config.center_threshold**2 and drone.get_altitude() < config.land_altitude:
                     yasmin.YASMIN_LOG_INFO(
                         'Centered over estimated marker path and below landing altitude!')
                     drone.move_velocity()
@@ -185,7 +184,7 @@ class CenterMoving(State):
                 output_y = pid_y.update(error_y)
 
                 is_near_center = (error_x**2 + error_y**2) <= 4 * \
-                    self.config.center_threshold**2
+                    config.center_threshold**2
 
                 yasmin.YASMIN_LOG_INFO(
                     f'Centering over path: error_x={error_x:.0f}; error_y={error_y:.0f}; '
@@ -194,7 +193,7 @@ class CenterMoving(State):
                 drone.move_velocity(
                     vx=output_x,
                     vy=output_y,
-                    vz=self.config.land_speed if is_near_center else 0,
+                    vz=config.land_speed if is_near_center else 0,
                     vyaw=0,
                 )
 
@@ -221,7 +220,7 @@ class CenterMoving(State):
 
                         # Only drop if we're both moving toward center and
                         # will arrive there before we finish descending.
-                        time_to_land = translation[2] / self.config.land_speed
+                        time_to_land = translation[2] / config.land_speed
                         if moving_towards_center and time_to_center <= time_to_land:
                             yasmin.YASMIN_LOG_INFO(
                                 f'Target synced! Dropping. time_to_center={time_to_center:.2f}s '
@@ -231,7 +230,7 @@ class CenterMoving(State):
                             drone.move_velocity(
                                 vx=0.0,
                                 vy=0.0,
-                                vz=self.config.land_speed,
+                                vz=config.land_speed,
                                 vyaw=0.0
                             )
                             return SUCCEED
@@ -257,6 +256,6 @@ class CenterMoving(State):
         """
         now = self.node.get_clock().now()
 
-        return now - self.start_time > Duration(seconds=self.config.timeout) or \
+        return now - self.start_time > Duration(seconds=config.timeout) or \
             now - \
-            self.start_state > Duration(seconds=self.config.timeout_per_state)
+            self.start_state > Duration(seconds=config.timeout_per_state)

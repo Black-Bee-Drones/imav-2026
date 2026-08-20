@@ -20,43 +20,43 @@ class ObstacleSM(StateMachine):
         """
         self.add_state(
             'GO_TO_OBSTACLES',
-            GoToObstacles(config),
+            GoToObstacles(),
             transitions={SUCCEED: 'FIRST_WINDOW', TIMEOUT: CANCEL}
         )
 
         self.add_state(
             'FIRST_WINDOW',
-            Window(config, 'first'),
+            Window('first'),
             transitions={SUCCEED: 'RED_BAR', TIMEOUT: CANCEL, 'reacquire': 'REACQUIRE_WINDOW'},
         )
 
         self.add_state(
             'REACQUIRE_WINDOW',
-            ReacquireWindow(config),
+            ReacquireWindow(),
             transitions={SUCCEED: 'FIRST_WINDOW', TIMEOUT: CANCEL},
         )
 
         self.add_state(
             'RED_BAR',
-            RedBar(config),
+            RedBar(),
             transitions={SUCCEED: 'BLUE_BAR', TIMEOUT: CANCEL},
         )
 
         self.add_state(
             'BLUE_BAR',
-            BlueBar(config),
+            BlueBar(),
             transitions={SUCCEED: 'TUBES', TIMEOUT: CANCEL},
         )
 
         self.add_state(
             'TUBES',
-            Tubes(config),
+            Tubes(),
             transitions={SUCCEED: 'SECOND_WINDOW', TIMEOUT: CANCEL},
         )
 
         self.add_state(
             'SECOND_WINDOW',
-            Window(config, 'second'),
+            Window('second'),
             transitions={SUCCEED: SUCCEED, TIMEOUT: CANCEL},
         )
 

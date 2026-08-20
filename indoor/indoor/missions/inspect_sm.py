@@ -20,31 +20,31 @@ class InspectSM(StateMachine):
 
         self.add_state(
             'GO_TO_WINDOW',
-            GoToWindow(config),
+            GoToWindow(),
             transitions={SUCCEED: 'FIND_WINDOW', TIMEOUT: CANCEL},
         )
 
         self.add_state(
             'FIND_WINDOW',
-            FindWindow(config),
+            FindWindow(),
             transitions={SUCCEED: 'WINDOW', TIMEOUT: CANCEL},
         )
 
         self.add_state(
             'WINDOW',
-            Window(config, 'room'),
+            Window('room'),
             transitions={SUCCEED: 'COUNT_BABIES', TIMEOUT: CANCEL},
         )
 
         self.add_state(
             'COUNT_BABIES',
-            CountBabies(config),
+            CountBabies(),
             transitions={SUCCEED: 'GO_OUT'},
         )
 
         self.add_state(
             'GO_OUT',
-            GoOut(config),
+            GoOut(),
             transitions={SUCCEED: SUCCEED, TIMEOUT: CANCEL},
         )
 

@@ -75,6 +75,8 @@ class Initialize(State):
             yasmin.YASMIN_LOG_INFO(
                 f'Successful start Drone("{self.config.drone_type}")!')
 
+            blackboard.set('config', self.config)
+
         except KeyboardInterrupt:
             yasmin.YASMIN_LOG_WARN('Execution interrupted by user.')
             return ABORT
