@@ -1,5 +1,5 @@
-import sys
 import argparse
+import traceback
 import rclpy
 
 import yasmin
@@ -9,72 +9,68 @@ from yasmin_ros.basic_outcomes import SUCCEED
 
 import nectar
 
-from indoor import (
-    Config,
-    SITLConfig,
-    CLEITINHO,
-    SITL_CLEITINHO,
-    JORGE,
-    SITL_JORGE,
-    IndoorSM,
-)
-
-CONFIG_PROFILES = {
-    'default': Config,
-    'sitl': SITLConfig,
-    'cleitinho': CLEITINHO,
-    'sitl_cleitinho': SITL_CLEITINHO,
-    'jorge': JORGE,
-    'sitl_jorge': SITL_JORGE,
-    'custom': None,
-}
+from indoor import Config, IndoorSM
 
 
 def main(args=None):
-    parser = argparse.ArgumentParser(description='Indoor Drone State Machine')
-    parser.add_argument(
-        '--config',
-        type=str,
-        default='default',
-        choices=CONFIG_PROFILES.keys(),
-        help='Which drone configuration profile to load'
+    parser = argparse.ArgumentParser(
+        prog='ros2 run indoor mangalarga',
+        description='IMAV 2026 - Indoor Drone State Machine',
+        add_help=True,
     )
 
-    input_args = args if args is not None else sys.argv[1:]
-    parsed_args, remaining_args = parser.parse_known_args(input_args)
+    parser.add_argument(
+        '--sitl',
+        action='store_true',
+    )
+    parser.add_argument(
+        '--preset',
+        type=str,
+        default=None,
+        choices=Config.list_preset(),
+    )
 
-    ros_args = [sys.argv[0]] + remaining_args
-    rclpy.init(args=ros_args)
+    parser.add_argument(
+        '-o-skip', '--obstacle-skip',
+        action='store_true',
+    )
+    parser.add_argument(
+        '-i-skip', '--inspect-skip',
+        action='store_true',
+    )
+    parser.add_argument(
+        '-d-skip', '--droping-skip',
+        action='store_true',
+    )
+    parser.add_argument(
+        '-p-skip', '--precise-skip',
+        action='store_true',
+    )
+
+    parsed_args, _ = parser.parse_known_args()
+
+    rclpy.init(args=args)
     set_ros_loggers()
-
     nectar.use_executor(YasminNode.get_instance()._executor)
 
     indoor_sm = None
 
     try:
-        yasmin.YASMIN_LOG_INFO(
-        f"Loading configuration profile: {parsed_args.config.upper()}"
-        )
+        indoor_sm = IndoorSM()
 
-        if parsed_args.config == 'custom':
-            from .customization import run_customization_wizard
-            config = run_customization_wizard()
-        else:
-            profile_obj = CONFIG_PROFILES[parsed_args.config]
-            if isinstance(profile_obj, type):
-                config = profile_obj()
-            else:
-                config = profile_obj
+        config = Config()
+        config.apply_args(parsed_args)
 
-        indoor_sm = IndoorSM(config)
-        final_outcome = indoor_sm()
+        final_outcome = indoor_sm(config)
 
     except KeyboardInterrupt:
+        yasmin.YASMIN_LOG_WARN('Execution interrupted by user.')
         if indoor_sm is not None and indoor_sm.is_running():
             indoor_sm.cancel_state()
 
     except Exception as e:
         yasmin.YASMIN_LOG_ERROR(f'Indoor state machine failed: {e}')
+        yasmin.YASMIN_LOG_ERROR(traceback.format_exc())
 
     else:
         if final_outcome == SUCCEED:

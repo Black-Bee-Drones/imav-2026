@@ -1,5 +1,5 @@
 from yasmin import StateMachine
-from yasmin_ros.basic_outcomes import SUCCEED, CANCEL, ABORT, TIMEOUT
+from yasmin_ros.basic_outcomes import SUCCEED, CANCEL, ABORT
 
 from indoor.states import (
     Initialize,
@@ -7,70 +7,56 @@ from indoor.states import (
     Takeoff,
 )
 from indoor.missions import (
-    DroppingSM,
-    InspectSM,
     ObstacleSM,
-    PreciseLandingSM,
+    InspectSM,
+    # DroppingSM,
+    # PreciseLandingSM,
 )
-from indoor import Config
 
 
 class IndoorSM(StateMachine):
-    def __init__(self, config: Config):
-        super().__init__(outcomes=[SUCCEED, ABORT, CANCEL, TIMEOUT])
-        """
-        Indoor Mission
-
-        Main state machine for the IMAV 2026 Indoor Competition
-        """
-
-        missions_sm = {
-            'OBSTACLESM': ObstacleSM,
-            'INSPECTSM': InspectSM,
-            'DROPPINGSM': DroppingSM,
-            'PRECISION_FIXEDSM': PreciseLandingSM,
-            'PRECISION_MOVINGSM': PreciseLandingSM,
-        }
+    def __init__(self):
+        super().__init__(outcomes=[SUCCEED, ABORT, CANCEL])
 
         self.add_state(
             'INITIALIZE',
-            Initialize(config),
+            Initialize(),
             transitions={SUCCEED: 'TAKEOFF', ABORT: ABORT},
         )
 
         self.add_state(
             'TAKEOFF',
             Takeoff(),
-            transitions={SUCCEED: config.missions[0], ABORT: 'LAND'},
+            transitions={SUCCEED: 'OBSTACLESM', ABORT: ABORT},
         )
 
-        for i, mission in enumerate(config.missions):
-            self.add_state(
-                mission,
-                missions_sm.get(mission)(config),
-                transitions={
-                    SUCCEED: config.missions[i + 1] if i < len(config.missions)-1 else 'LAND',
-                    CANCEL: config.landing_mode,
-                    ABORT: 'LAND',
-                    TIMEOUT: ABORT,
-                },
-            )
+        self.add_state(
+            'OBSTACLESM',
+            ObstacleSM(),
+            transitions={SUCCEED: 'INSPECTSM', CANCEL: 'INSPECTSM'},
+        )
+
+        self.add_state(
+            'INSPECTSM',
+            InspectSM(),
+            # transitions={SUCCEED: 'DROPPINGSM', CANCEL: 'DROPPINGSM'},
+        )
+
+        # self.add_state(
+        #     'DROPPINGSM',
+        #     DroppingSM(),
+        #     transitions={SUCCEED: 'PRECISION_LANDING', CANCEL: 'PRECISION_LANDING'},
+        # )
+
+        # self.add_state(
+        #     'PRECISION_LANDING',
+        #     PreciseLandingSM(),
+        #     transitions={SUCCEED: 'LAND', CANCEL: 'LAND'},
+        # )
 
         self.add_state(
             'LAND',
             Land(),
-            transitions={SUCCEED: SUCCEED, ABORT: ABORT},
-        )
-
-        self.add_state(
-            'PRECISION_FIXEDSM',
-            PreciseLandingSM(config=config),
-            transitions={SUCCEED: SUCCEED, ABORT: ABORT},
-        )
-
-        self.add_state(
-            'PRECISION_MOVINGSM',
-            PreciseLandingSM(config=config),
             transitions={SUCCEED: SUCCEED, ABORT: ABORT},
         )
 

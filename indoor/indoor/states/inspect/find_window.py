@@ -3,76 +3,62 @@ from rclpy.time import Time, Duration
 import yasmin
 from yasmin import State, Blackboard
 from yasmin_ros.yasmin_node import YasminNode
-from yasmin_ros.basic_outcomes import SUCCEED, TIMEOUT
+from yasmin_ros.basic_outcomes import SUCCEED, CANCEL, TIMEOUT
 
 from nectar.control import MavlinkDrone
 from nectar.vision import ImageHandler
 from nectar.ai import DetectionResult
 
-from indoor import Config
-
 
 class FindWindow(State):
-    def __init__(self, color_window: str = 'blue'):
-        super().__init__(outcomes=[SUCCEED, TIMEOUT])
-
-        self.color_window = color_window.strip().lower()
+    def __init__(self):
+        super().__init__(outcomes=[SUCCEED, CANCEL, TIMEOUT])
 
         self.node = YasminNode.get_instance()
 
-    def execute(self, blackboard: Blackboard):
-        drone: MavlinkDrone = blackboard.get('drone')
-        config: Config = blackboard.get('config')
+    def configure(self):
+        self.add_input_key('timeout')
+        self.add_input_key('inspect_timeout')
 
-        image_handler_front: ImageHandler = blackboard.get(
-            'image_handler_front')
-        image_handler_front.image_processing_callback = blackboard.get(
-            'callback_detector_gate')
+        self.add_input_key('start_time')
+        self.add_input_key('inspect_start_time')
+
+        self.add_input_key('drone')
+
+        self.add_input_key('image_handler_front')
+        self.add_input_key('callback_gate')
+
+        self.add_input_key('inspect_back_speed')
+
+    def execute(self, blackboard: Blackboard):
+        self.timeout: int = blackboard.get('timeout')
+        self.mission_timeout: int = blackboard.get('inspect_timeout')
 
         self.start_time: Time = blackboard.get('start_time')
-        self.start_state = self.node.get_clock().now()
+        self.start_mission: Time = blackboard.get('inspect_start_time')
 
-        yasmin.YASMIN_LOG_INFO('Start.')
-        if self.check_timeout(config):
-            yasmin.YASMIN_LOG_ERROR('Timeout.')
-            return TIMEOUT
+        drone: MavlinkDrone = blackboard.get('drone')
 
-        find = 0
-        while True:
-            now = self.node.get_clock().now()
+        handler: ImageHandler = blackboard.get('image_handler_front')
+        handler.image_processing_callback = blackboard.get('callback_gate')
 
-            result: DetectionResult = image_handler_front.take_photo()
-
-            window = result.filter_by_class(
-                ['blue_window' if self.color_window == 'blue' else 'red_window'])
-
-            if window:
-                find += 1
-
-                if config.find_tolerance <= find:
-                    yasmin.YASMIN_LOG_INFO('Completed successfully!!!')
-                    return SUCCEED
-            else:
-                find = 0
-
-            yasmin.YASMIN_LOG_INFO(
-                f'Go Back ({find}/{config.find_tolerance})...')
-            drone.move_velocity(
-                vx=config.back_speed,
-                vy=0,
-                vz=0,
-                vyaw=0,
-            )
-
-            if self.check_timeout(config):
-                yasmin.YASMIN_LOG_ERROR('Timeout.')
+        for _ in range(30):
+            if self.check_timeout():
                 return TIMEOUT
 
-            self.node.get_clock().sleep_until(now + Duration(seconds=1/30))
+            result: DetectionResult = handler.take_photo()
 
-    def check_timeout(self, config):
+            if result is not None and result.filter_by_class([
+                    blackboard.get('model_gate_class_name')]):
+                return SUCCEED
+
+            yasmin.YASMIN_LOG_INFO(f'Go Back...')
+            drone.move_velocity(vx=blackboard.get('inspect_back_speed'))
+
+        return CANCEL
+
+    def check_timeout(self):
         now = self.node.get_clock().now()
 
-        return now - self.start_time > Duration(seconds=config.timeout) or \
-            now - \
-            self.start_state > Duration(seconds=config.timeout_per_state)
+        return now - self.start_time > Duration(seconds=self.timeout) or \
+            now - self.start_mission > Duration(seconds=self.mission_timeout)

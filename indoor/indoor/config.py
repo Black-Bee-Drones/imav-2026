@@ -1,183 +1,198 @@
-import pathlib
-from dataclasses import dataclass
-from enum import Enum
+from argparse import Namespace
 
-from ament_index_python import get_package_share_directory
+from rclpy.time import Time
 
-from nectar.control import NavigationMethod
+import yasmin
+from yasmin import Blackboard
 
-models_path = pathlib.Path(get_package_share_directory('indoor')) / 'models'
-
-
-class Mission(str, Enum):
-    OBSTACLES = 'OBSTACLESM'
-    INSPECT = 'INSPECTSM'
-    DROPPING = 'DROPPINGSM'
+from indoor import presets
 
 
-class LandingMode(str, Enum):
-    LAND = 'LAND'
-    RTL = 'RTL'
-    PRECISION_FIXED = 'PRECISION_FIXEDSM'
-    PRECISION_MOVING = 'PRECISION_MOVINGSM'
+class Config(Blackboard):
+    def __init__(self):
+        super().__init__()
 
+        ### Global ###
+        self.timeout: int = 360  # seconds
+        self.safe_alt: float = 3.0  # meters
+        self.max_alt: float = 7.0  # meters
 
-@dataclass(frozen=True)
-class Config:
-    ### Missions ###
-    missions: tuple[Mission, ...] = (
-        Mission.OBSTACLES,
-        Mission.INSPECT,
-        Mission.DROPPING,
-    )
+        ### Initialize ###
+        # Drone
+        self.drone_type: str = 'mavlink'
+        self.drone_connection_string: str = 'udp:127.0.0.1:14551'
 
-    ### Landing behavior  ###
-    landing_mode: LandingMode = LandingMode.LAND
+        # Detector
+        self.model_gate_source: str = 'gate2.pt'
+        self.model_gate_conf: float = 0.5
+        self.model_gate_class_name: str = 'blue'
 
-    ### Global ###
-    timeout: int = 360  # seconds
-    timeout_per_state: int = 300  # seconds
-    safe_altitude: float = 2.5  # meters
-    max_altitude: float = 7.0  # meters
-    precision = 0.2  # meters
-    navigation_method = NavigationMethod.POSITION
+        self.model_baby_source: str = 'yolo26n.pt'
+        self.model_baby_conf: float = 0.25
+        self.model_baby_overlap_iou: float = 0.3  # IoU threshold
+        self.model_baby_classes_names = ['person', 'teddy bear']
 
-    ### Initialize ###
-    # Drone
-    drone_type: str = 'mavlink'
-    connection_string: str = 'udp:127.0.0.1:14551'
+        self.model_box_source: str = 'package.pt'
+        self.model_box_conf: float = 0.5
 
-    # Detector
-    gate_model_source: str = str(models_path / 'gate2.pt')
-    gate_conf: float = 0.5
-    baby_model_source: str = str(models_path / 'yolo26n.pt')
-    baby_conf: float = 0.25
-    baby_overlap_iou: float = 0.3  # IoU threshold
-    box_model_source: str = str(models_path / 'package.pt')
-    box_conf: float = 0.5
+        # Aruco
+        self.aruco_marker_dict: int = 5  # 5x5
+        self.aruco_size: float = 1.0  # meters
 
-    # Aruco
-    marker_dict: int = 5  # 5x5
-    aruco_size: float = 1.0  # meters
+        # ImageHandler
+        self.camera_front_source: str = 'ros'
+        self.camera_front_topic: str = '/camera/color/image_raw/compressed'
+        self.camera_front_id: int = 6
+        self.camera_down_source: str = 'opencv'
+        self.camera_down_topic: str = '/down_camera'
+        self.camera_down_id: int = 6
 
-    # ImageHandler
-    front_image_source: str = 'ros'
-    front_ros_topic: str = '/camera/color/image_raw/compressed'
-    front_camera_id: int = 6
-    down_image_source: str = 'webcam'
-    down_camera_id: int = 2
+        ### Takeoff ###
+        self.takeoff_alt: float = 1.2  # meters
 
-    ### Takeoff ###
-    takeoff_altitude: float = 1.2  # meters
+        ### LAND ###
+        self.rtl: bool = False
 
-    ### Obstacle ###
-    start_obstacle_x: float = -1.0  # meters
-    start_obstacle_y: float = -3.5  # meters
+        ### Obstacle ###
+        self.obstacle_skip: bool = False
+        self.obstacle_timeout: int = 300  # seconds
+        self.obstacle_start_time: Time | None = None
 
-    # Window
-    gate_alt: float = 1.2  # meters
-    first_color_window: str | None = None  # 'blue' or 'red' or None
-    second_color_window: str | None = None  # 'blue' or 'red' or None
-    room_color_window: str | None = None  # 'blue' or 'red' or None
-    window_threshold: int = 50  # pixels
-    y_offset: int = 0 # pixels
-    z_offset: int = 25 # pixels
-    gate_detection_tolerance: int = 15
+        self.obstacle_xy_kp: float = 0.005
+        self.obstacle_xy_kd: float = .0
+        self.obstacle_xy_ki: float = .0
 
-    # RedBar
-    red_alt: list[float, float, float] = (
-        1.7,
-        2.1,
-        2.5,
-    )  # meters (bar_alt + 0.5)
-    red_step: int | None = 3  # step ou jump
+        self.obstacle_z_kp: float = .1
+        self.obstacle_z_kd: float = .0
+        self.obstacle_z_ki: float = .0
 
-    # BlueBar
-    blue_alt: list[float, float, float] = (
-        0.2,
-        0.4,
-        0.6,
-    )  # meters (bar_alt / 2)
-    blue_step_1: int | None = 3  # step ou jump
-    blue_step_2: int | None = 3  # step ou jump
+        # GoToObstacle
+        self.obstacle_start_x: float = .0  # meters
+        self.obstacle_start_y: float = .0  # meters
 
-    # Tubes
-    tubes_avoid_enabled: bool = False
-    tubes_alt: float = 0.7  # meters
-    tubes_offset = 1.5  # meters
+        # Window
+        self.obstacle_gate_first_skip: bool = False
+        self.obstacle_gate_second_skip: bool = False
+        self.obstacle_gate_room_skip: bool = False
+        self.obstacle_gate_alt: float = 1.2
+        self.obstacle_gate_lost_tolerance = 15
+        self.obstacle_gate_aligned_tolerance = 15
+        self.obstacle_gate_aligned_threshold = 50  # pixels
 
-    ### Inspect ###
-    # GoToWindow
-    room_x: float = 9.0  # meters
-    room_y: float = 0.0  # meters
+        # RedBar
+        self.obstacle_red: int | None = 3  # step or jump
+        self.obstacle_red_step_alt_1: float = 1.7
+        self.obstacle_red_step_alt_2: float = 2.1
+        self.obstacle_red_step_alt_3: float = 2.5
 
-    room_entry_color: str | None = 'blue'  # 'blue' or 'red' or None
-    room_exit_color: str | None = 'blue'   # 'blue' or 'red' or None
+        # BlueBar
+        self.obstacle_blue_1: int | None = 3  # step or jump
+        self.obstacle_blue_2: int | None = 3  # step or jump
+        self.obstacle_blue_step_alt_1: float = 0.2
+        self.obstacle_blue_step_alt_2: float = 0.4
+        self.obstacle_blue_step_alt_3: float = 0.6
 
-    run_baby_inference: bool = True
+        # Tubes
+        self.obstacle_tubes_skip = False
+        self.obstacle_tubes_alt = 0.7
+        self.obstacle_tubes_offset = 1.5  # meters
 
-    # FindWindow
-    find_tolerance: int = 5
-    back_speed: float = -0.5  # meters per second
+        ### Inspect ###
+        self.inspect_skip: bool = False
+        self.inspect_timeout: int = 300  # seconds
+        self.inspect_start_time: Time | None = None
 
-    # Count Babies
-    baby_classes = ['person', 'teddy bear']
+        # GoToWindow
+        self.inspect_start_x: float = 10.0  # meters
+        self.inspect_start_y: float = 2.0  # meters
 
-    ### Dropping ###
-    drop_cone_enabled: bool = True
+        # FindWindow
+        self.inspect_back_speed: float = -0.5
 
-    ### Precise landing ###
-    # GoToLandingBase
-    fixed_base: bool = True
-    fixed_base_x: float = 0.0  # meters
-    fixed_base_y: float = 2.0  # meters
-    mobile_base_x: float = 0.0  # meters
-    mobile_base_y: float = -2.0  # meters
+        # Count Babies
+        self.inspect_babies_count: int | None = None
+        self.inspect_babies_boxes: list[list[int]] | None = None
 
-    # Center
-    center_threshold_xy: float = 0.2  # meters
-    center_threshold_z: float = 0.2  # meters
-    center_threshold_yaw: float = 5.0  # degrees
-    lost_tolerance: int = 10
-    land_altitude: float = 1.0  # meters
+        # GoOut
+        self.inspect_go_out_x: float = 1.5
 
-    # Reacquire
-    reacquire_step: float = 0.5  # meters
+        ### Dropping ###
+        self.drop_cone_enabled: bool = True
 
-    ### PIDController ###
-    # PID xy
-    controller_xy_kp: float = 0.000511
-    controller_xy_kd: float = 0.0
-    controller_xy_ki: float = 0.0
-    controller_xy_output_min: float = -0.1
-    controller_xy_output_max: float = 0.1
-    controller_xy_integral_min: float = -0.1
-    controller_xy_integral_max: float = 0.1
+        ### Precise landing ###
+        # GoToLandingBase
+        self.fixed_base: bool = True
+        self.fixed_base_x: float = 0.0  # meters
+        self.fixed_base_y: float = 2.0  # meters
+        self.mobile_base_x: float = 0.0  # meters
+        self.mobile_base_y: float = -2.0  # meters
 
-    # PID z
-    controller_z_kp: float = 0.000711
-    controller_z_kd: float = 0.0
-    controller_z_ki: float = 0.0
-    controller_z_output_min: float = -0.1
-    controller_z_output_max: float = 0.1
-    controller_z_integral_min: float = -0.1
-    controller_z_integral_max: float = 0.1
+        # Center
+        self.center_threshold_xy: float = 0.2  # meters
+        self.center_threshold_z: float = 0.2  # meters
+        self.center_threshold_yaw: float = 5.0  # degrees
+        self.lost_tolerance: int = 10
+        self.land_altitude: float = 1.0  # meters
 
-    # PID yaw
-    controller_yaw_kp: float = 0.0000111
-    controller_yaw_kd: float = 0.0
-    controller_yaw_ki: float = 0
-    controller_yaw_output_min: float = -0.1
-    controller_yaw_output_max: float = 0.1
-    controller_yaw_integral_min: float = -0.1
-    controller_yaw_integral_max: float = 0.1
+        # Reacquire
+        self.reacquire_step: float = 0.5  # meters
 
+        ### PIDController ###
+        # PID xy
+        self.controller_xy_kp: float = 0.000511
+        self.controller_xy_kd: float = 0.0
+        self.controller_xy_ki: float = 0.0
+        self.controller_xy_output_min: float = -0.1
+        self.controller_xy_output_max: float = 0.1
+        self.controller_xy_integral_min: float = -0.1
+        self.controller_xy_integral_max: float = 0.1
 
-@dataclass(frozen=True)
-class SITLConfig(Config):
-    connection_string: str = 'tcp:127.0.0.1:5762'
+        # PID z
+        self.controller_z_kp: float = 0.000711
+        self.controller_z_kd: float = 0.0
+        self.controller_z_ki: float = 0.0
+        self.controller_z_output_min: float = -0.1
+        self.controller_z_output_max: float = 0.1
+        self.controller_z_integral_min: float = -0.1
+        self.controller_z_integral_max: float = 0.1
 
-    front_image_source: str = 'ros'
-    front_ros_topic: str = '/front_camera/image'
-    down_image_source: str = 'ros'
-    down_ros_topic: str = '/down_camera'
+        # PID yaw
+        self.controller_yaw_kp: float = 0.0000111
+        self.controller_yaw_kd: float = 0.0
+        self.controller_yaw_ki: float = 0
+        self.controller_yaw_output_min: float = -0.1
+        self.controller_yaw_output_max: float = 0.1
+        self.controller_yaw_integral_min: float = -0.1
+        self.controller_yaw_integral_max: float = 0.1
+
+    def aplly_preset(self, preset: dict[str, any]):
+        for k, v in getattr(presets, preset).items():
+            self.set(k, v)
+
+    def apply_args(self, args: Namespace):
+        if args.sitl:
+            ### Initialize ###
+            # Drone
+            self.drone_connection_string: str = 'tcp:127.0.0.1:5760'
+
+            # ImageHandler
+            self.camera_front_source: str = 'ros'
+            self.camera_front_topic: str = '/front_camera/image'
+            self.camera_down_source: str = 'ros'
+            self.camera_down_topic: str = '/down_camera'
+
+        if args.preset is not None:
+            self.aplly_preset(args.preset)
+
+        if args.obstacle_skip:
+            self.obstacle_skip = args.obstacle_skip
+        if args.inspect_skip:
+            self.inspect_skip = args.inspect_skip
+        if args.droping_skip:
+            self.droping_skip = args.droping_skip
+        if args.precise_skip:
+            self.precise_skip = args.precise_skip
+
+    @staticmethod
+    def list_preset():
+        return [p for p in dir(presets) if p.isupper()]

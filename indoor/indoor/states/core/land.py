@@ -4,36 +4,25 @@ from yasmin_ros.basic_outcomes import SUCCEED, ABORT
 
 from nectar.control import MavlinkDrone
 
-from indoor import Config
-
 
 class Land(State):
     def __init__(self):
         super().__init__(outcomes=[SUCCEED, ABORT])
-        """
-        Land the drone.
-        """
 
+    def configure(self):
+        self.add_input_key('drone')
+
+        self.add_input_key('rtl')
 
     def execute(self, blackboard: Blackboard):
         drone: MavlinkDrone = blackboard.get('drone')
-        config: Config = blackboard.get('config')
 
-        yasmin.YASMIN_LOG_INFO('Landing...')
+        if blackboard.get('rlt'):
+            yasmin.YASMIN_LOG_INFO('RTL...')
+            status = drone.rtl()
 
-        try:
-            if config.landing_mode == 'RTL':
-                drone.rtl()
-            else:
-                drone.land()
+        if not self.rtl or not status:
+            yasmin.YASMIN_LOG_INFO('Landing...')
+            drone.land()
 
-        except KeyboardInterrupt:
-            yasmin.YASMIN_LOG_WARN('Execution interrupted by user.')
-            return ABORT
-
-        except Exception as e:
-            yasmin.YASMIN_LOG_ERROR(f'Landing failed: {e}')
-            return ABORT
-
-        yasmin.YASMIN_LOG_INFO('Completed successfully.')
         return SUCCEED

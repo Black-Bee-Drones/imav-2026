@@ -1,81 +1,93 @@
 from datetime import datetime
-import numpy as np
-import os
-import cv2
+import traceback
 import pathlib
+import os
+import numpy as np
+import cv2 as cv
 
-from ament_index_python.packages import get_package_share_directory
+from ament_index_python import get_package_share_directory
 
 import yasmin
 from yasmin import State, Blackboard
 from yasmin_ros.yasmin_node import YasminNode
 from yasmin_ros.basic_outcomes import SUCCEED, ABORT
 
-from nectar.control import DroneFactory, MavrosConfig, MavlinkConfig, PoseSource, PIDController
+from nectar.control import DroneFactory, MavrosConfig, MavlinkConfig, PoseSource
 from nectar.vision import ImageHandler, Aruco, ROSConfig, OpenCVConfig, RealSenseConfig
 from nectar.ai import Detector, DetectionResult
 
-from indoor import Config
-
 
 class Initialize(State):
-    def __init__(self, config: Config):
+    def __init__(self):
         super().__init__(outcomes=[SUCCEED, ABORT])
-        """
-        Initializes the drone, detector and camera.
-        """
-
-        self.config = config
 
         self.node = YasminNode.get_instance()
 
+    def configure(self):
+
+        self.add_output_key('drone')
+
+        self.add_output_key('callback_gate')
+        self.add_output_key('callback_baby')
+        self.add_output_key('callback_box')
+
+        self.add_output_key('image_handler_front')
+        self.add_output_key('image_handler_down')
+
+        self.add_input_key('drone_type')
+        self.add_input_key('drone_connection_string')
+
+        self.add_input_key('model_gate_source')
+        self.add_input_key('model_gate_conf')
+
+        self.add_input_key('model_baby_source')
+        self.add_input_key('model_baby_conf')
+
+        self.add_input_key('model_box_source')
+        self.add_input_key('model_box_conf')
+
+        self.add_input_key('aruco_marker_dict')
+        self.add_input_key('aruco_size')
+
+        self.add_input_key('camera_front_source')
+        self.add_input_key('camera_front_topic')
+        self.add_input_key('camera_front_id')
+
+        self.add_input_key('camera_down_source')
+        self.add_input_key('camera_down_topic')
+        self.add_input_key('camera_down_id')
+
     def execute(self, blackboard: Blackboard):
+        models_path = pathlib.Path(
+            get_package_share_directory('indoor')) / 'models'
+
         yasmin.YASMIN_LOG_INFO('Initializing...')
-
-        # Start time
-        try:
-            yasmin.YASMIN_LOG_INFO('Initializing Start time...')
-            self.start_time = self.node.get_clock().now()
-
-            blackboard.set('start_time', self.start_time)
-            yasmin.YASMIN_LOG_INFO('successful Start time!')
-
-        except KeyboardInterrupt:
-            yasmin.YASMIN_LOG_WARN('Execution interrupted by user.')
-            return ABORT
-
-        except Exception as e:
-            yasmin.YASMIN_LOG_ERROR(f'Start time failed: {e}')
-            return ABORT
 
         # Drone
         try:
-            yasmin.YASMIN_LOG_INFO(
-                f'Initializing Drone("{self.config.drone_type}")...')
-            if self.config.drone_type == 'mavros':
-                drone_config = MavrosConfig(
-                    pose_source=PoseSource.VISION,
-                    connection_string=self.config.connection_string
-                )
+            drone_type = blackboard.get('drone_type')
+            yasmin.YASMIN_LOG_INFO(f'Initializing Drone("{drone_type}")...')
 
-            elif self.config.drone_type == 'mavlink':
-                drone_config = MavlinkConfig(
-                    pose_source=PoseSource.VISION,
-                    start_driver=False,
-                    connection_string=self.config.connection_string
-                )
+            match drone_type:
+                case 'mavros':
+                    drone_config = MavrosConfig(
+                        pose_source=PoseSource.VISION,
+                        connection_string=blackboard.get(
+                            'drone_connection_string'),
+                    )
+                case 'mavlink':
+                    drone_config = MavlinkConfig(
+                        pose_source=PoseSource.VISION,
+                        connection_string=blackboard.get(
+                            'drone_connection_string'),
+                    )
+                case _:
+                    yasmin.YASMIN_LOG_ERROR('Invalid "drone_type"')
+                    return ABORT
 
-            else:
-                yasmin.YASMIN_LOG_ERROR('Invalid drone_type.')
-                return ABORT
-
-            drone = DroneFactory.create(self.config.drone_type, drone_config)
-
+            drone = DroneFactory.create(drone_type, drone_config)
             blackboard.set('drone', drone)
-            yasmin.YASMIN_LOG_INFO(
-                f'Successful start Drone("{self.config.drone_type}")!')
-
-            blackboard.set('config', self.config)
+            yasmin.YASMIN_LOG_INFO(f'Successful start Drone("{drone_type}")!')
 
         except KeyboardInterrupt:
             yasmin.YASMIN_LOG_WARN('Execution interrupted by user.')
@@ -83,76 +95,23 @@ class Initialize(State):
 
         except Exception as e:
             yasmin.YASMIN_LOG_ERROR(f'DroneFactory failed: {e}')
-            return ABORT
-
-        # PID
-        try:
-            yasmin.YASMIN_LOG_INFO(f'Initializing PID (x, y and z)...')
-            pid_x = PIDController(
-                kp=self.config.controller_xy_kp,
-                kd=self.config.controller_xy_kd,
-                ki=self.config.controller_xy_ki,
-                output_limits=(self.config.controller_xy_output_min,
-                               self.config.controller_xy_output_max),
-                integral_limits=(self.config.controller_xy_integral_min,
-                                 self.config.controller_xy_integral_max),
-            )
-            pid_y = PIDController(
-                kp=self.config.controller_xy_kp,
-                kd=self.config.controller_xy_kd,
-                ki=self.config.controller_xy_ki,
-                output_limits=(self.config.controller_xy_output_min,
-                               self.config.controller_xy_output_max),
-                integral_limits=(self.config.controller_xy_integral_min,
-                                 self.config.controller_xy_integral_max),
-            )
-            pid_z = PIDController(
-                kp=self.config.controller_z_kp,
-                kd=self.config.controller_z_kd,
-                ki=self.config.controller_z_ki,
-                output_limits=(self.config.controller_z_output_min,
-                               self.config.controller_z_output_max),
-                integral_limits=(self.config.controller_z_integral_min,
-                                 self.config.controller_z_integral_max),
-            )
-            pid_yaw = PIDController(
-                kp=self.config.controller_yaw_kp,
-                kd=self.config.controller_yaw_kd,
-                ki=self.config.controller_yaw_ki,
-                output_limits=(self.config.controller_yaw_output_min,
-                               self.config.controller_yaw_output_max),
-                integral_limits=(self.config.controller_yaw_integral_min,
-                                 self.config.controller_yaw_integral_max),
-            )
-
-            blackboard.set('pid_x', pid_x)
-            blackboard.set('pid_y', pid_y)
-            blackboard.set('pid_z', pid_z)
-            blackboard.set('pid_yaw', pid_yaw)
-            yasmin.YASMIN_LOG_INFO(f'Successful start PID (x, y, z and yaw)!')
-
-        except KeyboardInterrupt:
-            yasmin.YASMIN_LOG_WARN('Execution interrupted by user.')
-            return ABORT
-
-        except Exception as e:
-            yasmin.YASMIN_LOG_ERROR(f'PID failed: {e}')
+            yasmin.YASMIN_LOG_ERROR(traceback.format_exc())
             return ABORT
 
         # Detector - gate
         try:
             yasmin.YASMIN_LOG_INFO('Initializing Detector(gate)...')
             self.detector_gate = Detector(
-                model_source=self.config.gate_model_source,
-                confidence_threshold=self.config.gate_conf,
+                model_source=str(
+                    models_path / blackboard.get('model_gate_source')),
+                confidence_threshold=blackboard.get('model_gate_conf'),
             )
 
             yasmin.YASMIN_LOG_INFO('Load Detector(gate)...')
             self.detector_gate.load()
 
             blackboard.set('detector_gate', self.detector_gate)
-            blackboard.set('callback_detector_gate',
-                           self.callback_detector_gate)
+            blackboard.set('callback_gate', self.callback_detector_gate)
             yasmin.YASMIN_LOG_INFO('successful start Detector(gate)!')
 
         except KeyboardInterrupt:
@@ -161,22 +120,23 @@ class Initialize(State):
 
         except Exception as e:
             yasmin.YASMIN_LOG_ERROR(f'Detector(gate) failed: {e}')
+            yasmin.YASMIN_LOG_ERROR(traceback.format_exc())
             return ABORT
 
         # Detector - baby
         try:
             yasmin.YASMIN_LOG_INFO('Initializing Detector(baby)...')
             self.detector_baby = Detector(
-                model_source=self.config.baby_model_source,
-                confidence_threshold=self.config.baby_conf,
+                model_source=str(
+                    models_path / blackboard.get('model_baby_source')),
+                confidence_threshold=blackboard.get('model_baby_conf'),
             )
 
             yasmin.YASMIN_LOG_INFO('Load Detector(baby)...')
             self.detector_baby.load()
 
             blackboard.set('detector_baby', self.detector_baby)
-            blackboard.set('callback_detector_baby',
-                           self.callback_detector_baby)
+            blackboard.set('callback_baby', self.callback_detector_baby)
             yasmin.YASMIN_LOG_INFO('successful start Detector(baby)!')
 
         except KeyboardInterrupt:
@@ -185,22 +145,23 @@ class Initialize(State):
 
         except Exception as e:
             yasmin.YASMIN_LOG_ERROR(f'Detector(baby) failed: {e}')
+            yasmin.YASMIN_LOG_ERROR(traceback.format_exc())
             return ABORT
 
         # Detector - box
-
         try:
             yasmin.YASMIN_LOG_INFO('Initializing Detector(box)...')
             self.detector_box = Detector(
-                model_source=self.config.box_model_source,
-                confidence_threshold=self.config.box_conf,
+                model_source=str(
+                    models_path / blackboard.get('model_box_source')),
+                confidence_threshold=blackboard.get('model_box_conf'),
             )
 
             yasmin.YASMIN_LOG_INFO('Load Detector(box)...')
             self.detector_box.load()
 
             blackboard.set('detector_box', self.detector_box)
-            blackboard.set('callback_detector_box', self.callback_detector_box)
+            blackboard.set('callback_box', self.callback_detector_box)
             yasmin.YASMIN_LOG_INFO('successful start Detector(box)!')
 
         except KeyboardInterrupt:
@@ -209,14 +170,15 @@ class Initialize(State):
 
         except Exception as e:
             yasmin.YASMIN_LOG_ERROR(f'Detector(box) failed: {e}')
+            yasmin.YASMIN_LOG_ERROR(traceback.format_exc())
             return ABORT
 
         # Aruco
         try:
             yasmin.YASMIN_LOG_INFO('Initializing Aruco...')
             self.aruco = Aruco(
-                marker_dict=self.config.marker_dict,
-                tag_size=self.config.aruco_size,
+                marker_dict=blackboard.get('aruco_marker_dict'),
+                tag_size=blackboard.get('aruco_size'),
             )
 
             blackboard.set('aruco', self.aruco)
@@ -229,32 +191,43 @@ class Initialize(State):
 
         except Exception as e:
             yasmin.YASMIN_LOG_ERROR(f'Aruco failed: {e}')
+            yasmin.YASMIN_LOG_ERROR(traceback.format_exc())
             return ABORT
 
         # ImageHandler - front
         try:
+            camera_front_source = blackboard.get('camera_front_source')
             yasmin.YASMIN_LOG_INFO('Initializing ImageHandler(front)...')
 
-            if self.config.front_image_source == 'ros':
-                front_handler_config = ROSConfig(topic=self.config.front_ros_topic, compressed=True)
-
-            elif self.config.front_image_source == 'realsense':
-
-                front_handler_config = RealSenseConfig()
-            else:
-                front_handler_config = OpenCVConfig()
+            match camera_front_source:
+                case 'ros':
+                    handler_config_front = ROSConfig(
+                        topic=blackboard.get('camera_front_topic'),
+                        compressed=True,
+                    )
+                case 'realsense':
+                    handler_config_front = RealSenseConfig()
+                case 'opencv':
+                    handler_config_front = OpenCVConfig(
+                        device_index=blackboard.get('camera_front_id'),
+                    )
+                case _:
+                    yasmin.YASMIN_LOG_ERROR('Invalid "camera_front_source"')
+                    return ABORT
 
             image_handler_front = ImageHandler(
-                image_source=self.config.front_image_source,
-                config=front_handler_config
+                image_source=camera_front_source,
+                config=handler_config_front
             )
 
             yasmin.YASMIN_LOG_INFO('Open camera (front)...')
             image_handler_front.open()
 
             yasmin.YASMIN_LOG_INFO('Take testing photo (front)...')
+            result = image_handler_front.take_photo()
+            if result is None:
+                yasmin.YASMIN_LOG_WARN(result)
 
-            frame = image_handler_front.take_photo()
             blackboard.set('image_handler_front', image_handler_front)
             yasmin.YASMIN_LOG_INFO('successful start ImageHandler(front)!')
 
@@ -264,6 +237,48 @@ class Initialize(State):
 
         except Exception as e:
             yasmin.YASMIN_LOG_ERROR(f'ImageHandler(front) failed: {e}')
+            yasmin.YASMIN_LOG_ERROR(traceback.format_exc())
+            return ABORT
+
+        # ImageHandler - down
+        try:
+            camera_down_source = blackboard.get('camera_down_source')
+            yasmin.YASMIN_LOG_INFO('Initializing ImageHandler(down)...')
+
+            match camera_down_source:
+                case 'ros':
+                    handler_config_down = ROSConfig(
+                        topic=blackboard.get('camera_down_topic'),
+                        compressed=True,
+                    )
+                case 'opencv':
+                    handler_config_down = OpenCVConfig(
+                        device_index=blackboard.get('camera_down_id'),
+                    )
+
+            image_handler_down = ImageHandler(
+                image_source=camera_down_source,
+                config=handler_config_down
+            )
+
+            yasmin.YASMIN_LOG_INFO('Open camera (down)...')
+            image_handler_down.open()
+
+            yasmin.YASMIN_LOG_INFO('Take testing photo (down)...')
+            result = image_handler_down.take_photo()
+            if result is None:
+                yasmin.YASMIN_LOG_WARN(result)
+
+            blackboard.set('image_handler_down', image_handler_down)
+            yasmin.YASMIN_LOG_INFO('successful start ImageHandler(down)!')
+
+        except KeyboardInterrupt:
+            yasmin.YASMIN_LOG_WARN('Execution interrupted by user.')
+            return ABORT
+
+        except Exception as e:
+            yasmin.YASMIN_LOG_ERROR(f'ImageHandler(down) failed: {e}')
+            yasmin.YASMIN_LOG_ERROR(traceback.format_exc())
             return ABORT
 
         yasmin.YASMIN_LOG_INFO('Completed successfully!!!')
@@ -292,8 +307,8 @@ class Initialize(State):
         result.annotated_image = self.detector_gate.draw_detections(
             image, result)
 
-        cv2.imwrite(raw_file, result.image)
-        cv2.imwrite(annotated_file, result.annotated_image)
+        cv.imwrite(raw_file, result.image)
+        cv.imwrite(annotated_file, result.annotated_image)
 
         return result
 
@@ -320,8 +335,8 @@ class Initialize(State):
         result.annotated_image = self.detector_box.draw_detections(
             image, result)
 
-        cv2.imwrite(raw_file, result.image)
-        cv2.imwrite(annotated_file, result.annotated_image)
+        cv.imwrite(raw_file, result.image)
+        cv.imwrite(annotated_file, result.annotated_image)
 
         return result
 
@@ -348,8 +363,8 @@ class Initialize(State):
         result.annotated_image = self.detector_baby.draw_detections(
             image, result)
 
-        cv2.imwrite(raw_file, result.image)
-        cv2.imwrite(annotated_file, result.annotated_image)
+        cv.imwrite(raw_file, result.image)
+        cv.imwrite(annotated_file, result.annotated_image)
 
         return result
 
@@ -371,11 +386,11 @@ class Initialize(State):
         os.makedirs(raw_path, exist_ok=True)
         os.makedirs(annotated_path, exist_ok=True)
 
-        cv2.imwrite(raw_file, image)
+        cv.imwrite(raw_file, image)
 
         marker_id, translation, yaw = self.aruco.pose_estimate(
             image, draw=True)
 
-        cv2.imwrite(annotated_file, image)
+        cv.imwrite(annotated_file, image)
 
         return image, marker_id, translation, yaw

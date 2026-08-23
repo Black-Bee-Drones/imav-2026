@@ -1,48 +1,24 @@
-from .config import Config, SITLConfig, Mission, LandingMode
-
-CLEITINHO = Config(
-    missions=(
-        Mission.OBSTACLES,
-        Mission.INSPECT,
-    )
+CLEITINHO = dict(
+    droping_skip=True,
+    precise_skip=True,
 )
 
-JORGE = Config(
-    missions=(
-        Mission.DROPPING,
-    )
+JORGE = dict(
+    obstacle_skip=True,
+    inspect_skip=True,
+    precise_skip=True,
 )
 
-SITL_CLEITINHO = SITLConfig(
-    missions=(
-        Mission.OBSTACLES,
-        Mission.INSPECT,
-    )
+TESTGATE = dict(
+    inspect_skip=True,
+    droping_skip=True,
+    precise_skip=True,
+    rtl=False,
 )
 
-SITL_JORGE = SITLConfig(
-    missions=(
-        Mission.DROPPING,
-    )
-)
-
-
-TESTGATE = Config(
-    first_color_window='blue',
-    red_step=None,
-    blue_step_1=None,
-    blue_step_2=None,
-    tubes_avoid_enabled=False,
-    second_color_window=None,
-    landing_mode=LandingMode.LAND,
-    missions=(Mission.OBSTACLES,),
-)
-
-
-TESTBABIES = Config(
-    room_entry_color=None,
-    run_baby_inference=True,
-    room_exit_color=None,
-    landing_mode=LandingMode.LAND,
-    missions=(Mission.INSPECT,),
+TESTBABIES = dict(
+    obstacle_skip=True,
+    droping_skip=True,
+    precise_skip=True,
+    rtl=False,
 )

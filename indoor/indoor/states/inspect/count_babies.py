@@ -6,8 +6,6 @@ from yasmin_ros.basic_outcomes import SUCCEED
 from nectar.vision import ImageHandler
 from nectar.ai import DetectionResult
 
-from indoor import Config
-
 
 class CountBabies(State):
     def __init__(self):
@@ -15,27 +13,37 @@ class CountBabies(State):
 
         self.node = YasminNode.get_instance()
 
+    def configure(self):
+        self.add_output_key('inspect_babies_count')
+        self.add_output_key('inspect_babies_boxes')
+
+        self.add_input_key('image_handler_front')
+        self.add_input_key('callback_baby')
+
+        self.add_input_key('model_baby_classes_names')
+        self.add_input_key('model_baby_overlap_iou')
+
     def execute(self, blackboard: Blackboard):
+        handler: ImageHandler = blackboard.get('image_handler_front')
+        handler.image_processing_callback = blackboard.get('callback_baby')
 
-        config: Config = blackboard.get('config')
+        result: DetectionResult = handler.take_photo()
 
-        image_handler_down: ImageHandler = blackboard.get('image_handler_down')
-        image_handler_down.image_processing_callback = blackboard.get(
-            'callback_detector_baby')
+        if result is not None:
+            babies = result.filter_by_class(
+                [blackboard.get('model_baby_classes_names')])
+            boxes = self._merge_overlapping(
+                babies,
+                blackboard.get('model_baby_overlap_iou'),
+            )
 
-        result: DetectionResult = image_handler_down.take_photo()
+            yasmin.YASMIN_LOG_INFO(f'Number of babies: {len(boxes)}.')
+            for i, box in enumerate(boxes):
+                yasmin.YASMIN_LOG_INFO(f'Baby {i}: bbox={box}')
 
-        babies = result.filter_by_class(config.baby_classes)
-        boxes = self._merge_overlapping(babies, config.baby_overlap_iou)
+            blackboard.set('inspect_babies_count', len(boxes))
+            blackboard.set('inspect_babies_boxes', boxes)
 
-        yasmin.YASMIN_LOG_INFO(f'Number of babies: {len(boxes)}.')
-        for i, box in enumerate(boxes):
-            yasmin.YASMIN_LOG_INFO(f'Baby {i}: bbox={box}')
-
-        blackboard.set('babies_count', len(boxes))
-        blackboard.set('babies_boxes', boxes)
-
-        yasmin.YASMIN_LOG_INFO('Completed successfully!!!')
         return SUCCEED
 
     @staticmethod

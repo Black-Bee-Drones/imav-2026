@@ -7,8 +7,6 @@ from yasmin_ros.basic_outcomes import SUCCEED, TIMEOUT
 
 from nectar.control import MavlinkDrone, MoveReference
 
-from indoor import Config
-
 
 class GoOut(State):
     def __init__(self):
@@ -16,37 +14,58 @@ class GoOut(State):
 
         self.node = YasminNode.get_instance()
 
+    def configure(self):
+        self.add_output_key('obstacle_skip')
+        self.add_output_key('inpect_skip')
+        self.add_output_key('dropping_skip')
+        self.add_output_key('precise_skip')
+
+        self.add_output_key('rtl')
+
+        self.add_input_key('timeout')
+        self.add_input_key('inspect_timeout')
+
+        self.add_input_key('start_time')
+        self.add_input_key('inspect_start_time')
+
+        self.add_input_key('drone')
+
+        self.add_input_key('inspect_go_out_x')
+
     def execute(self, blackboard: Blackboard):
-        drone: MavlinkDrone = blackboard.get('drone')
-        config: Config = blackboard.get('config')
+        self.timeout: int = blackboard.get('timeout')
+        self.mission_timeout: int = blackboard.get('inspect_timeout')
 
         self.start_time: Time = blackboard.get('start_time')
-        self.start_state = self.node.get_clock().now()
+        self.start_mission: Time = blackboard.get('inspect_start_time')
 
-        yasmin.YASMIN_LOG_INFO('Start.')
-        if self.check_timeout(config):
-            yasmin.YASMIN_LOG_ERROR('Timeout.')
+        drone: MavlinkDrone = blackboard.get('drone')
+
+        if self.check_timeout():
+            blackboard.set('obstacle_skip', True)
+            blackboard.set('inpect_skip', True)
+            blackboard.set('dropping_skip', True)
+            blackboard.set('precise_skip', True)
+
+            blackboard.set('rtl', False)
             return TIMEOUT
 
-        yasmin.YASMIN_LOG_INFO('Fly the drone through the window.')
+        yasmin.YASMIN_LOG_INFO('Fly through the window.')
         drone.move_to(
-            x=-1.25,
+            x=blackboard.get('inspect_go_out_x'),
             y=0,
             z=0,
             yaw=0,
             reference=MoveReference.BODY
         )
 
-        if self.check_timeout(config):
-            yasmin.YASMIN_LOG_ERROR('Timeout.')
+        if self.check_timeout():
             return TIMEOUT
 
-        yasmin.YASMIN_LOG_INFO('Completed successfully!!!')
         return SUCCEED
 
     def check_timeout(self, config):
         now = self.node.get_clock().now()
 
-        return now - self.start_time > Duration(seconds=config.timeout) or \
-            now - \
-            self.start_state > Duration(seconds=config.timeout_per_state)
+        return now - self.start_time > Duration(seconds=self.timeout) or \
+            now - self.start_mission > Duration(seconds=self.mission_timeout)

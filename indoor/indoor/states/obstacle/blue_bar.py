@@ -7,8 +7,6 @@ from yasmin_ros.basic_outcomes import SUCCEED, TIMEOUT
 
 from nectar.control import MavlinkDrone, MoveReference
 
-from indoor import Config
-
 
 class BlueBar(State):
     def __init__(self):
@@ -16,91 +14,86 @@ class BlueBar(State):
 
         self.node = YasminNode.get_instance()
 
+    def configure(self):
+        self.add_input_key('timeout')
+        self.add_input_key('obstacle_timeout')
+
+        self.add_input_key('start_time')
+        self.add_input_key('obstacle_start_time')
+
+        self.add_input_key('drone')
+
+        self.add_input_key('safe_alt')
+
+        self.add_input_key('obstacle_start_x')
+        self.add_input_key('obstacle_start_y')
+
+        self.add_input_key('obstacle_blue_step_alt_1')
+        self.add_input_key('obstacle_blue_step_alt_2')
+        self.add_input_key('obstacle_blue_step_alt_3')
+
+        self.add_input_key('obstacle_blue_1')
+        self.add_input_key('obstacle_blue_2')
+
     def execute(self, blackboard: Blackboard):
-        drone: MavlinkDrone = blackboard.get('drone')
-        config: Config = blackboard.get('config')
+        self.timeout: int = blackboard.get('timeout')
+        self.mission_timeout: int = blackboard.get('obstacle_timeout')
 
         self.start_time: Time = blackboard.get('start_time')
-        self.start_state = self.node.get_clock().now()
+        self.start_mission: Time = blackboard.get('obstacle_start_time')
 
-        yasmin.YASMIN_LOG_INFO('Start.')
-        if self.check_timeout(config):
-            yasmin.YASMIN_LOG_ERROR('Timeout.')
+        drone: MavlinkDrone = blackboard.get('drone')
+
+        start_x: float = blackboard.get('obstacle_start_x')
+        start_y: float = blackboard.get('obstacle_start_y')
+
+        match blackboard.get('obstacle_blue_1'):
+            case 1:
+                alt_1 = blackboard.get('obstacle_blue_step_alt_1')
+            case 2:
+                alt_1 = blackboard.get('obstacle_blue_step_alt_2')
+            case 3:
+                alt_1 = blackboard.get('obstacle_blue_step_alt_3')
+            case _:
+                alt_1: float = blackboard.get('safe_alt')
+
+        match blackboard.get('obstacle_blue_2'):
+            case 1:
+                alt_2 = blackboard.get('obstacle_blue_step_alt_1')
+            case 2:
+                alt_2 = blackboard.get('obstacle_blue_step_alt_2')
+            case 3:
+                alt_2 = blackboard.get('obstacle_blue_step_alt_3')
+            case _:
+                alt_2: float = blackboard.get('safe_alt')
+
+        points = [
+            (start_x+2.25, start_y, alt_1),
+            (start_x+3.25, start_y, alt_1),
+            (start_x+3.25, start_y, alt_2),
+            (start_x+4.25, start_y, alt_2),
+        ]
+
+        if self.check_timeout():
             return TIMEOUT
 
-        altitude_1 = config.blue_alt[config.blue_step_1 -
-                                          1] if config.blue_step_1 else config.safe_altitude
-        altitude_2 = config.blue_alt[config.blue_step_2 -
-                                          1] if config.blue_step_2 else config.safe_altitude
+        for x, y, z in points:
+            yasmin.YASMIN_LOG_INFO(f'Fly to x={x}; y={y}; z={z}...')
+            drone.move_to(
+                x=x,
+                y=y,
+                z=z,
+                yaw=0,
+                reference=MoveReference.TAKEOFF,
+            )
 
-        yasmin.YASMIN_LOG_INFO(
-            f'Step 1 - Correcting drone altitude by z={altitude_1:.1f} m...')
-        drone.move_to(
-            x=config.start_obstacle_x + 2.25,
-            y=config.start_obstacle_y,
-            z=altitude_1,
-            yaw=0,
-            reference=MoveReference.TAKEOFF,
-            precision=config.precision,
-            method=config.navigation_method,
-        )
+            if self.check_timeout():
+                return TIMEOUT
 
-        if self.check_timeout(config):
-            yasmin.YASMIN_LOG_ERROR('Timeout.')
-            return TIMEOUT
-
-        yasmin.YASMIN_LOG_INFO('Step 1 - Fly under the first blue bar...')
-        drone.move_to(
-            x=config.start_obstacle_x + 3.25,
-            y=config.start_obstacle_y,
-            z=altitude_1,
-            yaw=0,
-            reference=MoveReference.TAKEOFF,
-            precision=config.precision,
-            method=config.navigation_method,
-        )
-
-        if self.check_timeout(config):
-            yasmin.YASMIN_LOG_ERROR('Timeout.')
-            return TIMEOUT
-
-        yasmin.YASMIN_LOG_INFO(
-            f'Step 2 - Correcting drone altitude by z={altitude_2:.1f} m...')
-        drone.move_to(
-            x=config.start_obstacle_x + 3.25,
-            y=config.start_obstacle_y,
-            z=altitude_2,
-            yaw=0,
-            reference=MoveReference.TAKEOFF,
-            precision=config.precision,
-            method=config.navigation_method,
-        )
-
-        if self.check_timeout(config):
-            yasmin.YASMIN_LOG_ERROR('Timeout.')
-            return TIMEOUT
-
-        yasmin.YASMIN_LOG_INFO('Step 2 - Fly under the second blue bar...')
-        drone.move_to(
-            x=config.start_obstacle_x + 4.25,
-            y=config.start_obstacle_y,
-            z=altitude_2,
-            yaw=0,
-            reference=MoveReference.TAKEOFF,
-            precision=config.precision,
-            method=config.navigation_method,
-        )
-
-        if self.check_timeout(config):
-            yasmin.YASMIN_LOG_ERROR('Timeout.')
-            return TIMEOUT
-
-        yasmin.YASMIN_LOG_INFO('Completed successfully!!!')
         return SUCCEED
 
     def check_timeout(self, config):
         now = self.node.get_clock().now()
 
-        return now - self.start_time > Duration(seconds=config.timeout) or \
-            now - \
-            self.start_state > Duration(seconds=config.timeout_per_state)
+        return now - self.start_time > Duration(seconds=self.timeout) or \
+            now - self.start_mission > Duration(seconds=self.mission_timeout)
