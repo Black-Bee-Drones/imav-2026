@@ -249,7 +249,7 @@ class CenterMoving(State):
 
                 self.node.get_clock().sleep_until(loop_start + Duration(seconds=1 / 30))
 
-    def check_timeout(self, config):
+    def check_timeout(self):
         """
         Returns True if either the overall mission timeout or this state's
         own per-state timeout has been exceeded.

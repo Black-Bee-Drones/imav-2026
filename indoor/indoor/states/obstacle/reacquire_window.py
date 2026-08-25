@@ -79,7 +79,7 @@ class ReacquireWindow(State):
         blackboard.set(f'obstacle_gate_{self.position}_skip', True)
         return CANCEL
 
-    def check_timeout(self, config):
+    def check_timeout(self):
         now = self.node.get_clock().now()
 
         return now - self.start_time > Duration(seconds=self.timeout) or \

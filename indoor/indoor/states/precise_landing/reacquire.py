@@ -43,7 +43,7 @@ class Reacquire(State):
         yasmin.YASMIN_LOG_INFO('Completed successfully.')
         return SUCCEED
 
-    def check_timeout(self, config):
+    def check_timeout(self):
         now = self.node.get_clock().now()
 
         return now - self.start_time > Duration(seconds=config.timeout) or \
