@@ -2,50 +2,66 @@ from rclpy.time import Time, Duration
 
 import yasmin
 from yasmin import State, Blackboard
-from yasmin_ros.yasmin_node import YasminNode
-from yasmin_ros.basic_outcomes import SUCCEED, TIMEOUT, CANCEL
+from yasmin_ros.basic_outcomes import SUCCEED, CANCEL, TIMEOUT
 
 from nectar.control import MavlinkDrone
-
-from indoor import Config
+from nectar.vision import ImageHandler
 
 
 class Reacquire(State):
     def __init__(self):
-        super().__init__(outcomes=[SUCCEED, TIMEOUT, CANCEL])
+        super().__init__(outcomes=[SUCCEED, CANCEL, TIMEOUT])
 
-        self.node = YasminNode.get_instance()
+    def configure(self):
+        self.add_input_key('drone')
+        self.add_input_key('image_handler_down')
+        self.add_input_key('callback_aruco')
+
+        self.add_input_key('timeout')
+        self.add_input_key('start_time')
+        self.add_input_key('max_alt')
+
+        self.add_input_key('precise_timeout')
+        self.add_input_key('precise_start_time')
+
+        self.add_input_key('precise_reacquire_vz')
 
     def execute(self, blackboard: Blackboard):
         drone: MavlinkDrone = blackboard.get('drone')
-        config: Config = blackboard.get('config')
+        handler: ImageHandler = blackboard.get('image_handler_down')
+        handler.image_processing_callback = blackboard.get('callback_aruco')
 
+        self.timeout: int = blackboard.get('timeout')
         self.start_time: Time = blackboard.get('start_time')
-        self.start_state = self.node.get_clock().now()
+        max_alt: float = blackboard.get('max_alt')
 
-        yasmin.YASMIN_LOG_INFO('Start.')
-        if self.check_timeout(config):
-            yasmin.YASMIN_LOG_ERROR('Timeout.')
-            return TIMEOUT
+        self.mission_timeout: int = blackboard.get('precise_timeout')
+        self.start_mission: Time = blackboard.get('precise_start_time')
+    
+        vz: float = blackboard.get('precise_reacquire_vz')
 
-        if config.reacquire_step + drone.get_altitude() >= config.max_altitude:
-            yasmin.YASMIN_LOG_ERROR('Altitude limit.')
-            return CANCEL
+        while (drone.get_altitude() < max_alt):
 
-        yasmin.YASMIN_LOG_INFO(f'Up {config.reacquire_step} m...')
-        drone.move_to(
-            x=0,
-            y=0,
-            z=config.reacquire_step,
-            yaw=0,
-        )
+            if self.check_timeout():
+                drone.move_velocity()
+                return TIMEOUT
 
-        yasmin.YASMIN_LOG_INFO('Completed successfully.')
-        return SUCCEED
+            image, marker_id, translation, yaw = handler.take_photo()
+            if marker_id is not None:
+                return SUCCEED
+
+            yasmin.YASMIN_LOG_INFO(f'Up...')
+            drone.move_velocity(
+                x=0,
+                y=0,
+                z=vz,
+                yaw=0,
+            )
+
+        return CANCEL
 
     def check_timeout(self):
         now = self.node.get_clock().now()
 
-        return now - self.start_time > Duration(seconds=config.timeout) or \
-            now - \
-            self.start_state > Duration(seconds=config.timeout_per_state)
+        return now - self.start_time > Duration(seconds=self.timeout) or \
+            now - self.start_mission > Duration(seconds=self.mission_timeout)

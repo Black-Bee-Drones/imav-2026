@@ -142,7 +142,7 @@ class Config(Blackboard):
         self.land_altitude: float = 1.0  # meters
 
         # Reacquire
-        self.reacquire_step: float = 0.5  # meters
+        self.precise_reacquire_vz: float = 0.3
 
         ### PIDController ###
         # PID xy

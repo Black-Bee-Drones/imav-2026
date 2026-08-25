@@ -15,7 +15,7 @@ class PreciseLandingSM(StateMachine):
         super().__init__(outcomes=[SUCCEED, CANCEL, ABORT, TIMEOUT])
 
         self.add_state(
-            'GO_TO_LAND',
+            'GO_TO_LANDING_BASE',
             GoToLandingBase(),
             transitions={
                 SUCCEED: 'CENTER',
@@ -34,7 +34,11 @@ class PreciseLandingSM(StateMachine):
         self.add_state(
             'REACQUIRE',
             Reacquire(),
-            transitions={SUCCEED: 'CENTER', CANCEL: ABORT},
+            transitions={
+                SUCCEED: 'CENTER',
+                CANCEL: CANCEL,
+                TIMEOUT: CANCEL,
+            },
         )
 
-        self.set_start_state('GO_TO_LAND')
+        self.set_start_state('GO_TO_LANDING_BASE')
