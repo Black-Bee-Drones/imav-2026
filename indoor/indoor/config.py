@@ -120,6 +120,10 @@ class Config(Blackboard):
 
         ### Dropping ###
         self.drop_cone_enabled: bool = True
+        self.droping_skip: bool = False
+
+        ### Precise landing (stage) ###
+        self.precise_skip: bool = False
 
         ### Precise landing ###
         # GoToLandingBase
@@ -186,7 +190,14 @@ class Config(Blackboard):
             self.camera_down_is_compressed: bool = False
 
         if args.preset is not None:
-            self.aplly_preset(args.preset)
+            if args.preset == 'custom':
+                from indoor.customization import run_customization_wizard
+
+                overrides = run_customization_wizard()
+                for k, v in overrides.items():
+                    self.set(k, v)
+            else:
+                self.aplly_preset(args.preset)
 
         if args.obstacle_skip:
             self.obstacle_skip = args.obstacle_skip
@@ -199,4 +210,4 @@ class Config(Blackboard):
 
     @staticmethod
     def list_preset():
-        return [p for p in dir(presets) if p.isupper()]
+        return [p for p in dir(presets) if p.isupper()] + ['custom']
