@@ -13,14 +13,15 @@ from indoor import Config
 class PreciseLandingSM(StateMachine):
     def __init__(self, config: Config):
         super().__init__(outcomes=[SUCCEED, CANCEL, ABORT, TIMEOUT])
-        """
-        Precise landing state machine.
-        """
 
         self.add_state(
             'GO_TO_LAND',
             GoToLandingBase(),
-            transitions={SUCCEED: 'CENTER', TIMEOUT: ABORT},
+            transitions={
+                SUCCEED: 'CENTER',
+                CANCEL: CANCEL,
+                TIMEOUT: CANCEL,
+            },
         )
 
         self.add_state(

@@ -122,16 +122,17 @@ class Config(Blackboard):
         self.drop_cone_enabled: bool = True
         self.droping_skip: bool = False
 
-        ### Precise landing (stage) ###
-        self.precise_skip: bool = False
-
         ### Precise landing ###
+        self.precise_skip: bool = False
+        self.precise_timeout: int = 300  # seconds
+        self.precise_start_time: Time | None = None
+
         # GoToLandingBase
-        self.fixed_base: bool = True
-        self.fixed_base_x: float = 0.0  # meters
-        self.fixed_base_y: float = 2.0  # meters
-        self.mobile_base_x: float = 0.0  # meters
-        self.mobile_base_y: float = -2.0  # meters
+        self.precise_fixed: bool = True
+        self.precise_fixed_x: float = 0.0 
+        self.precise_fixed_y: float = 2.0 
+        self.precise_mobile_x: float = 0.0 
+        self.precise_mobile_y: float = -2.0 
 
         # Center
         self.center_threshold_xy: float = 0.2  # meters

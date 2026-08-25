@@ -3,81 +3,85 @@ from rclpy.time import Time, Duration
 import yasmin
 from yasmin import State, Blackboard
 from yasmin_ros.yasmin_node import YasminNode
-from yasmin_ros.basic_outcomes import SUCCEED, TIMEOUT
+from yasmin_ros.basic_outcomes import SUCCEED, CANCEL, TIMEOUT
 
 from nectar.control import MavlinkDrone, MoveReference
-
-from indoor import Config
 
 
 class GoToLandingBase(State):
     def __init__(self):
-        super().__init__(outcomes=[SUCCEED, TIMEOUT])
+        super().__init__(outcomes=[SUCCEED, CANCEL, TIMEOUT])
 
         self.node = YasminNode.get_instance()
 
+    def configure(self):
+        self.add_output_key('precise_start_time')
+
+        self.add_input_key('drone')
+
+        self.add_input_key('timeout')
+        self.add_input_key('start_time')
+        self.add_input_key('safe_alt')
+
+        self.add_input_key('precise_skip')
+        self.add_input_key('precise_start_time')
+        self.add_input_key('precise_timeout')
+        self.add_input_key('precise_fixed')
+        self.add_input_key('precise_fixed_x')
+        self.add_input_key('precise_fixed_y')
+        self.add_input_key('precise_mobile_x')
+        self.add_input_key('precise_mobile_y')
+
     def execute(self, blackboard: Blackboard):
+        blackboard.set('precise_start_time', self.node.get_clock().now())
+        if blackboard.get('precise_skip'):
+            return CANCEL
+
         drone: MavlinkDrone = blackboard.get('drone')
-        config: Config = blackboard.get('config')
 
+        self.timeout: int = blackboard.get('timeout')
         self.start_time: Time = blackboard.get('start_time')
-        self.start_state = self.node.get_clock().now()
+        safe_alt: float = blackboard.get('safe_alt')
 
-        yasmin.YASMIN_LOG_INFO('Start.')
-        if self.check_timeout(config):
-            yasmin.YASMIN_LOG_ERROR('Timeout.')
+        self.mission_timeout: int = blackboard.get('precise_timeout')
+        self.start_mission: Time = blackboard.get('precise_start_time')
+        fixed: bool = blackboard.get('precise_fixed')
+
+        if fixed:
+            yasmin.YASMIN_LOG_INFO(f'Fly to a "fixed" landing base...')
+            base_x = blackboard.get('precise_fixed_x')
+            base_y = blackboard.get('precise_fixed_y')
+        else:
+            yasmin.YASMIN_LOG_INFO(f'Fly to a "mobile" landing base...')
+            base_x = blackboard.get('precise_mobile_x')
+            base_y = blackboard.get('precise_mobile_y')
+
+        points = [
+            (None, None, safe_alt),
+            (None, base_y, safe_alt),
+            (base_x, base_y, safe_alt),
+        ]
+
+        if self.check_timeout():
             return TIMEOUT
 
-        yasmin.YASMIN_LOG_INFO(
-            f'Fly to a {"fixed" if config.fixed_base else "mobile"} landing base...')
+        for x, y, z in points:
+            yasmin.YASMIN_LOG_INFO(f'Fly to x={x}; y={y}; z={z}...')
+            drone.move_to(
+                x=x,
+                y=y,
+                z=z,
+                yaw=0,
+                reference=MoveReference.TAKEOFF,
+            )
 
-        yasmin.YASMIN_LOG_INFO('Flying to a safe altitude...')
-        drone.move_to(
-            x=None,
-            y=None,
-            z=config.safe_altitude,
-            yaw=0,
-            reference=MoveReference.TAKEOFF,
-        )
+            if self.check_timeout():
+                return TIMEOUT
 
-        if self.check_timeout(config):
-            yasmin.YASMIN_LOG_ERROR('Timeout.')
-            return TIMEOUT
-
-        yasmin.YASMIN_LOG_INFO(
-            f'fly to y={config.base_y} from the {"fixed" if config.fixed_base else "mobile"} base...')
-        drone.move_to(
-            x=None,
-            y=config.base_y,
-            z=config.safe_altitude,
-            yaw=0,
-            reference=MoveReference.TAKEOFF,
-        )
-
-        if self.check_timeout(config):
-            yasmin.YASMIN_LOG_ERROR('Timeout.')
-            return TIMEOUT
-
-        yasmin.YASMIN_LOG_INFO(
-            f'fly to x={config.base_x} from the {"fixed" if config.fixed_base else "mobile"} base...')
-        drone.move_to(
-            x=config.base_x,
-            y=config.base_y,
-            z=config.safe_altitude,
-            yaw=0,
-            reference=MoveReference.TAKEOFF,
-        )
-
-        if self.check_timeout(config):
-            yasmin.YASMIN_LOG_ERROR('Timeout.')
-            return TIMEOUT
-
-        yasmin.YASMIN_LOG_INFO('Completed successfully!!!')
         return SUCCEED
 
     def check_timeout(self):
         now = self.node.get_clock().now()
 
-        return now - self.start_time > Duration(seconds=config.timeout) or \
-            now - \
-            self.start_state > Duration(seconds=config.timeout_per_state)
+        return now - self.start_time > Duration(seconds=self.timeout) or \
+            now - self.start_mission > Duration(seconds=self.mission_timeout)
