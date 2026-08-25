@@ -123,8 +123,8 @@ class Window(State):
 
                 yasmin.YASMIN_LOG_INFO(
 
-                    f'Centering: ({aligned}/{aligned_threshold}) ',
-                    f'| Error: y={error_y:.0f}; z={error_z:.0f}. ',
+                    f'Centering: ({aligned}/{aligned_threshold}) '
+                    f'| Error: y={error_y:.0f}; z={error_z:.0f}. '
                     f'| Output: y={output_y:.1f}; z={output_z:.1f}. '
                 )
                 drone.move_velocity(vy=output_y, vz=output_z)
@@ -135,8 +135,8 @@ class Window(State):
             else:
                 lost += 1
                 yasmin.YASMIN_LOG_INFO(
-                    f'Lost ({lost}/{lost_tolerance}): ',
-                    f'| Error: z={error_z:.0f}. ',
+                    f'Lost ({lost}/{lost_tolerance}): '
+                    f'| Error: z={error_z:.0f}. '
                     f'| Output: z={output_z:.1f}. '
                 )
                 drone.move_velocity(vz=output_z)
