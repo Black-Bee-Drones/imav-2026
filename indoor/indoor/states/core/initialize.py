@@ -22,6 +22,7 @@ class Initialize(State):
         super().__init__(outcomes=[SUCCEED, ABORT])
 
         self.node = YasminNode.get_instance()
+        self.start_time = self.node.get_clock().now()
 
     def configure(self):
 

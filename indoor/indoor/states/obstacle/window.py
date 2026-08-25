@@ -92,8 +92,13 @@ class Window(State):
             kp=blackboard.get('obstacle_z_kp'),
             kd=blackboard.get('obstacle_z_kd'),
             ki=blackboard.get('obstacle_z_ki'),
-            setpoint=blackboard.get('obstacle_gate_alt'),
+            setpoint=result.image.shape[0]/2 if (result is not None) else 0,
         )
+
+        output_y = 0.0
+        output_z = 0.0
+        error_y = 0.0
+        error_z = 0.0
 
         lost = 0
         aligned = 0
@@ -108,7 +113,7 @@ class Window(State):
                 lost = 0
 
                 output_y = pid_y.update(window[0].center[0])
-                output_z = pid_z.update(drone.get_altitude())
+                output_z = pid_z.update(window[0].center[1])
 
                 error_y = pid_y._last_error
                 error_z = pid_z._last_error
@@ -131,7 +136,7 @@ class Window(State):
                 lost += 1
                 yasmin.YASMIN_LOG_INFO(
                     f'Lost ({lost}/{lost_tolerance}): ',
-                    f'| Error: z={pid_z._last_error:.0f}. ',
+                    f'| Error: z={error_z:.0f}. ',
                     f'| Output: z={output_z:.1f}. '
                 )
                 drone.move_velocity(vz=output_z)
