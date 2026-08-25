@@ -15,46 +15,44 @@ class RedBar(State):
         self.node = YasminNode.get_instance()
 
     def configure(self):
-        self.add_input_key('timeout')
-        self.add_input_key('obstacle_timeout')
-
-        self.add_input_key('start_time')
-        self.add_input_key('obstacle_start_time')
-
         self.add_input_key('drone')
 
         self.add_input_key('safe_alt')
+        self.add_input_key('start_time')
+        self.add_input_key('timeout')
+
+        self.add_input_key('obstacle_start_time')
+        self.add_input_key('obstacle_timeout')
 
         self.add_input_key('obstacle_start_x')
         self.add_input_key('obstacle_start_y')
-
         self.add_input_key('obstacle_red_step_alt_1')
         self.add_input_key('obstacle_red_step_alt_2')
         self.add_input_key('obstacle_red_step_alt_3')
-
         self.add_input_key('obstacle_red')
 
     def execute(self, blackboard: Blackboard):
-        self.timeout: int = blackboard.get('timeout')
-        self.mission_timeout: int = blackboard.get('obstacle_timeout')
-
-        self.start_time: Time = blackboard.get('start_time')
-        self.start_mission: Time = blackboard.get('obstacle_start_time')
-
         drone: MavlinkDrone = blackboard.get('drone')
 
-        start_x = blackboard.get('obstacle_start_x')
-        start_y = blackboard.get('obstacle_start_y')
+        safe_alt: float = blackboard.get('safe_alt')
+        self.start_time: Time = blackboard.get('start_time')
+        self.timeout: int = blackboard.get('timeout')
+
+        self.start_mission: Time = blackboard.get('obstacle_start_time')
+        self.mission_timeout: int = blackboard.get('obstacle_timeout')
+
+        start_x: float = blackboard.get('obstacle_start_x')
+        start_y: float = blackboard.get('obstacle_start_y')
 
         match blackboard.get('obstacle_red'):
             case 1:
-                alt = blackboard.get('obstacle_red_step_alt_1')
+                alt: float = blackboard.get('obstacle_red_step_alt_1')
             case 2:
-                alt = blackboard.get('obstacle_red_step_alt_2')
+                alt: float = blackboard.get('obstacle_red_step_alt_2')
             case 3:
-                alt = blackboard.get('obstacle_red_step_alt_3')
+                alt: float = blackboard.get('obstacle_red_step_alt_3')
             case _:
-                alt = blackboard.get('safe_alt')
+                alt: float = safe_alt
 
         points = [
             (start_x+1.25, start_y, alt),

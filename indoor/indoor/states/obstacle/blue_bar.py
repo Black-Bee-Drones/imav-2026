@@ -15,34 +15,32 @@ class BlueBar(State):
         self.node = YasminNode.get_instance()
 
     def configure(self):
-        self.add_input_key('timeout')
-        self.add_input_key('obstacle_timeout')
-
-        self.add_input_key('start_time')
-        self.add_input_key('obstacle_start_time')
-
         self.add_input_key('drone')
 
         self.add_input_key('safe_alt')
+        self.add_input_key('start_time')
+        self.add_input_key('timeout')
+
+        self.add_input_key('obstacle_start_time')
+        self.add_input_key('obstacle_timeout')
 
         self.add_input_key('obstacle_start_x')
         self.add_input_key('obstacle_start_y')
-
         self.add_input_key('obstacle_blue_step_alt_1')
         self.add_input_key('obstacle_blue_step_alt_2')
         self.add_input_key('obstacle_blue_step_alt_3')
-
         self.add_input_key('obstacle_blue_1')
         self.add_input_key('obstacle_blue_2')
 
     def execute(self, blackboard: Blackboard):
-        self.timeout: int = blackboard.get('timeout')
-        self.mission_timeout: int = blackboard.get('obstacle_timeout')
-
-        self.start_time: Time = blackboard.get('start_time')
-        self.start_mission: Time = blackboard.get('obstacle_start_time')
-
         drone: MavlinkDrone = blackboard.get('drone')
+
+        safe_alt: float = blackboard.get('safe_alt')
+        self.start_time: Time = blackboard.get('start_time')
+        self.timeout: int = blackboard.get('timeout')
+
+        self.start_mission: Time = blackboard.get('obstacle_start_time')
+        self.mission_timeout: int = blackboard.get('obstacle_timeout')
 
         start_x: float = blackboard.get('obstacle_start_x')
         start_y: float = blackboard.get('obstacle_start_y')
@@ -55,7 +53,7 @@ class BlueBar(State):
             case 3:
                 alt_1 = blackboard.get('obstacle_blue_step_alt_3')
             case _:
-                alt_1: float = blackboard.get('safe_alt')
+                alt_1 = safe_alt
 
         match blackboard.get('obstacle_blue_2'):
             case 1:
@@ -65,7 +63,7 @@ class BlueBar(State):
             case 3:
                 alt_2 = blackboard.get('obstacle_blue_step_alt_3')
             case _:
-                alt_2: float = blackboard.get('safe_alt')
+                alt_2 = safe_alt
 
         points = [
             (start_x+2.25, start_y, alt_1),

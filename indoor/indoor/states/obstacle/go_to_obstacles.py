@@ -17,19 +17,17 @@ class GoToObstacles(State):
     def configure(self):
         self.add_output_key('obstacle_start_time')
 
-        self.add_input_key('obstacle_skip')
-
-        self.add_input_key('timeout')
-        self.add_input_key('obstacle_timeout')
+        self.add_input_key('drone')
 
         self.add_input_key('start_time')
-        self.add_input_key('obstacle_start_time')
+        self.add_input_key('timeout')
 
-        self.add_input_key('drone')
+        self.add_input_key('obstacle_skip')
+        self.add_input_key('obstacle_start_time')
+        self.add_input_key('obstacle_timeout')
 
         self.add_input_key('obstacle_start_x')
         self.add_input_key('obstacle_start_y')
-
         self.add_input_key('obstacle_gate_alt')
 
     def execute(self, blackboard: Blackboard):
@@ -40,11 +38,11 @@ class GoToObstacles(State):
 
         drone: MavrosDrone = blackboard.get('drone')
 
-        self.timeout: int = blackboard.get('timeout')
-        self.mission_timeout: int = blackboard.get('obstacle_timeout')
-
         self.start_time: Time = blackboard.get('start_time')
+        self.timeout: int = blackboard.get('timeout')
+
         self.start_mission: Time = blackboard.get('obstacle_start_time')
+        self.mission_timeout: int = blackboard.get('obstacle_timeout')
 
         start_x: float = blackboard.get('obstacle_start_x')
         start_y: float = blackboard.get('obstacle_start_y')

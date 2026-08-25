@@ -15,34 +15,30 @@ class Tubes(State):
         self.node = YasminNode.get_instance()
 
     def configure(self):
-        self.add_input_key('timeout')
-        self.add_input_key('obstacle_timeout')
-
-        self.add_input_key('start_time')
-        self.add_input_key('obstacle_start_time')
-
         self.add_input_key('drone')
 
         self.add_input_key('safe_alt')
+        self.add_input_key('start_time')
+        self.add_input_key('timeout')
+
+        self.add_input_key('obstacle_start_time')
+        self.add_input_key('obstacle_timeout')
 
         self.add_input_key('obstacle_start_x')
         self.add_input_key('obstacle_start_y')
-
         self.add_input_key('obstacle_tubes_skip')
-
         self.add_input_key('obstacle_tubes_alt')
         self.add_input_key('obstacle_tubes_offset')
 
     def execute(self, blackboard: Blackboard):
-        self.timeout: int = blackboard.get('timeout')
-        self.mission_timeout: int = blackboard.get('obstacle_timeout')
-
-        self.start_time: Time = blackboard.get('start_time')
-        self.start_mission: Time = blackboard.get('obstacle_start_time')
-
         drone: MavlinkDrone = blackboard.get('drone')
 
         safe_alt = blackboard.get('safe_alt')
+        self.start_time: Time = blackboard.get('start_time')
+        self.timeout: int = blackboard.get('timeout')
+
+        self.start_mission: Time = blackboard.get('obstacle_start_time')
+        self.mission_timeout: int = blackboard.get('obstacle_timeout')
 
         start_x = blackboard.get('obstacle_start_x')
         start_y = blackboard.get('obstacle_start_y')

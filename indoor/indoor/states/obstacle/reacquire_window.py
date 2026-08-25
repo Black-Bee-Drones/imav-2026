@@ -20,18 +20,17 @@ class ReacquireWindow(State):
     def configure(self):
         self.add_output_key(f'obstacle_gate_{self.position}_skip')
 
-        self.add_input_key('timeout')
-        self.add_input_key('obstacle_timeout')
-
-        self.add_input_key('start_time')
-        self.add_input_key('obstacle_start_time')
-
-        self.add_input_key('model_gate_class_name')
-
         self.add_input_key('drone')
-
         self.add_input_key('image_handler_front')
         self.add_input_key('callback_gate')
+
+        self.add_input_key('model_gate_class_name')
+    
+        self.add_input_key('start_time')
+        self.add_input_key('timeout')
+
+        self.add_input_key('obstacle_start_time')
+        self.add_input_key('obstacle_timeout')
 
         self.add_input_key('obstacle_z_kp')
         self.add_input_key('obstacle_z_kd')

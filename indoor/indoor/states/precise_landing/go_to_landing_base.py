@@ -19,13 +19,14 @@ class GoToLandingBase(State):
 
         self.add_input_key('drone')
 
-        self.add_input_key('timeout')
-        self.add_input_key('start_time')
         self.add_input_key('safe_alt')
+        self.add_input_key('start_time')
+        self.add_input_key('timeout')
 
         self.add_input_key('precise_skip')
         self.add_input_key('precise_start_time')
         self.add_input_key('precise_timeout')
+
         self.add_input_key('precise_fixed')
         self.add_input_key('precise_fixed_x')
         self.add_input_key('precise_fixed_y')
@@ -39,22 +40,22 @@ class GoToLandingBase(State):
 
         drone: MavlinkDrone = blackboard.get('drone')
 
-        self.timeout: int = blackboard.get('timeout')
-        self.start_time: Time = blackboard.get('start_time')
         safe_alt: float = blackboard.get('safe_alt')
+        self.start_time: Time = blackboard.get('start_time')
+        self.timeout: int = blackboard.get('timeout')
 
-        self.mission_timeout: int = blackboard.get('precise_timeout')
         self.start_mission: Time = blackboard.get('precise_start_time')
-        fixed: bool = blackboard.get('precise_fixed')
+        self.mission_timeout: int = blackboard.get('precise_timeout')
 
+        fixed: bool = blackboard.get('precise_fixed')
         if fixed:
             yasmin.YASMIN_LOG_INFO(f'Fly to a "fixed" landing base...')
-            base_x = blackboard.get('precise_fixed_x')
-            base_y = blackboard.get('precise_fixed_y')
+            base_x: float = blackboard.get('precise_fixed_x')
+            base_y: float = blackboard.get('precise_fixed_y')
         else:
             yasmin.YASMIN_LOG_INFO(f'Fly to a "mobile" landing base...')
-            base_x = blackboard.get('precise_mobile_x')
-            base_y = blackboard.get('precise_mobile_y')
+            base_x: float = blackboard.get('precise_mobile_x')
+            base_y: float = blackboard.get('precise_mobile_y')
 
         points = [
             (None, None, safe_alt),
@@ -62,10 +63,10 @@ class GoToLandingBase(State):
             (base_x, base_y, safe_alt),
         ]
 
-        if self.check_timeout():
-            return TIMEOUT
-
         for x, y, z in points:
+            if self.check_timeout():
+                return TIMEOUT
+
             yasmin.YASMIN_LOG_INFO(f'Fly to x={x}; y={y}; z={z}...')
             drone.move_to(
                 x=x,
@@ -74,9 +75,6 @@ class GoToLandingBase(State):
                 yaw=0,
                 reference=MoveReference.TAKEOFF,
             )
-
-            if self.check_timeout():
-                return TIMEOUT
 
         return SUCCEED
 
