@@ -51,10 +51,12 @@ class Initialize(State):
 
         self.add_input_key('camera_front_source')
         self.add_input_key('camera_front_topic')
+        self.add_input_key('camera_front_is_compressed')
         self.add_input_key('camera_front_id')
 
         self.add_input_key('camera_down_source')
         self.add_input_key('camera_down_topic')
+        self.add_input_key('camera_down_is_compressed')
         self.add_input_key('camera_down_id')
 
     def execute(self, blackboard: Blackboard):
@@ -203,7 +205,7 @@ class Initialize(State):
                 case 'ros':
                     handler_config_front = ROSConfig(
                         topic=blackboard.get('camera_front_topic'),
-                        compressed=True,
+                        compressed=blackboard.get('camera_front_is_compressed'),
                     )
                 case 'realsense':
                     handler_config_front = RealSenseConfig()
@@ -249,7 +251,7 @@ class Initialize(State):
                 case 'ros':
                     handler_config_down = ROSConfig(
                         topic=blackboard.get('camera_down_topic'),
-                        compressed=True,
+                        compressed=blackboard.get('camera_down_is_compressed'),
                     )
                 case 'opencv':
                     handler_config_down = OpenCVConfig(

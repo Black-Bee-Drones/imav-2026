@@ -42,9 +42,11 @@ class Config(Blackboard):
         # ImageHandler
         self.camera_front_source: str = 'ros'
         self.camera_front_topic: str = '/camera/color/image_raw/compressed'
+        self.camera_front_is_compressed: bool = True
         self.camera_front_id: int = 6
         self.camera_down_source: str = 'opencv'
         self.camera_down_topic: str = '/down_camera'
+        self.camera_down_is_compressed: bool = True
         self.camera_down_id: int = 6
 
         ### Takeoff ###
@@ -173,13 +175,15 @@ class Config(Blackboard):
         if args.sitl:
             ### Initialize ###
             # Drone
-            self.drone_connection_string: str = 'tcp:127.0.0.1:5760'
+            self.drone_connection_string: str = 'tcp:127.0.0.1:5762'
 
             # ImageHandler
             self.camera_front_source: str = 'ros'
             self.camera_front_topic: str = '/front_camera/image'
+            self.camera_front_is_compressed: bool = False
             self.camera_down_source: str = 'ros'
             self.camera_down_topic: str = '/down_camera'
+            self.camera_down_is_compressed: bool = False
 
         if args.preset is not None:
             self.aplly_preset(args.preset)
