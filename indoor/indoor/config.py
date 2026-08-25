@@ -69,8 +69,8 @@ class Config(Blackboard):
         self.obstacle_z_ki: float = .0
 
         # GoToObstacle
-        self.obstacle_start_x: float = .0  # meters
-        self.obstacle_start_y: float = .0  # meters
+        self.obstacle_start_x: float = -0.7  # meters
+        self.obstacle_start_y: float = -3.2  # meters
 
         # Window
         self.obstacle_gate_first_skip: bool = False
