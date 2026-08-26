@@ -129,7 +129,7 @@ class Window(State):
                     f'| Error: y={error_y:.0f}; z={error_z:.0f}. '
                     f'| Output: y={output_y:.1f}; z={output_z:.1f}. '
                 )
-                drone.move_velocity(vy=output_y, vz=output_z)
+                drone.move_velocity(0.1, vy=output_y, vz=output_z)
 
             if aligned >= aligned_threshold:
                 break
@@ -163,7 +163,7 @@ class Window(State):
 
         yasmin.YASMIN_LOG_INFO('Fly through the window.')
         drone.move_to(
-            x=1.0,
+            x=0.75,
             y=None,
             z=0,
             yaw=0,

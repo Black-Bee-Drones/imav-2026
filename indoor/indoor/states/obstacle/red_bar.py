@@ -56,7 +56,7 @@ class RedBar(State):
 
         points = [
             (start_x+1.25, start_y, alt),
-            (start_x+2.25, start_y, alt),
+            (start_x+2.0, start_y, alt),
         ]
 
         if self.check_timeout():
