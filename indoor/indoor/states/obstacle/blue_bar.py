@@ -5,7 +5,8 @@ from yasmin import State, Blackboard
 from yasmin_ros.yasmin_node import YasminNode
 from yasmin_ros.basic_outcomes import SUCCEED, TIMEOUT
 
-from nectar.control import MavlinkDrone, MoveReference
+from nectar.control import MavlinkDrone, MoveReference, PIDController
+from nectar.vision import LineDetector, ImageHandler
 
 
 class BlueBar(State):
@@ -32,6 +33,12 @@ class BlueBar(State):
         self.add_input_key('obstacle_blue_1')
         self.add_input_key('obstacle_blue_2')
 
+        self.add_input_key('image_handler_down')
+
+        self.add_input_key('obstacle_xy_kp')
+        self.add_input_key('obstacle_xy_kd')
+        self.add_input_key('obstacle_xy_ki')
+
     def execute(self, blackboard: Blackboard):
         drone: MavlinkDrone = blackboard.get('drone')
 
@@ -44,6 +51,8 @@ class BlueBar(State):
 
         start_x: float = blackboard.get('obstacle_start_x')
         start_y: float = blackboard.get('obstacle_start_y')
+
+        down_handler: ImageHandler = blackboard.get('image_handler_down')
 
         match blackboard.get('obstacle_blue_1'):
             case 1:
@@ -75,18 +84,53 @@ class BlueBar(State):
         if self.check_timeout():
             return TIMEOUT
 
-        for x, y, z in points:
-            yasmin.YASMIN_LOG_INFO(f'Fly to x={x}; y={y}; z={z}...')
-            drone.move_to(
-                x=x,
-                y=y,
-                z=z,
-                yaw=0,
-                reference=MoveReference.TAKEOFF,
-            )
+        blue_line = LineDetector(
+            color="blue",
+        )
 
-            if self.check_timeout():
-                return TIMEOUT
+        red_line = LineDetector(
+            color="red"
+        )
+
+        centrilized = False
+        error = -1.0
+        img = down_handler.take_photo()
+
+        pid_x = PIDController(
+            kp=blackboard.get('obstacle_xy_kp'),
+            kd=blackboard.get('obstacle_xy_kd'),
+            ki=blackboard.get('obstacle_xy_ki'),
+            setpoint= img.shape[0]/2 if (img is not None) else 0,
+            output_limits=(-0.3, 0.3)
+        )
+
+        while not centrilized:
+
+            if abs(error) < 20:
+                centrilized = True
+                yasmin.YASMIN_LOG_INFO("Contrilized between lines")
+                break
+
+            img = down_handler.take_photo()
+
+            blue_img, blue_mask, blue_cx, blue_cy, blue_angle, blue_w, blue_h = blue_line.detect_line(img)
+            red_img, red_mask, red_cx, red_cy, red_angle, red_w, red_h = red_line.detect_line(img)
+
+            error = pid_x._last_error
+
+            if blue_cy:
+                vx = pid_x.update((blue_cy + red_cy)/2)
+                yasmin.YASMIN_LOG_INFO(f"Blue Line detected | Error: {error} | vx: {vx}")
+                if red_cy:
+                    yasmin.YASMIN_LOG_INFO(f"Blue Line detected | Error: {error} | vx: {vx}")
+            else:
+                yasmin.YASMIN_LOG_INFO("N=Blue line not detected")
+                vx=0
+                break
+
+            drone.move_velocity(vx=vx)
+
+
 
         return SUCCEED
 

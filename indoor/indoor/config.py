@@ -47,7 +47,7 @@ class Config(Blackboard):
         self.camera_down_source: str = 'opencv'
         self.camera_down_topic: str = '/down_camera'
         self.camera_down_is_compressed: bool = True
-        self.camera_down_id: int = 6
+        self.camera_down_id: int = 0
 
         ### Takeoff ###
         self.takeoff_alt: float = 1.2  # meters
