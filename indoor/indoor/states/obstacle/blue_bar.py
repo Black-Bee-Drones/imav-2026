@@ -9,6 +9,7 @@ from nectar.control import MavlinkDrone, MoveReference, PIDController
 from nectar.vision import LineDetector, ImageHandler
 
 import cv2
+import math
 
 
 class BlueBar(State):
@@ -123,10 +124,10 @@ class BlueBar(State):
 
             error = pid_x._last_error
 
-            if red_cy == float("nan"):
+            if math.isnan(red_cy):
                 red_cy = 0
-                
-            yasmin.YASMIN_LOG_INFO(f"Blue center: f{blue_cy} | Red center: {red_cy} | Error: {error}")
+
+            yasmin.YASMIN_LOG_INFO(f"Blue center: {blue_cy} | Red center: {red_cy} | Error: {error}")
 
             if blue_cy:
                 vx = pid_x.update((blue_cy + red_cy)/2)
