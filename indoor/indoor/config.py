@@ -64,12 +64,12 @@ class Config(Blackboard):
         self.obstacle_xy_kd: float = .0
         self.obstacle_xy_ki: float = .0
 
-        self.obstacle_z_kp: float = .1
+        self.obstacle_z_kp: float = .003
         self.obstacle_z_kd: float = .0
         self.obstacle_z_ki: float = .0
 
         # GoToObstacle
-        self.obstacle_start_x: float = -0.7  # meters
+        self.obstacle_start_x: float = 0.0  # meters
         self.obstacle_start_y: float = -3.2  # meters
 
         # Window
@@ -96,7 +96,7 @@ class Config(Blackboard):
 
         # Tubes
         self.obstacle_tubes_skip = False
-        self.obstacle_tubes_alt = 0.7
+        self.obstacle_tubes_alt = 1.2
         self.obstacle_tubes_offset = 1.5  # meters
 
         ### Inspect ###

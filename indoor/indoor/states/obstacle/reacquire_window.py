@@ -73,7 +73,7 @@ class ReacquireWindow(State):
                     return TIMEOUT
 
                 output_z = pid_z.update(drone.get_altitude())
-                drone.move_velocity(vy=direction, vz=output_z)
+                drone.move_velocity(vy=direction, vz=output_z, duration=2.0)
 
         blackboard.set(f'obstacle_gate_{self.position}_skip', True)
         return CANCEL

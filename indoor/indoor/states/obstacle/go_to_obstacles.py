@@ -50,8 +50,8 @@ class GoToObstacles(State):
 
         points = [
             (None, None, gate_alt),
-            (start_x, None, gate_alt),
-            (start_x, start_y, gate_alt),
+            (start_x - 0.75, None, gate_alt), # safe distance
+            (start_x - 0.75, start_y, gate_alt), 
         ]
 
         if self.check_timeout():

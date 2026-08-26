@@ -53,11 +53,10 @@ class Tubes(State):
             ]
         else:
             points = [
-                (start_x+4.75, start_y, alt),
-                (start_x+5.75, start_y, alt),
+                (start_x+4.25, start_y, alt),
+                (start_x+4.25, start_y+offset, alt),
                 (start_x+5.75, start_y+offset, alt),
-                (start_x+6.25, start_y+offset, alt),
-                (start_x+6.25, start_y, alt),
+                (start_x+5.75, start_y, alt),
             ]
 
         if self.check_timeout():

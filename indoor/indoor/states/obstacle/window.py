@@ -5,7 +5,7 @@ from yasmin import State, Blackboard
 from yasmin_ros.yasmin_node import YasminNode
 from yasmin_ros.basic_outcomes import SUCCEED, TIMEOUT
 
-from nectar.control import MavlinkDrone, PIDController
+from nectar.control import MavlinkDrone, PIDController, MoveReference
 from nectar.vision import ImageHandler
 from nectar.ai import DetectionResult
 
@@ -86,6 +86,7 @@ class Window(State):
             kd=blackboard.get('obstacle_xy_kd'),
             ki=blackboard.get('obstacle_xy_ki'),
             setpoint= result.image.shape[1]/2 if (result is not None) else 0,
+            output_limits=(-0.3, 0.3)
         )
 
         pid_z = PIDController(
@@ -93,6 +94,7 @@ class Window(State):
             kd=blackboard.get('obstacle_z_kd'),
             ki=blackboard.get('obstacle_z_ki'),
             setpoint=result.image.shape[0]/2 if (result is not None) else 0,
+            output_limits=(-0.1, 0.1)
         )
 
         output_y = 0.0
@@ -161,18 +163,11 @@ class Window(State):
 
         yasmin.YASMIN_LOG_INFO('Fly through the window.')
         drone.move_to(
-            x=0.75,
-            y=0,
+            x=1.0,
+            y=None,
             z=0,
             yaw=0,
-        )
-
-        yasmin.YASMIN_LOG_INFO('Fly to gate alt.')
-        drone.move_to(
-            x=0,
-            y=0,
-            z=blackboard.get('obstacle_gate_alt') - drone.get_altitude(),
-            yaw=0,
+            reference=MoveReference.TAKEOFF
         )
 
         return SUCCEED
