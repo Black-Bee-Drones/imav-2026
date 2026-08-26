@@ -285,6 +285,13 @@ class Initialize(State):
             return ABORT
 
         yasmin.YASMIN_LOG_INFO('Completed successfully!!!')
+
+        try:
+            input("\n[PAUSE] Press ENTER to proceed to TAKEOFF...\n")
+        except (KeyboardInterrupt, EOFError):
+            yasmin.YASMIN_LOG_WARN('Takeoff cancelled by user.')
+            return ABORT
+
         return SUCCEED
 
     def callback_detector_gate(self, image: np.ndarray) -> DetectionResult:
