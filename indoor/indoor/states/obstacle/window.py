@@ -162,13 +162,22 @@ class Window(State):
             return TIMEOUT
 
         yasmin.YASMIN_LOG_INFO('Fly through the window.')
-        drone.move_to(
-            x=0.75,
-            y=None,
-            z=0,
-            yaw=0,
-            reference=MoveReference.TAKEOFF
-        )
+
+        if self.position == 'first':
+            drone.move_to(
+                x=0.75,
+                y=0.0,
+                z=0,
+                yaw=0,
+                reference=MoveReference.BODY
+            )
+        else:
+            drone.move_to(
+                x=6.25,
+                y=0.0,
+                z=0,
+                reference=MoveReference.TAKEOFF
+            )
 
         return SUCCEED
 

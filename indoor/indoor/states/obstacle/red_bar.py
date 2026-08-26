@@ -66,7 +66,7 @@ class RedBar(State):
             yasmin.YASMIN_LOG_INFO(f'Fly to x={x}; y={y}; z={z}...')
             drone.move_to(
                 x=x,
-                y=y - 0.3,
+                y=y,
                 z=z,
                 yaw=0,
                 reference=MoveReference.TAKEOFF,

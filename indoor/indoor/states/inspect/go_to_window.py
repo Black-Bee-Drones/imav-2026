@@ -51,9 +51,8 @@ class GoToWindow(State):
         alt: float = blackboard.get('obstacle_gate_alt')
 
         points = [
-            (None, None, alt),
-            (None, start_y, alt),
-            (start_x, start_y, alt),
+            (start_x, start_y, None),
+            (start_x, start_y, alt)
         ]
 
         if self.check_timeout():

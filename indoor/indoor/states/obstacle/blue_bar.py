@@ -8,6 +8,8 @@ from yasmin_ros.basic_outcomes import SUCCEED, TIMEOUT
 from nectar.control import MavlinkDrone, MoveReference, PIDController
 from nectar.vision import LineDetector, ImageHandler
 
+import cv2
+
 
 class BlueBar(State):
     def __init__(self):
@@ -106,7 +108,7 @@ class BlueBar(State):
 
         while not centrilized:
 
-            if abs(error) < 20:
+            if abs(error) < 20 and error != 0.0:
                 centrilized = True
                 yasmin.YASMIN_LOG_INFO(f"Centrilized between lines | Erro {error}")
                 break
@@ -116,15 +118,20 @@ class BlueBar(State):
             blue_img, blue_mask, blue_cx, blue_cy, blue_angle, blue_w, blue_h = blue_line.detect_line(img)
             red_img, red_mask, red_cx, red_cy, red_angle, red_w, red_h = red_line.detect_line(img)
 
+            cv2.imwrite(f"/home/jetson/blue_line/f{self.node.get_clock().now()}.jpg", blue_img)
+            cv2.imwrite(f"/home/jetson/red_line/f{self.node.get_clock().now()}.jpg", red_img)            
+
             error = pid_x._last_error
+
+            if red_cy == float("nan"):
+                red_cy = 0
+                
+            yasmin.YASMIN_LOG_INFO(f"Blue center: f{blue_cy} | Red center: {red_cy} | Error: {error}")
 
             if blue_cy:
                 vx = pid_x.update((blue_cy + red_cy)/2)
-                yasmin.YASMIN_LOG_INFO(f"Blue Line detected | Error: {error} | vx: {vx}")
-                if red_cy:
-                    yasmin.YASMIN_LOG_INFO(f"Blue Line detected | Error: {error} | vx: {vx}")
             else:
-                yasmin.YASMIN_LOG_INFO("N=Blue line not detected")
+                yasmin.YASMIN_LOG_INFO("Blue line not detected")
                 vx=0
                 break
 

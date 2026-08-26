@@ -70,7 +70,7 @@ class Config(Blackboard):
 
         # GoToObstacle
         self.obstacle_start_x: float = 0.0  # meters
-        self.obstacle_start_y: float = -3.2  # meters
+        self.obstacle_start_y: float = -3.5  # meters
 
         # Window
         self.obstacle_gate_first_skip: bool = False

@@ -27,22 +27,23 @@ class CountBabies(State):
         handler: ImageHandler = blackboard.get('image_handler_front')
         handler.image_processing_callback = blackboard.get('callback_baby')
 
-        result: DetectionResult = handler.take_photo()
+        while True:
+            result: DetectionResult = handler.take_photo()
 
-        if result is not None:
-            babies = result.filter_by_class(
-                [blackboard.get('model_baby_classes_names')])
-            boxes = self._merge_overlapping(
-                babies,
-                blackboard.get('model_baby_overlap_iou'),
-            )
+            if result is not None:
+                babies = result.filter_by_class(
+                    [blackboard.get('model_baby_classes_names')])
+                boxes = self._merge_overlapping(
+                    babies,
+                    blackboard.get('model_baby_overlap_iou'),
+                )
 
-            yasmin.YASMIN_LOG_INFO(f'Number of babies: {len(boxes)}.')
-            for i, box in enumerate(boxes):
-                yasmin.YASMIN_LOG_INFO(f'Baby {i}: bbox={box}')
+                yasmin.YASMIN_LOG_INFO(f'Number of babies: {len(boxes)}.')
+                for i, box in enumerate(boxes):
+                    yasmin.YASMIN_LOG_INFO(f'Baby {i}: bbox={box}')
 
-            blackboard.set('inspect_babies_count', len(boxes))
-            blackboard.set('inspect_babies_boxes', boxes)
+                blackboard.set('inspect_babies_count', len(boxes))
+                blackboard.set('inspect_babies_boxes', boxes)
 
         return SUCCEED
 
