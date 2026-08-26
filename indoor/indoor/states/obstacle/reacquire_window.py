@@ -39,6 +39,9 @@ class ReacquireWindow(State):
         self.add_input_key('obstacle_gate_alt')
 
     def execute(self, blackboard: Blackboard):
+
+        return SUCCEED
+
         self.timeout: int = blackboard.get('timeout')
         self.mission_timeout: int = blackboard.get('obstacle_timeout')
 

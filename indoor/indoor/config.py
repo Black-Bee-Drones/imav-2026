@@ -105,8 +105,8 @@ class Config(Blackboard):
         self.inspect_start_time: Time | None = None
 
         # GoToWindow
-        self.inspect_start_x: float = 10.0  # meters
-        self.inspect_start_y: float = 2.0  # meters
+        self.inspect_start_x: float = 9.30  # meters
+        self.inspect_start_y: float = 1.40  # meters
 
         # FindWindow
         self.inspect_back_speed: float = -0.5

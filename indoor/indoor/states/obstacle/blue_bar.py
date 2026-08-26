@@ -75,10 +75,10 @@ class BlueBar(State):
                 alt_2 = safe_alt
 
         points = [
-            (start_x+2.25, start_y, alt_1),
-            (start_x+3.25, start_y, alt_1),
-            (start_x+3.25, start_y, alt_2),
-            (start_x+4.25, start_y, alt_2),
+            (0, 0, alt_1),
+            (1.0, 0, alt_1),
+            (0, 0, alt_2),
+            (1.0, 0, alt_2),
         ]
 
         if self.check_timeout():
@@ -93,7 +93,7 @@ class BlueBar(State):
         )
 
         centrilized = False
-        error = -1.0
+        error = -100.0
         img = down_handler.take_photo()
 
         pid_x = PIDController(
@@ -108,7 +108,7 @@ class BlueBar(State):
 
             if abs(error) < 20:
                 centrilized = True
-                yasmin.YASMIN_LOG_INFO("Contrilized between lines")
+                yasmin.YASMIN_LOG_INFO(f"Centrilized between lines | Erro {error}")
                 break
 
             img = down_handler.take_photo()
@@ -130,6 +130,17 @@ class BlueBar(State):
 
             drone.move_velocity(vx=vx)
 
+        for x, y, z in points:
+            yasmin.YASMIN_LOG_INFO(f"Fly to x = {x} y = {y} z = {z}")
+            drone.move_to(
+                x=x,
+                y=y,
+                reference=MoveReference.BODY
+            )
+            drone.move_to(
+                z=z,
+                reference=MoveReference.TAKEOFF
+            )
 
 
         return SUCCEED
