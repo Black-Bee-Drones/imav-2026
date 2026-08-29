@@ -32,7 +32,7 @@ class Config(Blackboard):
         self.model_baby_conf: float = 0.25
         self.model_baby_overlap_iou: float = 0.3  # IoU threshold
         self.model_baby_classes_names = ['person', 'teddy bear']
-        self.model_baby_sample_count = 100
+        self.model_baby_sample_count = 15
         self.inspect_babies_output_path = indoor_path = pathlib.Path.home() / 'ros2_ws'
 
         self.model_box_source: str = 'package.pt'

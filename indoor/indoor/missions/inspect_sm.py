@@ -18,7 +18,7 @@ class InspectSM(StateMachine):
             'GO_TO_WINDOW',
             GoToWindow(),
             transitions={
-                SUCCEED: 'FIND_WINDOW',
+                SUCCEED: 'COUNT_BABIES',
                 CANCEL: CANCEL,
                 TIMEOUT: CANCEL,
             },

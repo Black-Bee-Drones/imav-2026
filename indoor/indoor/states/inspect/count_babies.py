@@ -20,10 +20,8 @@ class CountBabies(State):
 
     def configure(self):
         self.add_output_key('inspect_babies_count')
-        self.add_output_key('inspect_babies_boxes')
-        self.add_output_key('inspect_babies_image_path')
 
-        self.add_input_key('image_handler_front')
+        self.add_input_key('image_handler_down')
         self.add_input_key('callback_baby')
 
         self.add_input_key('model_baby_classes_names')
@@ -33,7 +31,7 @@ class CountBabies(State):
         self.add_input_key('inspect_babies_output_path')
 
     def execute(self, blackboard: Blackboard):
-        handler: ImageHandler = blackboard.get('image_handler_front')
+        handler: ImageHandler = blackboard.get('image_handler_down')
         handler.image_processing_callback = blackboard.get('callback_baby')
 
         classes_names = blackboard.get('model_baby_classes_names')
@@ -61,28 +59,17 @@ class CountBabies(State):
 
             samples.append((len(boxes), boxes, confidence, result))
 
-        weighted_votes: dict[int, float] = defaultdict(float)
-        for count, _, confidence, _ in samples:
-            weighted_votes[count] += confidence
-
-        final_count = max(weighted_votes, key=weighted_votes.get)
-
-        yasmin.YASMIN_LOG_INFO(
-            f'Confidence-weighted votes over {sample_count} samples: '
-            f'{dict(weighted_votes)} -> chosen count={final_count}.'
-        )
-
         matching = [s for s in samples if s[0] == final_count]
         best_count, best_boxes, best_confidence, best_result = max(
             matching, key=lambda s: s[2]
         )
 
+        yasmin.YASMIN_LOG_INFO(f'BABIES AMOUNT: {best_count}')
+
         saved_path = self._save_labeled_image(best_result, best_boxes, output_path)
         yasmin.YASMIN_LOG_INFO(f'Saved labeled image to {saved_path}.')
 
         final_count = blackboard.get('inspect_babies_count')
-        best_boxes = blackboard.get('inpsect_babies_box')
-        saved_path = blackboard.get('inspect_babies_image_path')
 
         return SUCCEED
 
