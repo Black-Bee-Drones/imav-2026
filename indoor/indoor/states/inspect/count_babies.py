@@ -27,7 +27,7 @@ class CountBabies(State):
         handler: ImageHandler = blackboard.get('image_handler_front')
         handler.image_processing_callback = blackboard.get('callback_baby')
 
-        while True:
+        while True: # Remover após conseguir os dados
             result: DetectionResult = handler.take_photo()
 
             if result is not None:
