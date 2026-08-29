@@ -43,7 +43,7 @@ class Config(Blackboard):
         self.aruco_size: float = 1.0  # meters
 
         # ImageHandler
-        self.camera_front_source: str = 'opencv'
+        self.camera_front_source: str = 'ros'
         self.camera_front_topic: str = '/camera/color/image_raw/compressed'
         self.camera_front_is_compressed: bool = True
         self.camera_front_id: int = 2
