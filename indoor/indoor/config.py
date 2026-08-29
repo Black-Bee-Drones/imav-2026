@@ -1,4 +1,5 @@
 from argparse import Namespace
+import pathlib
 
 from rclpy.time import Time
 
@@ -31,6 +32,8 @@ class Config(Blackboard):
         self.model_baby_conf: float = 0.25
         self.model_baby_overlap_iou: float = 0.3  # IoU threshold
         self.model_baby_classes_names = ['person', 'teddy bear']
+        self.model_baby_sample_count = 100
+        self.inspect_babies_output_path = indoor_path = pathlib.Path.home() / 'ros2_ws'
 
         self.model_box_source: str = 'package.pt'
         self.model_box_conf: float = 0.5
@@ -40,10 +43,10 @@ class Config(Blackboard):
         self.aruco_size: float = 1.0  # meters
 
         # ImageHandler
-        self.camera_front_source: str = 'ros'
+        self.camera_front_source: str = 'opencv'
         self.camera_front_topic: str = '/camera/color/image_raw/compressed'
         self.camera_front_is_compressed: bool = True
-        self.camera_front_id: int = 6
+        self.camera_front_id: int = 2
         self.camera_down_source: str = 'opencv'
         self.camera_down_topic: str = '/down_camera'
         self.camera_down_is_compressed: bool = True

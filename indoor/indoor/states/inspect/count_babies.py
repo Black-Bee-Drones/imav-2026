@@ -1,3 +1,8 @@
+from collections import defaultdict
+from datetime import datetime
+from pathlib import Path
+
+import cv2
 import yasmin
 from yasmin import State, Blackboard
 from yasmin_ros.yasmin_node import YasminNode
@@ -16,6 +21,7 @@ class CountBabies(State):
     def configure(self):
         self.add_output_key('inspect_babies_count')
         self.add_output_key('inspect_babies_boxes')
+        self.add_output_key('inspect_babies_image_path')
 
         self.add_input_key('image_handler_front')
         self.add_input_key('callback_baby')
@@ -23,29 +29,102 @@ class CountBabies(State):
         self.add_input_key('model_baby_classes_names')
         self.add_input_key('model_baby_overlap_iou')
 
+        self.add_input_key('model_baby_sample_count')
+        self.add_input_key('inspect_babies_output_path')
+
     def execute(self, blackboard: Blackboard):
         handler: ImageHandler = blackboard.get('image_handler_front')
         handler.image_processing_callback = blackboard.get('callback_baby')
 
-        while True: # Remover após conseguir os dados
+        classes_names = blackboard.get('model_baby_classes_names')
+        iou_threshold = blackboard.get('model_baby_overlap_iou')
+        sample_count = blackboard.get('model_baby_sample_count')
+        output_path = blackboard.get('inspect_babies_output_path')
+
+        samples = []  # list of (count, boxes, confidence, raw_result)
+
+        while len(samples) < sample_count:
             result: DetectionResult = handler.take_photo()
 
-            if result is not None:
-                babies = result.filter_by_class(
-                    [blackboard.get('model_baby_classes_names')])
-                boxes = self._merge_overlapping(
-                    babies,
-                    blackboard.get('model_baby_overlap_iou'),
-                )
+            if result is None:
+                continue
 
-                yasmin.YASMIN_LOG_INFO(f'Number of babies: {len(boxes)}.')
-                for i, box in enumerate(boxes):
-                    yasmin.YASMIN_LOG_INFO(f'Baby {i}: bbox={box}')
+            babies = result.filter_by_class(classes_names)
+            boxes, confidence = self._merge_overlapping(babies, iou_threshold)
 
-                blackboard.set('inspect_babies_count', len(boxes))
-                blackboard.set('inspect_babies_boxes', boxes)
+            yasmin.YASMIN_LOG_INFO(
+                f'Sample {len(samples)}: number of babies = {len(boxes)} '
+                f'(confidence={confidence:.3f}).'
+            )
+            for i, box in enumerate(boxes):
+                yasmin.YASMIN_LOG_INFO(f'Baby {i}: bbox={box}')
+
+            samples.append((len(boxes), boxes, confidence, result))
+
+        weighted_votes: dict[int, float] = defaultdict(float)
+        for count, _, confidence, _ in samples:
+            weighted_votes[count] += confidence
+
+        final_count = max(weighted_votes, key=weighted_votes.get)
+
+        yasmin.YASMIN_LOG_INFO(
+            f'Confidence-weighted votes over {sample_count} samples: '
+            f'{dict(weighted_votes)} -> chosen count={final_count}.'
+        )
+
+        matching = [s for s in samples if s[0] == final_count]
+        best_count, best_boxes, best_confidence, best_result = max(
+            matching, key=lambda s: s[2]
+        )
+
+        saved_path = self._save_labeled_image(best_result, best_boxes, output_path)
+        yasmin.YASMIN_LOG_INFO(f'Saved labeled image to {saved_path}.')
+
+        final_count = blackboard.get('inspect_babies_count')
+        best_boxes = blackboard.get('inpsect_babies_box')
+        saved_path = blackboard.get('inspect_babies_image_path')
 
         return SUCCEED
+
+    @staticmethod
+    def _save_labeled_image(result: DetectionResult, boxes: list[list[int]], output_path: str) -> str:
+        """
+        Draw the merged bounding boxes onto the raw image associated with
+        `result` and save it to `output_path`.
+
+        NOTE: this assumes `result` exposes the raw frame as `result.image`
+        (a numpy/cv2 BGR array). Adjust the attribute name if your
+        DetectionResult exposes the image differently.
+        """
+        image = result.image.copy()
+
+        for i, (x1, y1, x2, y2) in enumerate(boxes):
+            cv2.rectangle(image, (x1, y1), (x2, y2), (0, 255, 0), 2)
+            label = f'baby_{i}'
+            cv2.putText(
+                image,
+                label,
+                (x1, max(0, y1 - 8)),
+                cv2.FONT_HERSHEY_SIMPLEX,
+                0.6,
+                (0, 255, 0),
+                2,
+            )
+
+        path = Path(output_path)
+
+        image_extensions = {'.jpg', '.jpeg', '.png', '.bmp', '.tiff', '.tif', '.webp'}
+
+        if path.is_dir() or path.suffix.lower() not in image_extensions:
+            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+            path = path / f'babies_{timestamp}.jpg'
+
+        path.parent.mkdir(parents=True, exist_ok=True)
+
+        if not cv2.imwrite(str(path), image):
+            raise RuntimeError(f'Failed to write labeled image to {path}')
+
+        return str(path)
 
     @staticmethod
     def _iou(box_a, box_b) -> float:
@@ -69,16 +148,24 @@ class CountBabies(State):
         return inter_area / union_area if union_area > 0 else 0.0
 
     @classmethod
-    def _merge_overlapping(cls, result: DetectionResult, iou_threshold: float) -> list[list[int]]:
+    def _merge_overlapping(
+        cls, result: DetectionResult, iou_threshold: float
+    ) -> tuple[list[list[int]], float]:
         """
         Group detections whose boxes overlap by at least `iou_threshold` (union-find)
         and collapse each group into a single enclosing bounding box, so that
         overlapping person/teddy_bear detections of the same baby count once.
+
+        Also returns an overall confidence score for this sample: the mean
+        of each merged group's average detection confidence. Assumes each
+        detection exposes a `.conf` (float) attribute; adjust if your
+        DetectionResult uses a different name (e.g. `.confidence`).
         """
         boxes = [tuple(float(v) for v in det.xyxy) for det in result]
+        confidences = [float(det.confidence) for det in result]
         n = len(boxes)
         if n == 0:
-            return []
+            return [], 0.0
 
         parent = list(range(n))
 
@@ -98,16 +185,24 @@ class CountBabies(State):
                 if cls._iou(boxes[i], boxes[j]) >= iou_threshold:
                     union(i, j)
 
-        groups: dict[int, list[tuple]] = {}
+        groups: dict[int, list[int]] = {}
         for idx in range(n):
-            groups.setdefault(find(idx), []).append(boxes[idx])
+            groups.setdefault(find(idx), []).append(idx)
 
         merged = []
-        for group_boxes in groups.values():
+        group_confidences = []
+        for indices in groups.values():
+            group_boxes = [boxes[i] for i in indices]
             x1 = min(b[0] for b in group_boxes)
             y1 = min(b[1] for b in group_boxes)
             x2 = max(b[2] for b in group_boxes)
             y2 = max(b[3] for b in group_boxes)
             merged.append([int(x1), int(y1), int(x2), int(y2)])
 
-        return merged
+            group_confidences.append(
+                sum(confidences[i] for i in indices) / len(indices)
+            )
+
+        sample_confidence = sum(group_confidences) / len(group_confidences)
+
+        return merged, sample_confidence
