@@ -29,8 +29,7 @@ class GoToWindow(State):
 
         self.add_input_key('inspect_start_x')
         self.add_input_key('inspect_start_y')
-
-        self.add_input_key('obstacle_gate_alt')
+        self.add_input_key('inspect_start_z')
 
     def execute(self, blackboard: Blackboard):
         blackboard.set('inspect_start_time', self.node.get_clock().now())
@@ -48,23 +47,25 @@ class GoToWindow(State):
 
         start_x: float = blackboard.get('inspect_start_x')
         start_y: float = blackboard.get('inspect_start_y')
-        alt: float = blackboard.get('obstacle_gate_alt')
+        alt: float = blackboard.get('inspect_start_z')
 
         points = [
-            (start_x, start_y, None),
-            (start_x, start_y, alt)
+            (start_x - 1.5, start_y, None, None),
+            (start_x - 1.5, start_y, alt, None),
+            (start_x - 1.5, start_y, alt, 180),
+            (start_x, start_y, alt, None)
         ]
 
         if self.check_timeout():
             return TIMEOUT
 
-        for x, y, z in points:
+        for x, y, z, yaw in points:
             yasmin.YASMIN_LOG_INFO(f'Fly to x={x}; y={y}; z={z}...')
             drone.move_to(
                 x=x,
                 y=y,
                 z=z,
-                yaw=0,
+                yaw=yaw,
                 reference=MoveReference.TAKEOFF,
             )
 
