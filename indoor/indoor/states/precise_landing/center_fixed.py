@@ -86,10 +86,10 @@ class CenterFixed(State):
                 )
 
                 drone.move_velocity(
-                    x=output_x,
-                    y=output_y,
-                    z=output_z,
-                    yaw=output_yaw,
+                    vx=output_x,
+                    vy=output_y,
+                    vz=output_z,
+                    vyaw=output_yaw,
                 )
 
             else:
