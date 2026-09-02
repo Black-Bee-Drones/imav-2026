@@ -7,6 +7,8 @@ from yasmin_ros.basic_outcomes import SUCCEED, CANCEL, TIMEOUT
 
 from nectar.control import MavrosDrone, MoveReference
 
+from ...config import Config
+
 
 class GoToObstacles(State):
     def __init__(self):
@@ -14,39 +16,25 @@ class GoToObstacles(State):
 
         self.node = YasminNode.get_instance()
 
-    def configure(self):
-        self.add_output_key('obstacle_start_time')
-
-        self.add_input_key('drone')
-
-        self.add_input_key('start_time')
-        self.add_input_key('timeout')
-
-        self.add_input_key('obstacle_skip')
-        self.add_input_key('obstacle_start_time')
-        self.add_input_key('obstacle_timeout')
-
-        self.add_input_key('obstacle_start_x')
-        self.add_input_key('obstacle_start_y')
-        self.add_input_key('obstacle_gate_alt')
-
     def execute(self, blackboard: Blackboard):
-        blackboard.set('obstacle_start_time', self.node.get_clock().now())
-        self.obstacle_skip = blackboard.get('obstacle_skip')
+        config: Config = blackboard.get('config')
+        config.obstacle_start_time = self.node.get_clock().now()
+        blackboard.set('obstacle_start_time', config.obstacle_start_time)
+        self.obstacle_skip = config.obstacle_skip
         if self.obstacle_skip:
             return CANCEL
 
         drone: MavrosDrone = blackboard.get('drone')
 
         self.start_time: Time = blackboard.get('start_time')
-        self.timeout: int = blackboard.get('timeout')
+        self.timeout: int = config.timeout
 
-        self.start_mission: Time = blackboard.get('obstacle_start_time')
-        self.mission_timeout: int = blackboard.get('obstacle_timeout')
+        self.start_mission: Time = config.obstacle_start_time
+        self.mission_timeout: int = config.obstacle_timeout
 
-        start_x: float = blackboard.get('obstacle_start_x')
-        start_y: float = blackboard.get('obstacle_start_y')
-        gate_alt: float = blackboard.get('obstacle_gate_alt')
+        start_x: float = config.obstacle_start_x
+        start_y: float = config.obstacle_start_y
+        gate_alt: float = config.obstacle_gate_alt
 
         points = [
             (None, None, gate_alt),

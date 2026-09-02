@@ -13,14 +13,16 @@ from indoor.missions import (
     # PreciseLandingSM,
 )
 
+from indoor.config import Config
+
 
 class IndoorSM(StateMachine):
-    def __init__(self):
+    def __init__(self, config: Config):
         super().__init__(outcomes=[SUCCEED, ABORT, CANCEL])
 
         self.add_state(
             'INITIALIZE',
-            Initialize(),
+            Initialize(config),
             transitions={SUCCEED: 'TAKEOFF', ABORT: ABORT},
         )
 

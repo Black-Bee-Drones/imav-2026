@@ -9,11 +9,6 @@ class Land(State):
     def __init__(self):
         super().__init__(outcomes=[SUCCEED, ABORT])
 
-    def configure(self):
-        self.add_input_key('drone')
-
-        self.add_input_key('rtl')
-
     def execute(self, blackboard: Blackboard):
         drone: MavlinkDrone = blackboard.get('drone')
 

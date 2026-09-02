@@ -7,6 +7,8 @@ from yasmin_ros.basic_outcomes import SUCCEED, TIMEOUT
 
 from nectar.control import MavlinkDrone, MoveReference
 
+from ...config import Config
+
 
 class Tubes(State):
     def __init__(self):
@@ -14,39 +16,22 @@ class Tubes(State):
 
         self.node = YasminNode.get_instance()
 
-    def configure(self):
-        self.add_input_key('drone')
-
-        self.add_input_key('safe_alt')
-        self.add_input_key('start_time')
-        self.add_input_key('timeout')
-
-        self.add_input_key('obstacle_start_time')
-        self.add_input_key('obstacle_timeout')
-
-        self.add_input_key('obstacle_start_x')
-        self.add_input_key('obstacle_start_y')
-        self.add_input_key('obstacle_tubes_skip')
-        self.add_input_key('obstacle_tubes_alt')
-        self.add_input_key('obstacle_tubes_offset')
 
     def execute(self, blackboard: Blackboard):
+        config: Config = blackboard.get('config')
         drone: MavlinkDrone = blackboard.get('drone')
-
-        safe_alt = blackboard.get('safe_alt')
         self.start_time: Time = blackboard.get('start_time')
-        self.timeout: int = blackboard.get('timeout')
+        self.timeout: int = config.timeout
+        self.start_mission: Time = config.obstacle_start_time
+        self.mission_timeout: int = config.obstacle_timeout
+        start_x = config.obstacle_start_x
+        start_y = config.obstacle_start_y
 
-        self.start_mission: Time = blackboard.get('obstacle_start_time')
-        self.mission_timeout: int = blackboard.get('obstacle_timeout')
+        alt = config.obstacle_tubes_alt
+        offset = config.obstacle_tubes_offset
+        safe_alt = config.safe_alt
 
-        start_x = blackboard.get('obstacle_start_x')
-        start_y = blackboard.get('obstacle_start_y')
-
-        alt = blackboard.get('obstacle_tubes_alt')
-        offset = blackboard.get('obstacle_tubes_offset')
-
-        if blackboard.get('obstacle_tubes_skip'):
+        if config.obstacle_tubes_skip:
             points = [
                 (start_x+4.75, start_y, safe_alt),
                 (start_x+6.25, start_y, safe_alt),

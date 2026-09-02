@@ -65,7 +65,7 @@ python3 ~/ros2_ws/src/nectar-sdk/scripts/simulation/gz_vision_source.py
 ```
 
 
-Cameras: `/front_camera/image`, `/down_camera`.
+Cameras: `/north_camera/image`, `/down_camera`.
 
 ## Scenery-only check
 

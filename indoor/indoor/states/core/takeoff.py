@@ -4,6 +4,7 @@ from yasmin_ros.yasmin_node import YasminNode
 from yasmin_ros.basic_outcomes import SUCCEED, ABORT
 
 from nectar.control import MavlinkDrone
+from ...config import Config
 
 
 class Takeoff(State):
@@ -12,18 +13,12 @@ class Takeoff(State):
 
         self.node = YasminNode.get_instance()
 
-    def configure(self):
-        self.add_output_key('start_time')
-
-        self.add_input_key('drone')
-
-        self.add_input_key('takeoff_alt')
-
     def execute(self, blackboard: Blackboard):
         blackboard.set('start_time', self.node.get_clock().now())
         drone: MavlinkDrone = blackboard.get('drone')
+        config: Config = blackboard.get('config')
 
-        takeoff_alt: float = blackboard.get('takeoff_alt')
+        takeoff_alt: float = config.takeoff_alt
 
         yasmin.YASMIN_LOG_INFO(f'Taking off (altitude={takeoff_alt} m)...')
         drone.takeoff(takeoff_alt)

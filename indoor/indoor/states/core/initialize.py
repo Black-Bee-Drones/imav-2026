@@ -16,49 +16,17 @@ from nectar.control import DroneFactory, MavrosConfig, MavlinkConfig, PoseSource
 from nectar.vision import ImageHandler, Aruco, ROSConfig, OpenCVConfig, RealSenseConfig
 from nectar.ai import Detector, DetectionResult
 
+from ...config import Config
+
 
 class Initialize(State):
-    def __init__(self):
+    def __init__(self, config: Config):
         super().__init__(outcomes=[SUCCEED, ABORT])
 
         self.node = YasminNode.get_instance()
         self.start_time = self.node.get_clock().now()
 
-    def configure(self):
-
-        self.add_output_key('drone')
-
-        self.add_output_key('callback_gate')
-        self.add_output_key('callback_baby')
-        self.add_output_key('callback_box')
-
-        self.add_output_key('image_handler_front')
-        self.add_output_key('image_handler_down')
-
-        self.add_input_key('drone_type')
-        self.add_input_key('drone_connection_string')
-
-        self.add_input_key('model_gate_source')
-        self.add_input_key('model_gate_conf')
-
-        self.add_input_key('model_baby_source')
-        self.add_input_key('model_baby_conf')
-
-        self.add_input_key('model_box_source')
-        self.add_input_key('model_box_conf')
-
-        self.add_input_key('aruco_marker_dict')
-        self.add_input_key('aruco_size')
-
-        self.add_input_key('camera_front_source')
-        self.add_input_key('camera_front_topic')
-        self.add_input_key('camera_front_is_compressed')
-        self.add_input_key('camera_front_id')
-
-        self.add_input_key('camera_down_source')
-        self.add_input_key('camera_down_topic')
-        self.add_input_key('camera_down_is_compressed')
-        self.add_input_key('camera_down_id')
+        self.config = config
 
     def execute(self, blackboard: Blackboard):
         models_path = pathlib.Path(
@@ -68,21 +36,22 @@ class Initialize(State):
 
         # Drone
         try:
-            drone_type = blackboard.get('drone_type')
+            blackboard.set('config', self.config)
+            config: Config = self.config
+            drone_type = config.drone_type
+
             yasmin.YASMIN_LOG_INFO(f'Initializing Drone("{drone_type}")...')
 
             match drone_type:
                 case 'mavros':
                     drone_config = MavrosConfig(
                         pose_source=PoseSource.VISION,
-                        connection_string=blackboard.get(
-                            'drone_connection_string'),
+                        connection_string=config.drone_connection_string,
                     )
                 case 'mavlink':
                     drone_config = MavlinkConfig(
                         pose_source=PoseSource.VISION,
-                        connection_string=blackboard.get(
-                            'drone_connection_string'),
+                        connection_string=config.drone_connection_string,
                     )
                 case _:
                     yasmin.YASMIN_LOG_ERROR('Invalid "drone_type"')
@@ -106,8 +75,8 @@ class Initialize(State):
             yasmin.YASMIN_LOG_INFO('Initializing Detector(gate)...')
             self.detector_gate = Detector(
                 model_source=str(
-                    models_path / blackboard.get('model_gate_source')),
-                confidence_threshold=blackboard.get('model_gate_conf'),
+                    models_path / config.model_gate_source),
+                confidence_threshold=config.model_gate_conf,
             )
 
             yasmin.YASMIN_LOG_INFO('Load Detector(gate)...')
@@ -131,8 +100,8 @@ class Initialize(State):
             yasmin.YASMIN_LOG_INFO('Initializing Detector(baby)...')
             self.detector_baby = Detector(
                 model_source=str(
-                    models_path / blackboard.get('model_baby_source')),
-                confidence_threshold=blackboard.get('model_baby_conf'),
+                    models_path / config.model_baby_source),
+                confidence_threshold=config.model_baby_conf,
             )
 
             yasmin.YASMIN_LOG_INFO('Load Detector(baby)...')
@@ -156,8 +125,8 @@ class Initialize(State):
             yasmin.YASMIN_LOG_INFO('Initializing Detector(box)...')
             self.detector_box = Detector(
                 model_source=str(
-                    models_path / blackboard.get('model_box_source')),
-                confidence_threshold=blackboard.get('model_box_conf'),
+                    models_path / config.model_box_source),
+                confidence_threshold=config.model_box_conf,
             )
 
             yasmin.YASMIN_LOG_INFO('Load Detector(box)...')
@@ -180,8 +149,8 @@ class Initialize(State):
         try:
             yasmin.YASMIN_LOG_INFO('Initializing Aruco...')
             self.aruco = Aruco(
-                marker_dict=blackboard.get('aruco_marker_dict'),
-                tag_size=blackboard.get('aruco_size'),
+                marker_dict=config.aruco_marker_dict,
+                tag_size=config.aruco_size,
             )
 
             blackboard.set('aruco', self.aruco)
@@ -197,66 +166,66 @@ class Initialize(State):
             yasmin.YASMIN_LOG_ERROR(traceback.format_exc())
             return ABORT
 
-        # ImageHandler - front
+        # ImageHandler - north
         try:
-            camera_front_source = blackboard.get('camera_front_source')
-            yasmin.YASMIN_LOG_INFO('Initializing ImageHandler(front)...')
+            camera_north_source = config.camera_north_source
+            yasmin.YASMIN_LOG_INFO('Initializing ImageHandler(north)...')
 
-            match camera_front_source:
+            match camera_north_source:
                 case 'ros':
-                    handler_config_front = ROSConfig(
-                        topic=blackboard.get('camera_front_topic'),
-                        compressed=blackboard.get('camera_front_is_compressed'),
+                    handler_config_north = ROSConfig(
+                        topic=config.camera_north_topic,
+                        compressed=config.camera_north_is_compressed,
                     )
                 case 'realsense':
-                    handler_config_front = RealSenseConfig()
+                    handler_config_north = RealSenseConfig()
                 case 'opencv':
-                    handler_config_front = OpenCVConfig(
-                        device_index=blackboard.get('camera_front_id'),
+                    handler_config_north = OpenCVConfig(
+                        device_index=config.camera_north_id,
                     )
                 case _:
-                    yasmin.YASMIN_LOG_ERROR('Invalid "camera_front_source"')
+                    yasmin.YASMIN_LOG_ERROR('Invalid "camera_north_source"')
                     return ABORT
 
-            image_handler_front = ImageHandler(
-                image_source=camera_front_source,
-                config=handler_config_front
+            image_handler_north = ImageHandler(
+                image_source=camera_north_source,
+                config=handler_config_north
             )
 
-            yasmin.YASMIN_LOG_INFO('Open camera (front)...')
-            image_handler_front.open()
+            yasmin.YASMIN_LOG_INFO('Open camera (north)...')
+            image_handler_north.open()
 
-            yasmin.YASMIN_LOG_INFO('Take testing photo (front)...')
-            result = image_handler_front.take_photo()
+            yasmin.YASMIN_LOG_INFO('Take testing photo (north)...')
+            result = image_handler_north.take_photo()
             if result is None:
                 yasmin.YASMIN_LOG_WARN(result)
 
-            blackboard.set('image_handler_front', image_handler_front)
-            yasmin.YASMIN_LOG_INFO('successful start ImageHandler(front)!')
+            blackboard.set('image_handler_north', image_handler_north)
+            yasmin.YASMIN_LOG_INFO('successful start ImageHandler(north)!')
 
         except KeyboardInterrupt:
             yasmin.YASMIN_LOG_WARN('Execution interrupted by user.')
             return ABORT
 
         except Exception as e:
-            yasmin.YASMIN_LOG_ERROR(f'ImageHandler(front) failed: {e}')
+            yasmin.YASMIN_LOG_ERROR(f'ImageHandler(north) failed: {e}')
             yasmin.YASMIN_LOG_ERROR(traceback.format_exc())
             return ABORT
 
         # ImageHandler - down
         try:
-            camera_down_source = blackboard.get('camera_down_source')
+            camera_down_source = config.camera_down_source
             yasmin.YASMIN_LOG_INFO('Initializing ImageHandler(down)...')
 
             match camera_down_source:
                 case 'ros':
                     handler_config_down = ROSConfig(
-                        topic=blackboard.get('camera_down_topic'),
-                        compressed=blackboard.get('camera_down_is_compressed'),
+                        topic=config.camera_down_topic,
+                        compressed=config.camera_down_is_compressed,
                     )
                 case 'opencv':
                     handler_config_down = OpenCVConfig(
-                        device_index=blackboard.get('camera_down_id'),
+                        device_index=config.camera_down_id,
                     )
 
             image_handler_down = ImageHandler(

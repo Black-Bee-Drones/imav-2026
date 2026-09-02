@@ -7,6 +7,8 @@ from yasmin_ros.basic_outcomes import SUCCEED, CANCEL, TIMEOUT
 
 from nectar.control import MavlinkDrone, MoveReference
 
+from ...config import Config
+
 
 class GoToWindow(State):
     def __init__(self):
@@ -14,40 +16,25 @@ class GoToWindow(State):
 
         self.node = YasminNode.get_instance()
 
-    def configure(self):
-        self.add_output_key('inspect_start_time')
-
-        self.add_input_key('inspect_skip')
-
-        self.add_input_key('timeout')
-        self.add_input_key('inspect_timeout')
-
-        self.add_input_key('start_time')
-        self.add_input_key('inspect_start_time')
-
-        self.add_input_key('drone')
-
-        self.add_input_key('inspect_start_x')
-        self.add_input_key('inspect_start_y')
-        self.add_input_key('inspect_start_z')
-
     def execute(self, blackboard: Blackboard):
-        blackboard.set('inspect_start_time', self.node.get_clock().now())
-        self.obstacle_skip = blackboard.get('inspect_skip')
+        config: Config = blackboard.get('config')
+        config.inspect_start_time = self.node.get_clock().now()
+        blackboard.set('inspect_start_time', config.inspect_start_time)
+        self.obstacle_skip = config.inspect_skip
         if self.obstacle_skip:
             return CANCEL
 
-        self.timeout: int = blackboard.get('timeout')
-        self.mission_timeout: int = blackboard.get('inspect_timeout')
+        self.timeout: int = config.timeout
+        self.mission_timeout: int = config.inspect_timeout
 
         self.start_time: Time = blackboard.get('start_time')
-        self.start_mission: Time = blackboard.get('inspect_start_time')
+        self.start_mission: Time = config.inspect_start_time
 
         drone: MavlinkDrone = blackboard.get('drone')
 
-        start_x: float = blackboard.get('inspect_start_x')
-        start_y: float = blackboard.get('inspect_start_y')
-        alt: float = blackboard.get('inspect_start_z')
+        start_x: float = config.inspect_start_x
+        start_y: float = config.inspect_start_y
+        alt: float = config.inspect_start_z
 
         points = [
             (start_x - 1.5, start_y, None, None),

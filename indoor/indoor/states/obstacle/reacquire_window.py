@@ -9,6 +9,8 @@ from nectar.control import MavlinkDrone, PIDController
 from nectar.vision import ImageHandler
 from nectar.ai import DetectionResult
 
+from ...config import Config
+
 
 class ReacquireWindow(State):
     def __init__(self, position):
@@ -17,45 +19,25 @@ class ReacquireWindow(State):
         self.position = position
         self.node = YasminNode.get_instance()
 
-    def configure(self):
-        self.add_output_key(f'obstacle_gate_{self.position}_skip')
-
-        self.add_input_key('drone')
-        self.add_input_key('image_handler_front')
-        self.add_input_key('callback_gate')
-
-        self.add_input_key('model_gate_class_name')
-    
-        self.add_input_key('start_time')
-        self.add_input_key('timeout')
-
-        self.add_input_key('obstacle_start_time')
-        self.add_input_key('obstacle_timeout')
-
-        self.add_input_key('obstacle_z_kp')
-        self.add_input_key('obstacle_z_kd')
-        self.add_input_key('obstacle_z_ki')
-
-        self.add_input_key('obstacle_gate_alt')
-
     def execute(self, blackboard: Blackboard):
+        config: Config = blackboard.get('config')
 
-        self.timeout: int = blackboard.get('timeout')
-        self.mission_timeout: int = blackboard.get('obstacle_timeout')
+        self.timeout: int = config.timeout
+        self.mission_timeout: int = config.obstacle_timeout
 
         self.start_time: Time = blackboard.get('start_time')
-        self.start_mission: Time = blackboard.get('obstacle_start_time')
+        self.start_mission: Time = config.obstacle_start_time
 
         drone: MavlinkDrone = blackboard.get('drone')
 
-        handler: ImageHandler = blackboard.get('image_handler_front')
+        handler: ImageHandler = blackboard.get('image_handler_north')
         handler.image_processing_callback = blackboard.get('callback_gate')
 
         pid_z = PIDController(
-            kp=blackboard.get('obstacle_z_kp'),
-            kd=blackboard.get('obstacle_z_kd'),
-            ki=blackboard.get('obstacle_z_ki'),
-            setpoint=blackboard.get('obstacle_gate_alt'),
+            kp=config.obstacle_z_kp,
+            kd=config.obstacle_z_kd,
+            ki=config.obstacle_z_ki,
+            setpoint=config.obstacle_gate_alt,
         )
 
         for direction, label in ((0.25, 'right'), (-0.25, 'left')):
@@ -66,7 +48,7 @@ class ReacquireWindow(State):
             while self.node.get_clock().now() - start < Duration(seconds=2.0):
                 result: DetectionResult | None = handler.take_photo()
                 if result is not None and result.filter_by_class([
-                        blackboard.get('model_gate_class_name')]):
+                        config.model_gate_class_name]):
                     drone.move_velocity()
                     return SUCCEED
 

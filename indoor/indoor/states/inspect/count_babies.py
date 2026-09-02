@@ -11,6 +11,8 @@ from yasmin_ros.basic_outcomes import SUCCEED
 from nectar.vision import ImageHandler
 from nectar.ai import DetectionResult
 
+from ...config import Config
+
 
 class CountBabies(State):
     def __init__(self):
@@ -18,26 +20,16 @@ class CountBabies(State):
 
         self.node = YasminNode.get_instance()
 
-    def configure(self):
-        self.add_output_key('inspect_babies_count')
-
-        self.add_input_key('image_handler_down')
-        self.add_input_key('callback_baby')
-
-        self.add_input_key('model_baby_classes_names')
-        self.add_input_key('model_baby_overlap_iou')
-
-        self.add_input_key('model_baby_sample_count')
-        self.add_input_key('inspect_babies_output_path')
-
     def execute(self, blackboard: Blackboard):
+        config: Config = blackboard.get('config')
         handler: ImageHandler = blackboard.get('image_handler_down')
         handler.image_processing_callback = blackboard.get('callback_baby')
 
-        classes_names = blackboard.get('model_baby_classes_names')
-        iou_threshold = blackboard.get('model_baby_overlap_iou')
-        sample_count = blackboard.get('model_baby_sample_count')
-        output_path = blackboard.get('inspect_babies_output_path')
+        classes_names = config.model_baby_classes_names
+        iou_threshold = config.model_baby_overlap_iou
+        sample_count = config.model_baby_sample_count
+        output_path = config.inspect_babies_output_path
+        final_count = config.inspect_babies_count
 
         samples = []  # list of (count, boxes, confidence, raw_result)
 
@@ -59,7 +51,7 @@ class CountBabies(State):
 
             samples.append((len(boxes), boxes, confidence, result))
 
-        matching = [s for s in samples if s[0] == final_count]
+        matching = [s for s in samples if final_count is None or s[0] == final_count]
         best_count, best_boxes, best_confidence, best_result = max(
             matching, key=lambda s: s[2]
         )
@@ -69,7 +61,8 @@ class CountBabies(State):
         saved_path = self._save_labeled_image(best_result, best_boxes, output_path)
         yasmin.YASMIN_LOG_INFO(f'Saved labeled image to {saved_path}.')
 
-        final_count = blackboard.get('inspect_babies_count')
+        config.inspect_babies_count = best_count
+        blackboard.set('inspect_babies_count', best_count)
 
         return SUCCEED
 

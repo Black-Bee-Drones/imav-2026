@@ -1,218 +1,252 @@
 from argparse import Namespace
+from dataclasses import dataclass, field, replace
 import pathlib
+from typing import Optional
 
-from rclpy.time import Time
-
-import yasmin
-from yasmin import Blackboard
-
-from indoor import presets
+from ament_index_python.packages import get_package_share_directory
 
 
-class Config(Blackboard):
-    def __init__(self):
-        super().__init__()
+def _models_path() -> pathlib.Path:
+    return pathlib.Path(get_package_share_directory('indoor')) / 'models'
 
-        ### Global ###
-        self.timeout: int = 360  # seconds
-        self.safe_alt: float = 3.0  # meters
-        self.max_alt: float = 7.0  # meters
 
-        ### Initialize ###
-        # Drone
-        self.drone_type: str = 'mavlink'
-        self.drone_connection_string: str = 'udp:127.0.0.1:14551'
+@dataclass
+class Config:
+    """Plain dataclass holding every mission parameter. Presets (in
+    presets.py) are subclasses that override just the fields they care
+    about - everything else falls back to the defaults declared here."""
 
-        # Detector
-        self.model_gate_source: str = 'gate2.pt'
-        self.model_gate_conf: float = 0.5
-        self.model_gate_class_name: str = 'blue'
+    ### Global ###
+    timeout: int = 360          # seconds
+    safe_alt: float = 3.0        # meters
+    max_alt: float = 7.0         # meters
 
-        self.model_baby_source: str = 'yolo26n.pt'
-        self.model_baby_conf: float = 0.25
-        self.model_baby_overlap_iou: float = 0.3  # IoU threshold
-        self.model_baby_classes_names = ['person', 'teddy bear']
-        self.model_baby_sample_count = 15
-        self.inspect_babies_output_path = indoor_path = pathlib.Path.home() / 'ros2_ws'
+    ### Initialize ###
+    # Drone
+    drone_type: str = 'mavlink'
+    drone_connection_string: str = 'udp:127.0.0.1:14551'
 
-        self.model_box_source: str = 'package.pt'
-        self.model_box_conf: float = 0.5
+    # Detector - gate
+    model_gate_source: str = 'gate2.pt'
+    model_gate_conf: float = 0.5
+    model_gate_class_name: str = 'blue'
 
-        # Aruco
-        self.aruco_marker_dict: int = 5  # 5x5
-        self.aruco_size: float = 1.0  # meters
+    # Detector - baby
+    model_baby_source: str = 'yolo26n.pt'
+    model_baby_conf: float = 0.25
+    model_baby_overlap_iou: float = 0.3   # IoU threshold
+    model_baby_classes_names: list = field(default_factory=lambda: ['person', 'teddy bear'])
+    model_baby_sample_count: int = 15
 
-        # ImageHandler
-        self.camera_front_source: str = 'ros'
-        self.camera_front_topic: str = '/camera/color/image_raw/compressed'
-        self.camera_front_is_compressed: bool = True
-        self.camera_front_id: int = 2
-        self.camera_down_source: str = 'opencv'
-        self.camera_down_topic: str = '/down_camera'
-        self.camera_down_is_compressed: bool = True
-        self.camera_down_id: int = 0
+    # Detector - box
+    model_box_source: str = 'package.pt'
+    model_box_conf: float = 0.5
 
-        ### Takeoff ###
-        self.takeoff_alt: float = 1.2  # meters
+    # Aruco
+    aruco_marker_dict: int = 5    # 5x5
+    aruco_size: float = 1.0        # meters
 
-        ### LAND ###
-        self.rtl: bool = False
+    # ImageHandler - north (D435i)
+    camera_north_source: str = 'ros'
+    camera_north_topic: str = '/camera/color/image_raw/compressed'
+    camera_north_is_compressed: bool = True
+    camera_north_id: int = 2
 
-        ### Obstacle ###
-        self.obstacle_skip: bool = False
-        self.obstacle_timeout: int = 300  # seconds
-        self.obstacle_start_time: Time | None = None
+    # ImageHandler - south (C920)
+    camera_south_source: str = 'ros'
+    camera_south_topic: str = '/camera/color/image_raw/compressed'
+    camera_south_is_compressed: bool = True
+    camera_south_id: int = 2
 
-        self.obstacle_xy_kp: float = 0.005
-        self.obstacle_xy_kd: float = .0
-        self.obstacle_xy_ki: float = .0
+    # ImageHandler - down
+    camera_down_source: str = 'opencv'
+    camera_down_topic: str = '/down_camera'
+    camera_down_is_compressed: bool = True
+    camera_down_id: int = 0
 
-        self.obstacle_z_kp: float = .003
-        self.obstacle_z_kd: float = .0
-        self.obstacle_z_ki: float = .0
+    ### Takeoff ###
+    takeoff_alt: float = 1.2   # meters
 
-        # GoToObstacle
-        self.obstacle_start_x: float = 0.0  # meters
-        self.obstacle_start_y: float = -3.5  # meters
+    ### Land ###
+    rtl: bool = False
 
-        # Window
-        self.obstacle_gate_first_skip: bool = False
-        self.obstacle_gate_second_skip: bool = False
-        self.obstacle_gate_room_skip: bool = False
-        self.obstacle_gate_alt: float = 1.2
-        self.obstacle_gate_lost_tolerance = 15
-        self.obstacle_gate_aligned_tolerance = 15
-        self.obstacle_gate_aligned_threshold = 50  # pixels
+    ### Obstacle ###
+    obstacle_skip: bool = False
+    obstacle_timeout: int = 300   # seconds
 
-        # RedBar
-        self.obstacle_red: int | None = 3  # step or jump
-        self.obstacle_red_step_alt_1: float = 1.7
-        self.obstacle_red_step_alt_2: float = 2.1
-        self.obstacle_red_step_alt_3: float = 2.5
+    obstacle_xy_kp: float = 0.005
+    obstacle_xy_kd: float = 0.0
+    obstacle_xy_ki: float = 0.0
 
-        # BlueBar
-        self.obstacle_blue_1: int | None = 3  # step or jump
-        self.obstacle_blue_2: int | None = 3  # step or jump
-        self.obstacle_blue_step_alt_1: float = 0.2
-        self.obstacle_blue_step_alt_2: float = 0.4
-        self.obstacle_blue_step_alt_3: float = 0.6
+    obstacle_z_kp: float = 0.003
+    obstacle_z_kd: float = 0.0
+    obstacle_z_ki: float = 0.0
 
-        # Tubes
-        self.obstacle_tubes_skip = False
-        self.obstacle_tubes_alt = 1.2
-        self.obstacle_tubes_offset = 1.5  # meters
+    # GoToObstacle
+    obstacle_start_x: float = 0.0     # meters
+    obstacle_start_y: float = -3.5    # meters
 
-        ### Inspect ###
-        self.inspect_skip: bool = False
-        self.inspect_timeout: int = 300  # seconds
-        self.inspect_start_time: Time | None = None
+    # Window
+    obstacle_gate_first_skip: bool = False
+    obstacle_gate_second_skip: bool = False
+    obstacle_gate_room_skip: bool = False
+    obstacle_gate_alt: float = 1.2
+    obstacle_gate_lost_tolerance: int = 15
+    obstacle_gate_aligned_tolerance: int = 15
+    obstacle_gate_aligned_threshold: int = 50   # pixels
 
-        # GoToWindow
-        self.inspect_start_x: float = 10.0  # meters
-        self.inspect_start_y: float = 0.0  # meters
-        self.inspect_start_z: float = 1.70  # meters
+    # RedBar
+    obstacle_red: Optional[int] = 3   # step or jump
+    obstacle_red_step_alt_1: float = 1.7
+    obstacle_red_step_alt_2: float = 2.1
+    obstacle_red_step_alt_3: float = 2.5
 
-        # FindWindow
-        self.inspect_back_speed: float = -0.5
+    # BlueBar
+    obstacle_blue_1: Optional[int] = 3   # step or jump
+    obstacle_blue_2: Optional[int] = 3   # step or jump
+    obstacle_blue_step_alt_1: float = 0.2
+    obstacle_blue_step_alt_2: float = 0.4
+    obstacle_blue_step_alt_3: float = 0.6
 
-        # Count Babies
-        self.inspect_babies_count: int | None = None
-        self.inspect_babies_boxes: list[list[int]] | None = None
+    # Tubes
+    obstacle_tubes_skip: bool = False
+    obstacle_tubes_alt: float = 1.2
+    obstacle_tubes_offset: float = 1.5   # meters
 
-        # GoOut
-        self.inspect_go_out_x: float = 1.5
+    ### Inspect ###
+    inspect_skip: bool = False
+    inspect_timeout: int = 300   # seconds
 
-        ### Dropping ###
-        self.drop_cone_enabled: bool = True
-        self.droping_skip: bool = False
+    # GoToWindow
+    inspect_start_x: float = 10.0   # meters
+    inspect_start_y: float = 0.0     # meters
+    inspect_start_z: float = 1.70    # meters
 
-        ### Precise landing ###
-        self.precise_skip: bool = False
-        self.precise_timeout: int = 300  # seconds
-        self.precise_start_time: Time | None = None
+    # FindWindow
+    inspect_back_speed: float = -0.5
 
-        # GoToLandingBase
-        self.precise_fixed: bool = True
-        self.precise_fixed_x: float = 0.0 
-        self.precise_fixed_y: float = 2.0 
-        self.precise_mobile_x: float = 0.0 
-        self.precise_mobile_y: float = -2.0 
+    # Count Babies
+    inspect_babies_count: Optional[int] = None
 
-        # Center
-        self.center_threshold_xy: float = 0.2  # meters
-        self.center_threshold_z: float = 0.2  # meters
-        self.center_threshold_yaw: float = 5.0  # degrees
-        self.lost_tolerance: int = 10
-        self.land_altitude: float = 1.0  # meters
+    # GoOut
+    inspect_go_out_x: float = 1.5
 
-        # Reacquire
-        self.precise_reacquire_vz: float = 0.3
+    ### Dropping ###
+    drop_cone_enabled: bool = True
+    droping_skip: bool = False
 
-        ### PIDController ###
-        # PID xy
-        self.controller_xy_kp: float = 0.000511
-        self.controller_xy_kd: float = 0.0
-        self.controller_xy_ki: float = 0.0
-        self.controller_xy_output_min: float = -0.1
-        self.controller_xy_output_max: float = 0.1
-        self.controller_xy_integral_min: float = -0.1
-        self.controller_xy_integral_max: float = 0.1
+    ### Precise landing ###
+    precise_skip: bool = False
+    precise_timeout: int = 300   # seconds
 
-        # PID z
-        self.controller_z_kp: float = 0.000711
-        self.controller_z_kd: float = 0.0
-        self.controller_z_ki: float = 0.0
-        self.controller_z_output_min: float = -0.1
-        self.controller_z_output_max: float = 0.1
-        self.controller_z_integral_min: float = -0.1
-        self.controller_z_integral_max: float = 0.1
+    # GoToLandingBase
+    precise_fixed: bool = True
+    precise_fixed_x: float = 0.0
+    precise_fixed_y: float = 2.0
+    precise_mobile_x: float = 0.0
+    precise_mobile_y: float = -2.0
 
-        # PID yaw
-        self.controller_yaw_kp: float = 0.0000111
-        self.controller_yaw_kd: float = 0.0
-        self.controller_yaw_ki: float = 0
-        self.controller_yaw_output_min: float = -0.1
-        self.controller_yaw_output_max: float = 0.1
-        self.controller_yaw_integral_min: float = -0.1
-        self.controller_yaw_integral_max: float = 0.1
+    # Center
+    center_threshold_xy: float = 0.2     # meters
+    center_threshold_z: float = 0.2      # meters
+    center_threshold_yaw: float = 5.0    # degrees
+    lost_tolerance: int = 10
+    land_altitude: float = 1.0           # meters
 
-    def aplly_preset(self, preset: dict[str, any]):
-        for k, v in getattr(presets, preset).items():
-            self.set(k, v)
+    # Reacquire
+    precise_reacquire_vz: float = 0.3
 
-    def apply_args(self, args: Namespace):
-        if args.sitl:
-            ### Initialize ###
-            # Drone
-            self.drone_connection_string: str = 'tcp:127.0.0.1:5762'
+    ### PIDController ###
+    # PID xy
+    controller_xy_kp: float = 0.000511
+    controller_xy_kd: float = 0.0
+    controller_xy_ki: float = 0.0
+    controller_xy_output_min: float = -0.1
+    controller_xy_output_max: float = 0.1
+    controller_xy_integral_min: float = -0.1
+    controller_xy_integral_max: float = 0.1
 
-            # ImageHandler
-            self.camera_front_source: str = 'ros'
-            self.camera_front_topic: str = '/front_camera/image'
-            self.camera_front_is_compressed: bool = False
-            self.camera_down_source: str = 'ros'
-            self.camera_down_topic: str = '/down_camera'
-            self.camera_down_is_compressed: bool = False
+    # PID z
+    controller_z_kp: float = 0.000711
+    controller_z_kd: float = 0.0
+    controller_z_ki: float = 0.0
+    controller_z_output_min: float = -0.1
+    controller_z_output_max: float = 0.1
+    controller_z_integral_min: float = -0.1
+    controller_z_integral_max: float = 0.1
+
+    # PID yaw
+    controller_yaw_kp: float = 0.0000111
+    controller_yaw_kd: float = 0.0
+    controller_yaw_ki: float = 0
+    controller_yaw_output_min: float = -0.1
+    controller_yaw_output_max: float = 0.1
+    controller_yaw_integral_min: float = -0.1
+    controller_yaw_integral_max: float = 0.1
+
+    ### Runtime-only fields ###
+    # Not real config - populated/consumed during a mission run. Kept as
+    # dataclass fields (rather than set in __post_init__) so `replace()`
+    # and preset subclassing keep working uniformly for every field.
+    inspect_babies_output_path: pathlib.Path = field(
+        default_factory=lambda: pathlib.Path.home() / 'ros2_ws')
+    obstacle_start_time: object = None
+    inspect_start_time: object = None
+    precise_start_time: object = None
+    inspect_babies_boxes: Optional[list] = None
+
+    def __post_init__(self):
+        # model_*_source fields hold bare filenames in every preset/default
+        # (e.g. "gate2.pt"); resolve them once, here, into full paths under
+        # the package's models/ dir so every state just reads
+        # config.model_gate_source etc. as a ready-to-use path.
+        models_path = _models_path()
+        for attr in ('model_gate_source', 'model_baby_source', 'model_box_source'):
+            value = getattr(self, attr)
+            if value and not pathlib.Path(value).is_absolute():
+                setattr(self, attr, str(models_path / value))
+
+    @classmethod
+    def list_preset(cls) -> list:
+        from indoor import presets
+        return presets.list_presets()
+
+
+    def apply_args(self, args: Namespace) -> 'Config':
+        """Returns a new Config (possibly a different subclass, if a
+        preset was requested) with CLI overrides applied. Does not mutate
+        self, since presets are chosen by picking a different dataclass."""
+        config = self
 
         if args.preset is not None:
             if args.preset == 'custom':
                 from indoor.customization import run_customization_wizard
-
                 overrides = run_customization_wizard()
-                for k, v in overrides.items():
-                    self.set(k, v)
+                config = replace(config, **overrides)
             else:
-                self.aplly_preset(args.preset)
+                from indoor import presets
+                preset_cls = presets.get_preset(args.preset)
+                config = preset_cls()
+
+        if args.sitl:
+            config = replace(
+                config,
+                drone_connection_string='tcp:127.0.0.1:5762',
+                camera_north_source='ros',
+                camera_north_topic='/north_camera/image',
+                camera_north_is_compressed=False,
+                camera_down_source='ros',
+                camera_down_topic='/down_camera',
+                camera_down_is_compressed=False,
+            )
 
         if args.obstacle_skip:
-            self.obstacle_skip = args.obstacle_skip
+            config = replace(config, obstacle_skip=args.obstacle_skip)
         if args.inspect_skip:
-            self.inspect_skip = args.inspect_skip
+            config = replace(config, inspect_skip=args.inspect_skip)
         if args.droping_skip:
-            self.droping_skip = args.droping_skip
+            config = replace(config, droping_skip=args.droping_skip)
         if args.precise_skip:
-            self.precise_skip = args.precise_skip
+            config = replace(config, precise_skip=args.precise_skip)
 
-    @staticmethod
-    def list_preset():
-        return [p for p in dir(presets) if p.isupper()] + ['custom']
+        return config

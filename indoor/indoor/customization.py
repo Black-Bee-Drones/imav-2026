@@ -1,4 +1,4 @@
-import importlib
+from dataclasses import asdict, fields
 import os
 import pathlib
 import re
@@ -7,6 +7,7 @@ import termios
 import tty
 
 from indoor import presets
+from indoor.config import Config
 
 
 def get_key_input():
@@ -106,9 +107,9 @@ _YES_NO = [
 
 
 # --- Per-stage customization steps -----------------------------------------
-# Each function returns a dict of overrides using the *exact* attribute
-# names declared on indoor.Config, so the result can be applied directly
-# via `config.set(k, v)`.
+# Each function returns a dict of overrides using the *exact* field names
+# declared on indoor.config.Config, so the result can be applied directly
+# via `dataclasses.replace(config, **overrides)`.
 
 def customize_obstacle_stage():
     """Obstacle stage: window 1, red bar, blue bar 1/2, tube avoidance,
@@ -175,46 +176,50 @@ def customize_landing():
 
 # --- Discovering and reusing pre-built profiles ---------------------------
 
-def discover_saved_profiles():
-    """Presets in presets.py are plain UPPER_CASE dicts (see CLEITINHO,
-    JORGE, ...). Return {name: dict} for all of them."""
-    profiles = {}
-    for name in dir(presets):
-        if not name.isupper():
-            continue
-        obj = getattr(presets, name)
-        if isinstance(obj, dict):
-            profiles[name] = obj
-    return profiles
+# Fields that are runtime state, not something a saved preset should pin.
+_RUNTIME_FIELDS = {
+    'inspect_babies_output_path',
+    'obstacle_start_time',
+    'inspect_start_time',
+    'precise_start_time',
+    'inspect_babies_boxes',
+}
 
 
-def _describe_profile(name, profile):
-    summary = ", ".join(f"{k}={v}" for k, v in profile.items())
+def _describe_profile(name, cls):
+    # Only show fields the preset actually overrides vs. base Config, to
+    # keep the menu readable.
+    base = asdict(Config())
+    this = asdict(cls())
+    diff = {k: v for k, v in this.items() if k not in _RUNTIME_FIELDS and base.get(k) != v}
+    summary = ", ".join(f"{k}={v}" for k, v in diff.items())
     return f"{name}  [{summary}]"
 
 
 def select_initial_profile():
-    profiles = discover_saved_profiles()
     options = [("Start a new custom configuration", None)]
-    for name in sorted(profiles):
-        options.append((_describe_profile(name, profiles[name]), name))
+    for name in sorted(presets.PRESETS):
+        options.append((_describe_profile(name, presets.PRESETS[name]), name))
 
     chosen_name = select_single(
         "Custom configuration - start fresh or reuse an existing one?",
         options,
     )
-    return chosen_name, profiles
+    if chosen_name is None:
+        return None
+
+    # Return as a plain overrides dict (relative to base Config) so the
+    # caller can apply it the same way as a freshly-built configuration.
+    base = asdict(Config())
+    this = asdict(presets.PRESETS[chosen_name]())
+    return {k: v for k, v in this.items() if k not in _RUNTIME_FIELDS and base.get(k) != v}
 
 
 # --- Saving a freshly-built configuration back into presets.py ------------
 
-def _format_value(value):
-    return repr(value)
-
-
-def _sanitize_variable_name(raw_name):
+def _sanitize_class_name(raw_name):
     """Turn free-typed input into a valid, SCREAMING_SNAKE_CASE Python
-    module-level variable name."""
+    class name (matches the style of CLEITINHO/JORGE/... in presets.py)."""
     name = re.sub(r"[^A-Za-z0-9_]", "_", raw_name.strip()).upper()
     name = name.strip("_") or "CUSTOM"
     if name[0].isdigit():
@@ -222,27 +227,45 @@ def _sanitize_variable_name(raw_name):
     return name
 
 
-def render_preset_block(var_name, overrides):
-    """Render `VAR_NAME = dict(...)` source text ready to append to
-    presets.py, matching the style of CLEITINHO/JORGE/etc."""
-    lines = [f"\n\n{var_name} = dict("]
+def _annotation_for(value):
+    if value is None:
+        return "object"
+    return type(value).__name__
+
+
+def render_preset_class(class_name, overrides):
+    """Render `@dataclass\nclass NAME(Config): ...` source text ready to
+    append to presets.py, matching the style of CLEITINHO/JORGE/etc."""
+    lines = ["\n\n@dataclass", f"class {class_name}(Config):"]
     for key, value in overrides.items():
-        lines.append(f"    {key}={_format_value(value)},")
-    lines.append(")\n")
-    return "\n".join(lines)
+        lines.append(f"    {key}: {_annotation_for(value)} = {value!r}")
+    return "\n".join(lines) + "\n"
 
 
-def save_profile_to_presets(var_name, overrides):
-    """Append the new profile to the end of presets.py on disk."""
+def save_profile_to_presets(class_name, overrides):
+    """Append the new preset class to the end of presets.py on disk, and
+    register it in presets.PRESETS so it's usable for the rest of this
+    process too."""
     presets_file = pathlib.Path(presets.__file__).resolve()
-    if presets_file.suffix in ('.pyc', '.pyo'):
-        presets_file = presets_file.with_suffix('.py')
 
-    block = render_preset_block(var_name, overrides)
+    block = render_preset_class(class_name, overrides)
     with presets_file.open("a") as f:
         f.write(block)
 
-    importlib.reload(presets)
+    # Build the equivalent class in-memory rather than re-importing the
+    # module (simpler than reload()-ing something that may already have
+    # live instances floating around).
+    from dataclasses import make_dataclass
+    field_specs = [(k, _eval_annotation(v), v) for k, v in overrides.items()]
+    new_cls = make_dataclass(class_name, [(k, t) for k, t, _ in field_specs],
+                              bases=(Config,))
+    for k, _t, v in field_specs:
+        new_cls.__dataclass_fields__[k].default = v
+    presets.register_preset(class_name, new_cls)
+
+
+def _eval_annotation(value):
+    return object if value is None else type(value)
 
 
 def prompt_save(overrides):
@@ -265,33 +288,34 @@ def prompt_save(overrides):
             input("Press Enter to try again...")
             continue
 
-        var_name = _sanitize_variable_name(raw_name)
-        if var_name == 'CUSTOM' or hasattr(presets, var_name):
-            print(f"\n'{var_name}' is already used in presets.py (or reserved).")
+        class_name = _sanitize_class_name(raw_name)
+        if class_name == 'CUSTOM' or class_name in presets.PRESETS:
+            print(f"\n'{class_name}' is already used in presets.py (or reserved).")
             retry = select_single("Pick a different name?", _YES_NO)
             if retry:
                 continue
             return
         break
 
-    save_profile_to_presets(var_name, overrides)
+    save_profile_to_presets(class_name, overrides)
     os.system('clear')
-    print(f"Saved as {var_name} in presets.py.")
-    print(f"Run with --preset {var_name} next time to reuse it directly.")
+    print(f"Saved as {class_name} in presets.py.")
+    print(f"Run with --preset {class_name} next time to reuse it directly.")
     input("\nPress Enter to continue...")
 
 
 def run_customization_wizard():
     """Full interactive wizard used by `--preset custom`.
 
-    First offers a choice between reusing an existing profile (one of the
-    dicts already in presets.py) and building a new one from scratch.
-    Building a new one ends with an optional save step that appends it to
-    presets.py. Always returns a dict of Config attribute overrides.
+    First offers a choice between reusing an existing preset (one of the
+    dataclasses already in presets.py) and building a new one from
+    scratch. Building a new one ends with an optional save step that
+    appends it to presets.py. Always returns a dict of Config field
+    overrides, ready for `dataclasses.replace(Config(), **overrides)`.
     """
-    chosen_name, profiles = select_initial_profile()
-    if chosen_name is not None:
-        return profiles[chosen_name]
+    initial = select_initial_profile()
+    if initial is not None:
+        return initial
 
     stage_choices = select_multi(
         "Select stages to attempt (Space to toggle, Enter to confirm)",
@@ -322,9 +346,9 @@ def run_customization_wizard():
     overrides["rtl"] = landing_mode == "rtl"
     overrides["precise_skip"] = landing_mode not in ("precision_fixed", "precision_moving")
     if landing_mode == "precision_fixed":
-        overrides["fixed_base"] = True
+        overrides["precise_fixed"] = True
     elif landing_mode == "precision_moving":
-        overrides["fixed_base"] = False
+        overrides["precise_fixed"] = False
 
     prompt_save(overrides)
 

@@ -9,6 +9,8 @@ from nectar.control import MavlinkDrone, PIDController, MoveReference
 from nectar.vision import ImageHandler
 from nectar.ai import DetectionResult
 
+from ...config import Config
+
 
 class Window(State):
     def __init__(self, position: str):
@@ -17,64 +19,31 @@ class Window(State):
         self.position = position
         self.node = YasminNode.get_instance()
 
-    def configure(self) -> None:
-        self.add_input_key('timeout')
-        self.add_input_key('start_time')
-
-        self.add_input_key('model_gate_class_name')
-
-        if self.position == 'room':
-            self.add_input_key('inspect_timeout')
-            self.add_input_key('inspect_start_time')
-        else:
-            self.add_input_key('obstacle_timeout')
-            self.add_input_key('obstacle_start_time')
-
-        self.add_input_key('drone')
-
-        self.add_input_key('image_handler_front')
-        self.add_input_key('callback_gate')
-
-        self.add_input_key('safe_alt')
-
-        self.add_input_key(f'obstacle_gate_{self.position}_skip')
-        self.add_input_key('obstacle_gate_alt')
-
-        self.add_input_key('obstacle_gate_lost_tolerance')
-        self.add_input_key('obstacle_gate_aligned_tolerance')
-        self.add_input_key('obstacle_gate_aligned_threshold')
-
-        self.add_input_key('obstacle_xy_kp')
-        self.add_input_key('obstacle_xy_kd')
-        self.add_input_key('obstacle_xy_ki')
-
-        self.add_input_key('obstacle_z_kp')
-        self.add_input_key('obstacle_z_kd')
-        self.add_input_key('obstacle_z_ki')
 
     def execute(self, blackboard: Blackboard):
-        self.timeout: int = blackboard.get('timeout')
+        config: Config = blackboard.get('config')
+        self.timeout: int = config.timeout
         self.start_time: Time = blackboard.get('start_time')
 
         if self.position == 'room':
-            self.start_mission: Time = blackboard.get('inspect_timeout')
-            self.mission_timeout: int = blackboard.get('inspect_start_time')
+            self.start_mission: Time = config.inspect_start_time
+            self.mission_timeout: int = config.inspect_timeout
         else:
-            self.start_mission: Time = blackboard.get('obstacle_start_time')
-            self.mission_timeout: int = blackboard.get('obstacle_timeout')
+            self.start_mission: Time = config.obstacle_start_time
+            self.mission_timeout: int = config.obstacle_timeout
 
         drone: MavlinkDrone = blackboard.get('drone')
 
-        handler: ImageHandler = blackboard.get('image_handler_front')
+        handler: ImageHandler = blackboard.get('image_handler_north')
         handler.image_processing_callback = blackboard.get('callback_gate')
 
-        safe_alt = blackboard.get('safe_alt')
+        safe_alt = config.safe_alt
 
-        skip = blackboard.get(f'obstacle_gate_{self.position}_skip')
+        skip = getattr(config, f'obstacle_gate_{self.position}_skip')
 
-        lost_tolerance = blackboard.get('obstacle_gate_lost_tolerance')
-        aligned_tolerance = blackboard.get('obstacle_gate_aligned_tolerance')
-        aligned_threshold = blackboard.get('obstacle_gate_aligned_threshold')
+        lost_tolerance = config.obstacle_gate_lost_tolerance
+        aligned_tolerance = config.obstacle_gate_aligned_tolerance
+        aligned_threshold = config.obstacle_gate_aligned_threshold
 
         result = handler.take_photo()
         if result is None:
@@ -82,17 +51,17 @@ class Window(State):
             skip = True
 
         pid_y = PIDController(
-            kp=blackboard.get('obstacle_xy_kp'),
-            kd=blackboard.get('obstacle_xy_kd'),
-            ki=blackboard.get('obstacle_xy_ki'),
+            kp=config.obstacle_xy_kp,
+            kd=config.obstacle_xy_kd,
+            ki=config.obstacle_xy_ki,
             setpoint= result.image.shape[1]/2 if (result is not None) else 0,
             output_limits=(-0.3, 0.3)
         )
 
         pid_z = PIDController(
-            kp=blackboard.get('obstacle_z_kp'),
-            kd=blackboard.get('obstacle_z_kd'),
-            ki=blackboard.get('obstacle_z_ki'),
+            kp=config.obstacle_z_kp,
+            kd=config.obstacle_z_kd,
+            ki=config.obstacle_z_ki,
             setpoint=result.image.shape[0]/2 if (result is not None) else 0,
             output_limits=(-0.1, 0.1)
         )
@@ -109,7 +78,7 @@ class Window(State):
             if result is None:
                 continue
 
-            window = result.filter_by_class([blackboard.get('model_gate_class_name')])
+            window = result.filter_by_class([config.model_gate_class_name])
 
             if window:
                 lost = 0

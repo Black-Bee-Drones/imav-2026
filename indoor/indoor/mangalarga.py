@@ -56,10 +56,11 @@ def main(args=None):
     indoor_sm = None
 
     try:
-        indoor_sm = IndoorSM()
-
         config = Config()
-        config.apply_args(parsed_args)
+        config = config.apply_args(parsed_args)
+
+
+        indoor_sm = IndoorSM(config)
 
         final_outcome = indoor_sm(config)
 

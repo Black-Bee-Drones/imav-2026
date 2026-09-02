@@ -11,6 +11,8 @@ from nectar.vision import LineDetector, ImageHandler
 import cv2
 import math
 
+from ...config import Config
+
 
 class BlueBar(State):
     def __init__(self):
@@ -18,62 +20,39 @@ class BlueBar(State):
 
         self.node = YasminNode.get_instance()
 
-    def configure(self):
-        self.add_input_key('drone')
-
-        self.add_input_key('safe_alt')
-        self.add_input_key('start_time')
-        self.add_input_key('timeout')
-
-        self.add_input_key('obstacle_start_time')
-        self.add_input_key('obstacle_timeout')
-
-        self.add_input_key('obstacle_start_x')
-        self.add_input_key('obstacle_start_y')
-        self.add_input_key('obstacle_blue_step_alt_1')
-        self.add_input_key('obstacle_blue_step_alt_2')
-        self.add_input_key('obstacle_blue_step_alt_3')
-        self.add_input_key('obstacle_blue_1')
-        self.add_input_key('obstacle_blue_2')
-
-        self.add_input_key('image_handler_down')
-
-        self.add_input_key('obstacle_xy_kp')
-        self.add_input_key('obstacle_xy_kd')
-        self.add_input_key('obstacle_xy_ki')
-
     def execute(self, blackboard: Blackboard):
         drone: MavlinkDrone = blackboard.get('drone')
+        config: Config = blackboard.get('config')
 
-        safe_alt: float = blackboard.get('safe_alt')
+        safe_alt: float = config.safe_alt
         self.start_time: Time = blackboard.get('start_time')
-        self.timeout: int = blackboard.get('timeout')
+        self.timeout: int = config.timeout
 
-        self.start_mission: Time = blackboard.get('obstacle_start_time')
-        self.mission_timeout: int = blackboard.get('obstacle_timeout')
+        self.start_mission: Time = config.obstacle_start_time
+        self.mission_timeout: int = config.obstacle_timeout
 
-        start_x: float = blackboard.get('obstacle_start_x')
-        start_y: float = blackboard.get('obstacle_start_y')
+        start_x: float = config.obstacle_start_x
+        start_y: float = config.obstacle_start_y
 
         down_handler: ImageHandler = blackboard.get('image_handler_down')
 
-        match blackboard.get('obstacle_blue_1'):
+        match config.obstacle_blue_1:
             case 1:
-                alt_1 = blackboard.get('obstacle_blue_step_alt_1')
+                alt_1 = config.obstacle_blue_step_alt_1
             case 2:
-                alt_1 = blackboard.get('obstacle_blue_step_alt_2')
+                alt_1 = config.obstacle_blue_step_alt_2
             case 3:
-                alt_1 = blackboard.get('obstacle_blue_step_alt_3')
+                alt_1 = config.obstacle_blue_step_alt_3
             case _:
                 alt_1 = safe_alt
 
-        match blackboard.get('obstacle_blue_2'):
+        match config.obstacle_blue_2:
             case 1:
-                alt_2 = blackboard.get('obstacle_blue_step_alt_1')
+                alt_2 = config.obstacle_blue_step_alt_1
             case 2:
-                alt_2 = blackboard.get('obstacle_blue_step_alt_2')
+                alt_2 = config.obstacle_blue_step_alt_2
             case 3:
-                alt_2 = blackboard.get('obstacle_blue_step_alt_3')
+                alt_2 = config.obstacle_blue_step_alt_3
             case _:
                 alt_2 = safe_alt
 
@@ -100,9 +79,9 @@ class BlueBar(State):
         img = down_handler.take_photo()
 
         pid_x = PIDController(
-            kp=blackboard.get('obstacle_xy_kp'),
-            kd=blackboard.get('obstacle_xy_kd'),
-            ki=blackboard.get('obstacle_xy_ki'),
+            kp=config.obstacle_xy_kp,
+            kd=config.obstacle_xy_kd,
+            ki=config.obstacle_xy_ki,
             setpoint= img.shape[0]/2 if (img is not None) else 0,
             output_limits=(-0.3, 0.3)
         )
