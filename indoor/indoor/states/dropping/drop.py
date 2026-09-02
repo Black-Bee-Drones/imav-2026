@@ -5,7 +5,7 @@ from yasmin_ros.basic_outcomes import SUCCEED, FAIL, CANCEL
 
 from nectar.control import MavlinkDrone
 
-from indoor import Config
+from indoor.config import Config
 
 
 class Drop(State):

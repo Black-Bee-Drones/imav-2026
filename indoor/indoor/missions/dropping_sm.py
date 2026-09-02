@@ -7,11 +7,10 @@ from indoor.states import (
     Reacquire,
     Drop,
 )
-from indoor import Config
 
 
 class DroppingSM(StateMachine):
-    def __init__(self, config: Config):
+    def __init__(self):
         super().__init__(outcomes=[SUCCEED, CANCEL, ABORT, TIMEOUT])
         """
         Dropping on hot spot state machine.

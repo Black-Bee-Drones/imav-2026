@@ -9,8 +9,8 @@ from indoor.states import (
 from indoor.missions import (
     ObstacleSM,
     InspectSM,
-    # DroppingSM,
-    # PreciseLandingSM,
+    DroppingSM,
+    PreciseLandingSM,
 )
 
 from indoor.config import Config
@@ -41,20 +41,20 @@ class IndoorSM(StateMachine):
         self.add_state(
             'INSPECTSM',
             InspectSM(),
-            # transitions={SUCCEED: 'DROPPINGSM', CANCEL: 'DROPPINGSM'},
+            transitions={SUCCEED: 'DROPPINGSM', CANCEL: 'DROPPINGSM'},
         )
 
-        # self.add_state(
-        #     'DROPPINGSM',
-        #     DroppingSM(),
-        #     transitions={SUCCEED: 'PRECISION_LANDING', CANCEL: 'PRECISION_LANDING'},
-        # )
+        self.add_state(
+            'DROPPINGSM',
+            DroppingSM(),
+            transitions={SUCCEED: 'PRECISION_LANDING', CANCEL: 'PRECISION_LANDING'},
+        )
 
-        # self.add_state(
-        #     'PRECISION_LANDING',
-        #     PreciseLandingSM(),
-        #     transitions={SUCCEED: 'LAND', CANCEL: 'LAND'},
-        # )
+        self.add_state(
+            'PRECISION_LANDING',
+            PreciseLandingSM(config),
+            transitions={SUCCEED: 'LAND', CANCEL: 'LAND'},
+        )
 
         self.add_state(
             'LAND',

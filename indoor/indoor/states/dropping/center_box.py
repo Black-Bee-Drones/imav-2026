@@ -8,7 +8,7 @@ from yasmin_ros.basic_outcomes import SUCCEED, FAIL, TIMEOUT
 from nectar.control import MavlinkDrone, PIDController
 from nectar.vision import ImageHandler
 
-from indoor import Config
+from indoor.config import Config
 
 
 class CenterBox(State):

@@ -7,7 +7,7 @@ from yasmin_ros.basic_outcomes import SUCCEED, TIMEOUT
 
 from nectar.control import MavlinkDrone, MoveReference
 
-from indoor import Config
+from indoor.config import Config
 
 
 class GoToBox(State):
