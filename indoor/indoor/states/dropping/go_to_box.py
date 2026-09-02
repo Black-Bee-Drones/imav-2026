@@ -7,7 +7,7 @@ from yasmin_ros.basic_outcomes import SUCCEED, TIMEOUT
 
 from nectar.control import MavlinkDrone, MoveReference
 
-from indoor.config import Config
+from ...config import Config
 
 
 class GoToBox(State):
@@ -70,7 +70,7 @@ class GoToBox(State):
         yasmin.YASMIN_LOG_INFO('Completed successfully!!!')
         return SUCCEED
 
-    def check_timeout(self):
+    def check_timeout(self, config):
         now = self.node.get_clock().now()
 
         return now - self.start_time > Duration(seconds=config.timeout) or \

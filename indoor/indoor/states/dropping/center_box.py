@@ -8,7 +8,7 @@ from yasmin_ros.basic_outcomes import SUCCEED, FAIL, TIMEOUT
 from nectar.control import MavlinkDrone, PIDController
 from nectar.vision import ImageHandler
 
-from indoor.config import Config
+from ...config import Config
 
 
 class CenterBox(State):
@@ -89,7 +89,7 @@ class CenterBox(State):
 
             self.node.get_clock().sleep_until(now + Duration(seconds=1/30))
 
-    def check_timeout(self):
+    def check_timeout(self, config):
         now = self.node.get_clock().now()
 
         return now - self.start_time > Duration(seconds=config.timeout) or \
