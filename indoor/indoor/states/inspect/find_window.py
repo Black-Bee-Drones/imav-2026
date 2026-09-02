@@ -29,7 +29,7 @@ class FindWindow(State):
 
         drone: MavlinkDrone = blackboard.get('drone')
 
-        handler: ImageHandler = blackboard.get('image_handler_north')
+        handler: ImageHandler = blackboard.get('image_handler_south')
         handler.image_processing_callback = blackboard.get('callback_gate')
 
         for _ in range(30):

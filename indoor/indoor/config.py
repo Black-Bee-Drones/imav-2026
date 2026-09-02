@@ -53,7 +53,7 @@ class Config:
     camera_north_id: int = 2
 
     # ImageHandler - south (C920)
-    camera_south_source: str = 'ros'
+    camera_south_source: str = 'opencv'
     camera_south_topic: str = '/camera/color/image_raw/compressed'
     camera_south_is_compressed: bool = True
     camera_south_id: int = 2

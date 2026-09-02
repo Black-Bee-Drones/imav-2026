@@ -211,6 +211,52 @@ class Initialize(State):
             yasmin.YASMIN_LOG_ERROR(f'ImageHandler(north) failed: {e}')
             yasmin.YASMIN_LOG_ERROR(traceback.format_exc())
             return ABORT
+        
+        # ImageHandler - south
+        try:
+            camera_south_source = config.camera_south_source
+            yasmin.YASMIN_LOG_INFO('Initializing ImageHandler(north)...')
+
+            match camera_south_source:
+                case 'ros':
+                    handler_config_south = ROSConfig(
+                        topic=config.camera_nsouth_topic,
+                        compressed=config.camera_south_is_compressed,
+                    )
+                case 'realsense':
+                    handler_config_south = RealSenseConfig()
+                case 'opencv':
+                    handler_config_south = OpenCVConfig(
+                        device_index=config.camera_south_id,
+                    )
+                case _:
+                    yasmin.YASMIN_LOG_ERROR('Invalid "camera_south_source"')
+                    return ABORT
+
+            image_handler_south = ImageHandler(
+                image_source=camera_south_source,
+                config=handler_config_south
+            )
+
+            yasmin.YASMIN_LOG_INFO('Open camera (south)...')
+            image_handler_south.open()
+
+            yasmin.YASMIN_LOG_INFO('Take testing photo (south)...')
+            result = image_handler_south.take_photo()
+            if result is None:
+                yasmin.YASMIN_LOG_WARN(result)
+
+            blackboard.set('image_handler_south', image_handler_south)
+            yasmin.YASMIN_LOG_INFO('successful start ImageHandler(south)!')
+
+        except KeyboardInterrupt:
+            yasmin.YASMIN_LOG_WARN('Execution interrupted by user.')
+            return ABORT
+
+        except Exception as e:
+            yasmin.YASMIN_LOG_ERROR(f'ImageHandler(north) failed: {e}')
+            yasmin.YASMIN_LOG_ERROR(traceback.format_exc())
+            return ABORT
 
         # ImageHandler - down
         try:
