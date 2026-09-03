@@ -29,6 +29,7 @@ def main(args=None):
     parser.add_argument('-i-skip', '--inspect-skip', action='store_true')
     parser.add_argument('-d-skip', '--droping-skip', action='store_true')
     parser.add_argument('-p-skip', '--precise-skip', action='store_true')
+    parser.add_argument('--no-takeoff', action='store_true')
     parsed_args, _ = parser.parse_known_args()
 
     rclpy.init(args=args)

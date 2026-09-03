@@ -74,6 +74,7 @@ class Config:
     camera_down_hfov: float = radians(86)
 
     takeoff_alt: float = 1.2
+    skip_takeoff: bool = False
     rtl: bool = False
 
     obstacle_skip: bool = False
@@ -92,6 +93,7 @@ class Config:
     obstacle_gate_first_skip: bool = False
     obstacle_gate_second_skip: bool = False
     obstacle_gate_room_skip: bool = False
+    obstacle_gate_align_only: bool = False
     obstacle_gate_alt: float = 1.2
     obstacle_gate_lost_tolerance: int = 15
     obstacle_gate_aligned_tolerance: int = 70
@@ -242,5 +244,7 @@ class Config:
             config = replace(config, droping_skip=True)
         if args.precise_skip:
             config = replace(config, precise_skip=True)
+        if getattr(args, 'no_takeoff', False):
+            config = replace(config, skip_takeoff=True)
 
         return config

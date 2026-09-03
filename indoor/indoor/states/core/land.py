@@ -16,6 +16,10 @@ class Land(State):
         drone: MavlinkDrone = blackboard.get('drone')
         config: Config = blackboard.get('config')
 
+        if config.skip_takeoff:
+            yasmin.YASMIN_LOG_INFO('Skip takeoff: not landing.')
+            return SUCCEED
+
         if config.rtl:
             yasmin.YASMIN_LOG_INFO('RTL...')
             if drone.rtl(method=RTLMethod.NAVIGATE):

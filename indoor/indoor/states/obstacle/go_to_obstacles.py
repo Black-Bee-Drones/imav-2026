@@ -24,6 +24,12 @@ class GoToObstacles(State):
         if self.obstacle_skip:
             return CANCEL
 
+        if config.skip_takeoff:
+            yasmin.YASMIN_LOG_INFO(
+                'Skip takeoff: leave start pose, no fly-to.'
+            )
+            return SUCCEED
+
         drone: MavrosDrone = blackboard.get('drone')
 
         self.start_time: Time = blackboard.get('start_time')

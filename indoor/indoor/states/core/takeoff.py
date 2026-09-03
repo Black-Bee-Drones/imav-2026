@@ -17,8 +17,22 @@ class Takeoff(State):
         blackboard.set('start_time', self.node.get_clock().now())
         drone: MavlinkDrone = blackboard.get('drone')
         config: Config = blackboard.get('config')
-        takeoff_alt = config.takeoff_alt
 
+        if config.skip_takeoff:
+            yasmin.YASMIN_LOG_INFO(
+                'Skip takeoff: GUIDED + origin, not arming.'
+            )
+            if not drone.set_mode('GUIDED'):
+                yasmin.YASMIN_LOG_WARN('Failed to set GUIDED.')
+            else:
+                drone.delay(1.0)
+            try:
+                drone.set_takeoff_position()
+            except Exception as e:
+                yasmin.YASMIN_LOG_WARN(f'Takeoff position not set: {e}')
+            return SUCCEED
+
+        takeoff_alt = config.takeoff_alt
         yasmin.YASMIN_LOG_INFO(f'Taking off (altitude={takeoff_alt} m)...')
         if drone.takeoff(takeoff_alt, max_retries=5):
             yasmin.YASMIN_LOG_INFO('Takeoff successful!')

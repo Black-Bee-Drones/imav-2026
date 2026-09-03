@@ -184,6 +184,8 @@ class Window(State):
                 )
                 drone.move_velocity(vy=output_y, vz=output_z)
                 if aligned >= aligned_threshold:
+                    if config.obstacle_gate_align_only:
+                        continue
                     ever_aligned = True
                     phase = "creep"
                     yasmin.YASMIN_LOG_INFO(
