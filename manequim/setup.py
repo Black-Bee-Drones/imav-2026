@@ -1,6 +1,6 @@
 from setuptools import find_packages, setup
 
-package_name = 'imav_2026'
+package_name = 'manequim'
 
 setup(
     name=package_name,
@@ -13,11 +13,15 @@ setup(
     ],
     install_requires=['setuptools'],
     zip_safe=True,
-    maintainer='ryan',
-    maintainer_email='controleryan@gmail.com',
+    maintainer='arthur-xavier',
+    maintainer_email='arthuraxribeiro@gmail.com',
     description='TODO: Package description',
     license='TODO: License declaration',
-    tests_require=['pytest'],
+    extras_require={
+        'test': [
+            'pytest',
+        ],
+    },
     entry_points={
         'console_scripts': [
         ],
