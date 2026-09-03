@@ -19,7 +19,7 @@ class DroppingSM(StateMachine):
         self.add_state(
             'GO_TO_BOX',
             GoToBox(),
-            transitions={SUCCEED: SUCCEED, TIMEOUT: CANCEL},
+            transitions={SUCCEED: SUCCEED, TIMEOUT: CANCEL, CANCEL: CANCEL},
         )
 
         self.add_state(

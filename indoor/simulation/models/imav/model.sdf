@@ -3,6 +3,8 @@
   <model name="imav">
     <static>true</static>
 
+    <!-- Mesh visual (rulebook scenery). Collision is the floor box + overlays so
+         missing all.stl cannot leave the arena without physics. -->
     <link name="base_link">
       <collision name="floor_collision">
         <pose>0 0 -0.05 0 0 0</pose>
@@ -12,7 +14,6 @@
           </box>
         </geometry>
       </collision>
-
       <visual name="visual">
         <geometry>
           <mesh>
@@ -21,6 +22,1578 @@
           </mesh>
         </geometry>
       </visual>
+    </link>
+
+    <link name="floor_red">
+      <pose>0 0 -0.002 0 0 0</pose>
+      <visual name="visual">
+        <geometry><box><size>14 7 0.004</size></box></geometry>
+          <material>
+            <ambient>0.7 0.08 0.05 1</ambient>
+            <diffuse>0.7 0.08 0.05 1</diffuse>
+            <specular>0.15 0.15 0.15 1</specular>
+          </material>
+      </visual>
+    </link>
+    <!-- Fig.8 wallpaper: tiled quads (not one stretched 10 m box). -->
+    <link name="wallpaper">
+
+      <visual name="wp_c0_0">
+        <pose>-6.642857 0.30 0.004 0 0 0</pose>
+        <geometry><box><size>0.714286 0.6 0.006</size></box></geometry>
+          <material>
+            <ambient>1 1 1 1</ambient>
+            <diffuse>1 1 1 1</diffuse>
+            <pbr>
+              <metal>
+                <albedo_map>model://imav/meshes/wallpaper_image.jpg</albedo_map>
+              </metal>
+            </pbr>
+          </material>
+      </visual>
+
+      <visual name="wp_c0_1">
+        <pose>-5.928571 0.30 0.004 0 0 0</pose>
+        <geometry><box><size>0.714286 0.6 0.006</size></box></geometry>
+          <material>
+            <ambient>1 1 1 1</ambient>
+            <diffuse>1 1 1 1</diffuse>
+            <pbr>
+              <metal>
+                <albedo_map>model://imav/meshes/wallpaper_image.jpg</albedo_map>
+              </metal>
+            </pbr>
+          </material>
+      </visual>
+
+      <visual name="wp_c0_2">
+        <pose>-5.214286 0.30 0.004 0 0 0</pose>
+        <geometry><box><size>0.714286 0.6 0.006</size></box></geometry>
+          <material>
+            <ambient>1 1 1 1</ambient>
+            <diffuse>1 1 1 1</diffuse>
+            <pbr>
+              <metal>
+                <albedo_map>model://imav/meshes/wallpaper_image.jpg</albedo_map>
+              </metal>
+            </pbr>
+          </material>
+      </visual>
+
+      <visual name="wp_c0_3">
+        <pose>-4.500000 0.30 0.004 0 0 0</pose>
+        <geometry><box><size>0.714286 0.6 0.006</size></box></geometry>
+          <material>
+            <ambient>1 1 1 1</ambient>
+            <diffuse>1 1 1 1</diffuse>
+            <pbr>
+              <metal>
+                <albedo_map>model://imav/meshes/wallpaper_image.jpg</albedo_map>
+              </metal>
+            </pbr>
+          </material>
+      </visual>
+
+      <visual name="wp_c0_4">
+        <pose>-3.785714 0.30 0.004 0 0 0</pose>
+        <geometry><box><size>0.714286 0.6 0.006</size></box></geometry>
+          <material>
+            <ambient>1 1 1 1</ambient>
+            <diffuse>1 1 1 1</diffuse>
+            <pbr>
+              <metal>
+                <albedo_map>model://imav/meshes/wallpaper_image.jpg</albedo_map>
+              </metal>
+            </pbr>
+          </material>
+      </visual>
+
+      <visual name="wp_c0_5">
+        <pose>-3.071429 0.30 0.004 0 0 0</pose>
+        <geometry><box><size>0.714286 0.6 0.006</size></box></geometry>
+          <material>
+            <ambient>1 1 1 1</ambient>
+            <diffuse>1 1 1 1</diffuse>
+            <pbr>
+              <metal>
+                <albedo_map>model://imav/meshes/wallpaper_image.jpg</albedo_map>
+              </metal>
+            </pbr>
+          </material>
+      </visual>
+
+      <visual name="wp_c0_6">
+        <pose>-2.357143 0.30 0.004 0 0 0</pose>
+        <geometry><box><size>0.714286 0.6 0.006</size></box></geometry>
+          <material>
+            <ambient>1 1 1 1</ambient>
+            <diffuse>1 1 1 1</diffuse>
+            <pbr>
+              <metal>
+                <albedo_map>model://imav/meshes/wallpaper_image.jpg</albedo_map>
+              </metal>
+            </pbr>
+          </material>
+      </visual>
+
+      <visual name="wp_c0_7">
+        <pose>-1.642857 0.30 0.004 0 0 0</pose>
+        <geometry><box><size>0.714286 0.6 0.006</size></box></geometry>
+          <material>
+            <ambient>1 1 1 1</ambient>
+            <diffuse>1 1 1 1</diffuse>
+            <pbr>
+              <metal>
+                <albedo_map>model://imav/meshes/wallpaper_image.jpg</albedo_map>
+              </metal>
+            </pbr>
+          </material>
+      </visual>
+
+      <visual name="wp_c0_8">
+        <pose>-0.928571 0.30 0.004 0 0 0</pose>
+        <geometry><box><size>0.714286 0.6 0.006</size></box></geometry>
+          <material>
+            <ambient>1 1 1 1</ambient>
+            <diffuse>1 1 1 1</diffuse>
+            <pbr>
+              <metal>
+                <albedo_map>model://imav/meshes/wallpaper_image.jpg</albedo_map>
+              </metal>
+            </pbr>
+          </material>
+      </visual>
+
+      <visual name="wp_c0_9">
+        <pose>-0.214286 0.30 0.004 0 0 0</pose>
+        <geometry><box><size>0.714286 0.6 0.006</size></box></geometry>
+          <material>
+            <ambient>1 1 1 1</ambient>
+            <diffuse>1 1 1 1</diffuse>
+            <pbr>
+              <metal>
+                <albedo_map>model://imav/meshes/wallpaper_image.jpg</albedo_map>
+              </metal>
+            </pbr>
+          </material>
+      </visual>
+
+      <visual name="wp_c0_10">
+        <pose>0.500000 0.30 0.004 0 0 0</pose>
+        <geometry><box><size>0.714286 0.6 0.006</size></box></geometry>
+          <material>
+            <ambient>1 1 1 1</ambient>
+            <diffuse>1 1 1 1</diffuse>
+            <pbr>
+              <metal>
+                <albedo_map>model://imav/meshes/wallpaper_image.jpg</albedo_map>
+              </metal>
+            </pbr>
+          </material>
+      </visual>
+
+      <visual name="wp_c0_11">
+        <pose>1.214286 0.30 0.004 0 0 0</pose>
+        <geometry><box><size>0.714286 0.6 0.006</size></box></geometry>
+          <material>
+            <ambient>1 1 1 1</ambient>
+            <diffuse>1 1 1 1</diffuse>
+            <pbr>
+              <metal>
+                <albedo_map>model://imav/meshes/wallpaper_image.jpg</albedo_map>
+              </metal>
+            </pbr>
+          </material>
+      </visual>
+
+      <visual name="wp_c0_12">
+        <pose>1.928571 0.30 0.004 0 0 0</pose>
+        <geometry><box><size>0.714286 0.6 0.006</size></box></geometry>
+          <material>
+            <ambient>1 1 1 1</ambient>
+            <diffuse>1 1 1 1</diffuse>
+            <pbr>
+              <metal>
+                <albedo_map>model://imav/meshes/wallpaper_image.jpg</albedo_map>
+              </metal>
+            </pbr>
+          </material>
+      </visual>
+
+      <visual name="wp_c0_13">
+        <pose>2.642857 0.30 0.004 0 0 0</pose>
+        <geometry><box><size>0.714286 0.6 0.006</size></box></geometry>
+          <material>
+            <ambient>1 1 1 1</ambient>
+            <diffuse>1 1 1 1</diffuse>
+            <pbr>
+              <metal>
+                <albedo_map>model://imav/meshes/wallpaper_image.jpg</albedo_map>
+              </metal>
+            </pbr>
+          </material>
+      </visual>
+
+      <visual name="wp_c1_0">
+        <pose>-6.642857 -0.30 0.004 0 0 0</pose>
+        <geometry><box><size>0.714286 0.6 0.006</size></box></geometry>
+          <material>
+            <ambient>1 1 1 1</ambient>
+            <diffuse>1 1 1 1</diffuse>
+            <pbr>
+              <metal>
+                <albedo_map>model://imav/meshes/wallpaper_image.jpg</albedo_map>
+              </metal>
+            </pbr>
+          </material>
+      </visual>
+
+      <visual name="wp_c1_1">
+        <pose>-5.928571 -0.30 0.004 0 0 0</pose>
+        <geometry><box><size>0.714286 0.6 0.006</size></box></geometry>
+          <material>
+            <ambient>1 1 1 1</ambient>
+            <diffuse>1 1 1 1</diffuse>
+            <pbr>
+              <metal>
+                <albedo_map>model://imav/meshes/wallpaper_image.jpg</albedo_map>
+              </metal>
+            </pbr>
+          </material>
+      </visual>
+
+      <visual name="wp_c1_2">
+        <pose>-5.214286 -0.30 0.004 0 0 0</pose>
+        <geometry><box><size>0.714286 0.6 0.006</size></box></geometry>
+          <material>
+            <ambient>1 1 1 1</ambient>
+            <diffuse>1 1 1 1</diffuse>
+            <pbr>
+              <metal>
+                <albedo_map>model://imav/meshes/wallpaper_image.jpg</albedo_map>
+              </metal>
+            </pbr>
+          </material>
+      </visual>
+
+      <visual name="wp_c1_3">
+        <pose>-4.500000 -0.30 0.004 0 0 0</pose>
+        <geometry><box><size>0.714286 0.6 0.006</size></box></geometry>
+          <material>
+            <ambient>1 1 1 1</ambient>
+            <diffuse>1 1 1 1</diffuse>
+            <pbr>
+              <metal>
+                <albedo_map>model://imav/meshes/wallpaper_image.jpg</albedo_map>
+              </metal>
+            </pbr>
+          </material>
+      </visual>
+
+      <visual name="wp_c1_4">
+        <pose>-3.785714 -0.30 0.004 0 0 0</pose>
+        <geometry><box><size>0.714286 0.6 0.006</size></box></geometry>
+          <material>
+            <ambient>1 1 1 1</ambient>
+            <diffuse>1 1 1 1</diffuse>
+            <pbr>
+              <metal>
+                <albedo_map>model://imav/meshes/wallpaper_image.jpg</albedo_map>
+              </metal>
+            </pbr>
+          </material>
+      </visual>
+
+      <visual name="wp_c1_5">
+        <pose>-3.071429 -0.30 0.004 0 0 0</pose>
+        <geometry><box><size>0.714286 0.6 0.006</size></box></geometry>
+          <material>
+            <ambient>1 1 1 1</ambient>
+            <diffuse>1 1 1 1</diffuse>
+            <pbr>
+              <metal>
+                <albedo_map>model://imav/meshes/wallpaper_image.jpg</albedo_map>
+              </metal>
+            </pbr>
+          </material>
+      </visual>
+
+      <visual name="wp_c1_6">
+        <pose>-2.357143 -0.30 0.004 0 0 0</pose>
+        <geometry><box><size>0.714286 0.6 0.006</size></box></geometry>
+          <material>
+            <ambient>1 1 1 1</ambient>
+            <diffuse>1 1 1 1</diffuse>
+            <pbr>
+              <metal>
+                <albedo_map>model://imav/meshes/wallpaper_image.jpg</albedo_map>
+              </metal>
+            </pbr>
+          </material>
+      </visual>
+
+      <visual name="wp_c1_7">
+        <pose>-1.642857 -0.30 0.004 0 0 0</pose>
+        <geometry><box><size>0.714286 0.6 0.006</size></box></geometry>
+          <material>
+            <ambient>1 1 1 1</ambient>
+            <diffuse>1 1 1 1</diffuse>
+            <pbr>
+              <metal>
+                <albedo_map>model://imav/meshes/wallpaper_image.jpg</albedo_map>
+              </metal>
+            </pbr>
+          </material>
+      </visual>
+
+      <visual name="wp_c1_8">
+        <pose>-0.928571 -0.30 0.004 0 0 0</pose>
+        <geometry><box><size>0.714286 0.6 0.006</size></box></geometry>
+          <material>
+            <ambient>1 1 1 1</ambient>
+            <diffuse>1 1 1 1</diffuse>
+            <pbr>
+              <metal>
+                <albedo_map>model://imav/meshes/wallpaper_image.jpg</albedo_map>
+              </metal>
+            </pbr>
+          </material>
+      </visual>
+
+      <visual name="wp_c1_9">
+        <pose>-0.214286 -0.30 0.004 0 0 0</pose>
+        <geometry><box><size>0.714286 0.6 0.006</size></box></geometry>
+          <material>
+            <ambient>1 1 1 1</ambient>
+            <diffuse>1 1 1 1</diffuse>
+            <pbr>
+              <metal>
+                <albedo_map>model://imav/meshes/wallpaper_image.jpg</albedo_map>
+              </metal>
+            </pbr>
+          </material>
+      </visual>
+
+      <visual name="wp_c1_10">
+        <pose>0.500000 -0.30 0.004 0 0 0</pose>
+        <geometry><box><size>0.714286 0.6 0.006</size></box></geometry>
+          <material>
+            <ambient>1 1 1 1</ambient>
+            <diffuse>1 1 1 1</diffuse>
+            <pbr>
+              <metal>
+                <albedo_map>model://imav/meshes/wallpaper_image.jpg</albedo_map>
+              </metal>
+            </pbr>
+          </material>
+      </visual>
+
+      <visual name="wp_c1_11">
+        <pose>1.214286 -0.30 0.004 0 0 0</pose>
+        <geometry><box><size>0.714286 0.6 0.006</size></box></geometry>
+          <material>
+            <ambient>1 1 1 1</ambient>
+            <diffuse>1 1 1 1</diffuse>
+            <pbr>
+              <metal>
+                <albedo_map>model://imav/meshes/wallpaper_image.jpg</albedo_map>
+              </metal>
+            </pbr>
+          </material>
+      </visual>
+
+      <visual name="wp_c1_12">
+        <pose>1.928571 -0.30 0.004 0 0 0</pose>
+        <geometry><box><size>0.714286 0.6 0.006</size></box></geometry>
+          <material>
+            <ambient>1 1 1 1</ambient>
+            <diffuse>1 1 1 1</diffuse>
+            <pbr>
+              <metal>
+                <albedo_map>model://imav/meshes/wallpaper_image.jpg</albedo_map>
+              </metal>
+            </pbr>
+          </material>
+      </visual>
+
+      <visual name="wp_c1_13">
+        <pose>2.642857 -0.30 0.004 0 0 0</pose>
+        <geometry><box><size>0.714286 0.6 0.006</size></box></geometry>
+          <material>
+            <ambient>1 1 1 1</ambient>
+            <diffuse>1 1 1 1</diffuse>
+            <pbr>
+              <metal>
+                <albedo_map>model://imav/meshes/wallpaper_image.jpg</albedo_map>
+              </metal>
+            </pbr>
+          </material>
+      </visual>
+
+      <visual name="wp_l_0">
+        <pose>-6.642857 2.29 0.004 0 0 0</pose>
+        <geometry><box><size>0.714286 0.6 0.006</size></box></geometry>
+          <material>
+            <ambient>1 1 1 1</ambient>
+            <diffuse>1 1 1 1</diffuse>
+            <pbr>
+              <metal>
+                <albedo_map>model://imav/meshes/wallpaper_image.jpg</albedo_map>
+              </metal>
+            </pbr>
+          </material>
+      </visual>
+
+      <visual name="wp_l_1">
+        <pose>-5.928571 2.29 0.004 0 0 0</pose>
+        <geometry><box><size>0.714286 0.6 0.006</size></box></geometry>
+          <material>
+            <ambient>1 1 1 1</ambient>
+            <diffuse>1 1 1 1</diffuse>
+            <pbr>
+              <metal>
+                <albedo_map>model://imav/meshes/wallpaper_image.jpg</albedo_map>
+              </metal>
+            </pbr>
+          </material>
+      </visual>
+
+      <visual name="wp_l_2">
+        <pose>-5.214286 2.29 0.004 0 0 0</pose>
+        <geometry><box><size>0.714286 0.6 0.006</size></box></geometry>
+          <material>
+            <ambient>1 1 1 1</ambient>
+            <diffuse>1 1 1 1</diffuse>
+            <pbr>
+              <metal>
+                <albedo_map>model://imav/meshes/wallpaper_image.jpg</albedo_map>
+              </metal>
+            </pbr>
+          </material>
+      </visual>
+
+      <visual name="wp_l_3">
+        <pose>-4.500000 2.29 0.004 0 0 0</pose>
+        <geometry><box><size>0.714286 0.6 0.006</size></box></geometry>
+          <material>
+            <ambient>1 1 1 1</ambient>
+            <diffuse>1 1 1 1</diffuse>
+            <pbr>
+              <metal>
+                <albedo_map>model://imav/meshes/wallpaper_image.jpg</albedo_map>
+              </metal>
+            </pbr>
+          </material>
+      </visual>
+
+      <visual name="wp_l_4">
+        <pose>-3.785714 2.29 0.004 0 0 0</pose>
+        <geometry><box><size>0.714286 0.6 0.006</size></box></geometry>
+          <material>
+            <ambient>1 1 1 1</ambient>
+            <diffuse>1 1 1 1</diffuse>
+            <pbr>
+              <metal>
+                <albedo_map>model://imav/meshes/wallpaper_image.jpg</albedo_map>
+              </metal>
+            </pbr>
+          </material>
+      </visual>
+
+      <visual name="wp_l_5">
+        <pose>-3.071429 2.29 0.004 0 0 0</pose>
+        <geometry><box><size>0.714286 0.6 0.006</size></box></geometry>
+          <material>
+            <ambient>1 1 1 1</ambient>
+            <diffuse>1 1 1 1</diffuse>
+            <pbr>
+              <metal>
+                <albedo_map>model://imav/meshes/wallpaper_image.jpg</albedo_map>
+              </metal>
+            </pbr>
+          </material>
+      </visual>
+
+      <visual name="wp_l_6">
+        <pose>-2.357143 2.29 0.004 0 0 0</pose>
+        <geometry><box><size>0.714286 0.6 0.006</size></box></geometry>
+          <material>
+            <ambient>1 1 1 1</ambient>
+            <diffuse>1 1 1 1</diffuse>
+            <pbr>
+              <metal>
+                <albedo_map>model://imav/meshes/wallpaper_image.jpg</albedo_map>
+              </metal>
+            </pbr>
+          </material>
+      </visual>
+
+      <visual name="wp_l_7">
+        <pose>-1.642857 2.29 0.004 0 0 0</pose>
+        <geometry><box><size>0.714286 0.6 0.006</size></box></geometry>
+          <material>
+            <ambient>1 1 1 1</ambient>
+            <diffuse>1 1 1 1</diffuse>
+            <pbr>
+              <metal>
+                <albedo_map>model://imav/meshes/wallpaper_image.jpg</albedo_map>
+              </metal>
+            </pbr>
+          </material>
+      </visual>
+
+      <visual name="wp_l_8">
+        <pose>-0.928571 2.29 0.004 0 0 0</pose>
+        <geometry><box><size>0.714286 0.6 0.006</size></box></geometry>
+          <material>
+            <ambient>1 1 1 1</ambient>
+            <diffuse>1 1 1 1</diffuse>
+            <pbr>
+              <metal>
+                <albedo_map>model://imav/meshes/wallpaper_image.jpg</albedo_map>
+              </metal>
+            </pbr>
+          </material>
+      </visual>
+
+      <visual name="wp_l_9">
+        <pose>-0.214286 2.29 0.004 0 0 0</pose>
+        <geometry><box><size>0.714286 0.6 0.006</size></box></geometry>
+          <material>
+            <ambient>1 1 1 1</ambient>
+            <diffuse>1 1 1 1</diffuse>
+            <pbr>
+              <metal>
+                <albedo_map>model://imav/meshes/wallpaper_image.jpg</albedo_map>
+              </metal>
+            </pbr>
+          </material>
+      </visual>
+
+      <visual name="wp_l_10">
+        <pose>0.500000 2.29 0.004 0 0 0</pose>
+        <geometry><box><size>0.714286 0.6 0.006</size></box></geometry>
+          <material>
+            <ambient>1 1 1 1</ambient>
+            <diffuse>1 1 1 1</diffuse>
+            <pbr>
+              <metal>
+                <albedo_map>model://imav/meshes/wallpaper_image.jpg</albedo_map>
+              </metal>
+            </pbr>
+          </material>
+      </visual>
+
+      <visual name="wp_l_11">
+        <pose>1.214286 2.29 0.004 0 0 0</pose>
+        <geometry><box><size>0.714286 0.6 0.006</size></box></geometry>
+          <material>
+            <ambient>1 1 1 1</ambient>
+            <diffuse>1 1 1 1</diffuse>
+            <pbr>
+              <metal>
+                <albedo_map>model://imav/meshes/wallpaper_image.jpg</albedo_map>
+              </metal>
+            </pbr>
+          </material>
+      </visual>
+
+      <visual name="wp_l_12">
+        <pose>1.928571 2.29 0.004 0 0 0</pose>
+        <geometry><box><size>0.714286 0.6 0.006</size></box></geometry>
+          <material>
+            <ambient>1 1 1 1</ambient>
+            <diffuse>1 1 1 1</diffuse>
+            <pbr>
+              <metal>
+                <albedo_map>model://imav/meshes/wallpaper_image.jpg</albedo_map>
+              </metal>
+            </pbr>
+          </material>
+      </visual>
+
+      <visual name="wp_l_13">
+        <pose>2.642857 2.29 0.004 0 0 0</pose>
+        <geometry><box><size>0.714286 0.6 0.006</size></box></geometry>
+          <material>
+            <ambient>1 1 1 1</ambient>
+            <diffuse>1 1 1 1</diffuse>
+            <pbr>
+              <metal>
+                <albedo_map>model://imav/meshes/wallpaper_image.jpg</albedo_map>
+              </metal>
+            </pbr>
+          </material>
+      </visual>
+
+      <visual name="wp_r_0">
+        <pose>-6.642857 -2.30 0.004 0 0 0</pose>
+        <geometry><box><size>0.714286 0.6 0.006</size></box></geometry>
+          <material>
+            <ambient>1 1 1 1</ambient>
+            <diffuse>1 1 1 1</diffuse>
+            <pbr>
+              <metal>
+                <albedo_map>model://imav/meshes/wallpaper_image.jpg</albedo_map>
+              </metal>
+            </pbr>
+          </material>
+      </visual>
+
+      <visual name="wp_r_1">
+        <pose>-5.928571 -2.30 0.004 0 0 0</pose>
+        <geometry><box><size>0.714286 0.6 0.006</size></box></geometry>
+          <material>
+            <ambient>1 1 1 1</ambient>
+            <diffuse>1 1 1 1</diffuse>
+            <pbr>
+              <metal>
+                <albedo_map>model://imav/meshes/wallpaper_image.jpg</albedo_map>
+              </metal>
+            </pbr>
+          </material>
+      </visual>
+
+      <visual name="wp_r_2">
+        <pose>-5.214286 -2.30 0.004 0 0 0</pose>
+        <geometry><box><size>0.714286 0.6 0.006</size></box></geometry>
+          <material>
+            <ambient>1 1 1 1</ambient>
+            <diffuse>1 1 1 1</diffuse>
+            <pbr>
+              <metal>
+                <albedo_map>model://imav/meshes/wallpaper_image.jpg</albedo_map>
+              </metal>
+            </pbr>
+          </material>
+      </visual>
+
+      <visual name="wp_r_3">
+        <pose>-4.500000 -2.30 0.004 0 0 0</pose>
+        <geometry><box><size>0.714286 0.6 0.006</size></box></geometry>
+          <material>
+            <ambient>1 1 1 1</ambient>
+            <diffuse>1 1 1 1</diffuse>
+            <pbr>
+              <metal>
+                <albedo_map>model://imav/meshes/wallpaper_image.jpg</albedo_map>
+              </metal>
+            </pbr>
+          </material>
+      </visual>
+
+      <visual name="wp_r_4">
+        <pose>-3.785714 -2.30 0.004 0 0 0</pose>
+        <geometry><box><size>0.714286 0.6 0.006</size></box></geometry>
+          <material>
+            <ambient>1 1 1 1</ambient>
+            <diffuse>1 1 1 1</diffuse>
+            <pbr>
+              <metal>
+                <albedo_map>model://imav/meshes/wallpaper_image.jpg</albedo_map>
+              </metal>
+            </pbr>
+          </material>
+      </visual>
+
+      <visual name="wp_r_5">
+        <pose>-3.071429 -2.30 0.004 0 0 0</pose>
+        <geometry><box><size>0.714286 0.6 0.006</size></box></geometry>
+          <material>
+            <ambient>1 1 1 1</ambient>
+            <diffuse>1 1 1 1</diffuse>
+            <pbr>
+              <metal>
+                <albedo_map>model://imav/meshes/wallpaper_image.jpg</albedo_map>
+              </metal>
+            </pbr>
+          </material>
+      </visual>
+
+      <visual name="wp_r_6">
+        <pose>-2.357143 -2.30 0.004 0 0 0</pose>
+        <geometry><box><size>0.714286 0.6 0.006</size></box></geometry>
+          <material>
+            <ambient>1 1 1 1</ambient>
+            <diffuse>1 1 1 1</diffuse>
+            <pbr>
+              <metal>
+                <albedo_map>model://imav/meshes/wallpaper_image.jpg</albedo_map>
+              </metal>
+            </pbr>
+          </material>
+      </visual>
+
+      <visual name="wp_r_7">
+        <pose>-1.642857 -2.30 0.004 0 0 0</pose>
+        <geometry><box><size>0.714286 0.6 0.006</size></box></geometry>
+          <material>
+            <ambient>1 1 1 1</ambient>
+            <diffuse>1 1 1 1</diffuse>
+            <pbr>
+              <metal>
+                <albedo_map>model://imav/meshes/wallpaper_image.jpg</albedo_map>
+              </metal>
+            </pbr>
+          </material>
+      </visual>
+
+      <visual name="wp_r_8">
+        <pose>-0.928571 -2.30 0.004 0 0 0</pose>
+        <geometry><box><size>0.714286 0.6 0.006</size></box></geometry>
+          <material>
+            <ambient>1 1 1 1</ambient>
+            <diffuse>1 1 1 1</diffuse>
+            <pbr>
+              <metal>
+                <albedo_map>model://imav/meshes/wallpaper_image.jpg</albedo_map>
+              </metal>
+            </pbr>
+          </material>
+      </visual>
+
+      <visual name="wp_r_9">
+        <pose>-0.214286 -2.30 0.004 0 0 0</pose>
+        <geometry><box><size>0.714286 0.6 0.006</size></box></geometry>
+          <material>
+            <ambient>1 1 1 1</ambient>
+            <diffuse>1 1 1 1</diffuse>
+            <pbr>
+              <metal>
+                <albedo_map>model://imav/meshes/wallpaper_image.jpg</albedo_map>
+              </metal>
+            </pbr>
+          </material>
+      </visual>
+
+      <visual name="wp_r_10">
+        <pose>0.500000 -2.30 0.004 0 0 0</pose>
+        <geometry><box><size>0.714286 0.6 0.006</size></box></geometry>
+          <material>
+            <ambient>1 1 1 1</ambient>
+            <diffuse>1 1 1 1</diffuse>
+            <pbr>
+              <metal>
+                <albedo_map>model://imav/meshes/wallpaper_image.jpg</albedo_map>
+              </metal>
+            </pbr>
+          </material>
+      </visual>
+
+      <visual name="wp_r_11">
+        <pose>1.214286 -2.30 0.004 0 0 0</pose>
+        <geometry><box><size>0.714286 0.6 0.006</size></box></geometry>
+          <material>
+            <ambient>1 1 1 1</ambient>
+            <diffuse>1 1 1 1</diffuse>
+            <pbr>
+              <metal>
+                <albedo_map>model://imav/meshes/wallpaper_image.jpg</albedo_map>
+              </metal>
+            </pbr>
+          </material>
+      </visual>
+
+      <visual name="wp_r_12">
+        <pose>1.928571 -2.30 0.004 0 0 0</pose>
+        <geometry><box><size>0.714286 0.6 0.006</size></box></geometry>
+          <material>
+            <ambient>1 1 1 1</ambient>
+            <diffuse>1 1 1 1</diffuse>
+            <pbr>
+              <metal>
+                <albedo_map>model://imav/meshes/wallpaper_image.jpg</albedo_map>
+              </metal>
+            </pbr>
+          </material>
+      </visual>
+
+      <visual name="wp_r_13">
+        <pose>2.642857 -2.30 0.004 0 0 0</pose>
+        <geometry><box><size>0.714286 0.6 0.006</size></box></geometry>
+          <material>
+            <ambient>1 1 1 1</ambient>
+            <diffuse>1 1 1 1</diffuse>
+            <pbr>
+              <metal>
+                <albedo_map>model://imav/meshes/wallpaper_image.jpg</albedo_map>
+              </metal>
+            </pbr>
+          </material>
+      </visual>
+    </link>
+
+    <link name="sand_square">
+      <pose>5.75 2.25 0.004 0 0 0</pose>
+      <visual name="visual">
+        <geometry><box><size>2.5 2.5 0.006</size></box></geometry>
+          <material>
+            <ambient>1 1 1 1</ambient>
+            <diffuse>1 1 1 1</diffuse>
+            <pbr>
+              <metal>
+                <albedo_map>model://imav/meshes/sand_image.jpg</albedo_map>
+              </metal>
+            </pbr>
+          </material>
+      </visual>
+    </link>
+    <link name="aruco_id0">
+      <pose>-6.0 2.29 0.012 0 0 0</pose>
+      <collision name="collision">
+        <geometry><box><size>0.4 0.4 0.004</size></box></geometry>
+      </collision>
+      <visual name="visual">
+        <geometry><box><size>0.4 0.4 0.004</size></box></geometry>
+          <material>
+            <ambient>1 1 1 1</ambient>
+            <diffuse>1 1 1 1</diffuse>
+            <pbr>
+              <metal>
+                <albedo_map>model://imav/meshes/aruco_0.png</albedo_map>
+              </metal>
+            </pbr>
+          </material>
+      </visual>
+    </link>
+    <link name="aruco_id1">
+      <pose>-6.0 -2.3 0.012 0 0 0</pose>
+      <collision name="collision">
+        <geometry><box><size>0.4 0.4 0.004</size></box></geometry>
+      </collision>
+      <visual name="visual">
+        <geometry><box><size>0.4 0.4 0.004</size></box></geometry>
+          <material>
+            <ambient>1 1 1 1</ambient>
+            <diffuse>1 1 1 1</diffuse>
+            <pbr>
+              <metal>
+                <albedo_map>model://imav/meshes/aruco_1.png</albedo_map>
+              </metal>
+            </pbr>
+          </material>
+      </visual>
+    </link>
+    <link name="aruco_id2">
+      <pose>2.0 2.29 0.012 0 0 0</pose>
+      <collision name="collision">
+        <geometry><box><size>0.4 0.4 0.004</size></box></geometry>
+      </collision>
+      <visual name="visual">
+        <geometry><box><size>0.4 0.4 0.004</size></box></geometry>
+          <material>
+            <ambient>1 1 1 1</ambient>
+            <diffuse>1 1 1 1</diffuse>
+            <pbr>
+              <metal>
+                <albedo_map>model://imav/meshes/aruco_2.png</albedo_map>
+              </metal>
+            </pbr>
+          </material>
+      </visual>
+    </link>
+    <link name="aruco_id3">
+      <pose>2.0 -2.3 0.012 0 0 0</pose>
+      <collision name="collision">
+        <geometry><box><size>0.4 0.4 0.004</size></box></geometry>
+      </collision>
+      <visual name="visual">
+        <geometry><box><size>0.4 0.4 0.004</size></box></geometry>
+          <material>
+            <ambient>1 1 1 1</ambient>
+            <diffuse>1 1 1 1</diffuse>
+            <pbr>
+              <metal>
+                <albedo_map>model://imav/meshes/aruco_3.png</albedo_map>
+              </metal>
+            </pbr>
+          </material>
+      </visual>
+    </link>
+    <!-- Fig.12b: one red bar at step 3 (1980 mm). -->
+    <link name="red_post_l">
+      <pose> -4.5  0.75 1.050 0 0 0</pose>
+      <collision name="collision">
+        <geometry><cylinder><radius>0.03</radius><length>2.10</length></cylinder></geometry>
+      </collision>
+      <visual name="visual">
+        <geometry><cylinder><radius>0.03</radius><length>2.10</length></cylinder></geometry>
+          <material>
+            <ambient>0.28 0.15 0.06 1</ambient>
+            <diffuse>0.28 0.15 0.06 1</diffuse>
+            <specular>0.15 0.15 0.15 1</specular>
+          </material>
+      </visual>
+    </link>
+    <link name="red_post_r">
+      <pose> -4.5 -0.75 1.050 0 0 0</pose>
+      <collision name="collision">
+        <geometry><cylinder><radius>0.03</radius><length>2.10</length></cylinder></geometry>
+      </collision>
+      <visual name="visual">
+        <geometry><cylinder><radius>0.03</radius><length>2.10</length></cylinder></geometry>
+          <material>
+            <ambient>0.28 0.15 0.06 1</ambient>
+            <diffuse>0.28 0.15 0.06 1</diffuse>
+            <specular>0.15 0.15 0.15 1</specular>
+          </material>
+      </visual>
+    </link>
+    <link name="red_bar">
+      <pose> -4.5 0.0 1.980 1.5708 0 0</pose>
+      <collision name="collision">
+        <geometry><cylinder><radius>0.025</radius><length>1.5</length></cylinder></geometry>
+      </collision>
+      <visual name="visual">
+        <geometry><cylinder><radius>0.025</radius><length>1.5</length></cylinder></geometry>
+          <material>
+            <ambient>0.85 0.04 0.04 1</ambient>
+            <diffuse>0.85 0.04 0.04 1</diffuse>
+            <specular>0.15 0.15 0.15 1</specular>
+          </material>
+      </visual>
+    </link>
+    <link name="blue1_post_l">
+      <pose> -3.5  0.75 1.000 0 0 0</pose>
+      <collision name="collision">
+        <geometry><cylinder><radius>0.03</radius><length>2.0</length></cylinder></geometry>
+      </collision>
+      <visual name="visual">
+        <geometry><cylinder><radius>0.03</radius><length>2.0</length></cylinder></geometry>
+          <material>
+            <ambient>0.28 0.15 0.06 1</ambient>
+            <diffuse>0.28 0.15 0.06 1</diffuse>
+            <specular>0.15 0.15 0.15 1</specular>
+          </material>
+      </visual>
+    </link>
+    <link name="blue1_post_r">
+      <pose> -3.5 -0.75 1.000 0 0 0</pose>
+      <collision name="collision">
+        <geometry><cylinder><radius>0.03</radius><length>2.0</length></cylinder></geometry>
+      </collision>
+      <visual name="visual">
+        <geometry><cylinder><radius>0.03</radius><length>2.0</length></cylinder></geometry>
+          <material>
+            <ambient>0.28 0.15 0.06 1</ambient>
+            <diffuse>0.28 0.15 0.06 1</diffuse>
+            <specular>0.15 0.15 0.15 1</specular>
+          </material>
+      </visual>
+    </link>
+    <link name="blue1_bar">
+      <pose> -3.5 0.0 0.800 1.5708 0 0</pose>
+      <collision name="collision">
+        <geometry><cylinder><radius>0.025</radius><length>1.5</length></cylinder></geometry>
+      </collision>
+      <visual name="visual">
+        <geometry><cylinder><radius>0.025</radius><length>1.5</length></cylinder></geometry>
+          <material>
+            <ambient>0.04 0.1 0.85 1</ambient>
+            <diffuse>0.04 0.1 0.85 1</diffuse>
+            <specular>0.15 0.15 0.15 1</specular>
+          </material>
+      </visual>
+    </link>
+    <link name="blue2_post_l">
+      <pose> -2.5  0.75 1.000 0 0 0</pose>
+      <collision name="collision">
+        <geometry><cylinder><radius>0.03</radius><length>2.0</length></cylinder></geometry>
+      </collision>
+      <visual name="visual">
+        <geometry><cylinder><radius>0.03</radius><length>2.0</length></cylinder></geometry>
+          <material>
+            <ambient>0.28 0.15 0.06 1</ambient>
+            <diffuse>0.28 0.15 0.06 1</diffuse>
+            <specular>0.15 0.15 0.15 1</specular>
+          </material>
+      </visual>
+    </link>
+    <link name="blue2_post_r">
+      <pose> -2.5 -0.75 1.000 0 0 0</pose>
+      <collision name="collision">
+        <geometry><cylinder><radius>0.03</radius><length>2.0</length></cylinder></geometry>
+      </collision>
+      <visual name="visual">
+        <geometry><cylinder><radius>0.03</radius><length>2.0</length></cylinder></geometry>
+          <material>
+            <ambient>0.28 0.15 0.06 1</ambient>
+            <diffuse>0.28 0.15 0.06 1</diffuse>
+            <specular>0.15 0.15 0.15 1</specular>
+          </material>
+      </visual>
+    </link>
+    <link name="blue2_bar">
+      <pose> -2.5 0.0 0.800 1.5708 0 0</pose>
+      <collision name="collision">
+        <geometry><cylinder><radius>0.025</radius><length>1.5</length></cylinder></geometry>
+      </collision>
+      <visual name="visual">
+        <geometry><cylinder><radius>0.025</radius><length>1.5</length></cylinder></geometry>
+          <material>
+            <ambient>0.04 0.1 0.85 1</ambient>
+            <diffuse>0.04 0.1 0.85 1</diffuse>
+            <specular>0.15 0.15 0.15 1</specular>
+          </material>
+      </visual>
+    </link>
+    <link name="tube_v_l">
+      <pose>-1.5  0.50 1.0 0 0 0</pose>
+      <collision name="collision">
+        <geometry><cylinder><radius>0.05</radius><length>2.0</length></cylinder></geometry>
+      </collision>
+      <visual name="visual">
+        <geometry><cylinder><radius>0.05</radius><length>2.0</length></cylinder></geometry>
+          <material>
+            <ambient>0.85 0.04 0.04 1</ambient>
+            <diffuse>0.85 0.04 0.04 1</diffuse>
+            <specular>0.15 0.15 0.15 1</specular>
+          </material>
+      </visual>
+    </link>
+    <link name="tube_v_c">
+      <pose>-1.5  0.00 1.0 0 0 0</pose>
+      <collision name="collision">
+        <geometry><cylinder><radius>0.05</radius><length>2.0</length></cylinder></geometry>
+      </collision>
+      <visual name="visual">
+        <geometry><cylinder><radius>0.05</radius><length>2.0</length></cylinder></geometry>
+          <material>
+            <ambient>0.85 0.04 0.04 1</ambient>
+            <diffuse>0.85 0.04 0.04 1</diffuse>
+            <specular>0.15 0.15 0.15 1</specular>
+          </material>
+      </visual>
+    </link>
+    <link name="tube_v_r">
+      <pose>-1.5 -0.50 1.0 0 0 0</pose>
+      <collision name="collision">
+        <geometry><cylinder><radius>0.05</radius><length>2.0</length></cylinder></geometry>
+      </collision>
+      <visual name="visual">
+        <geometry><cylinder><radius>0.05</radius><length>2.0</length></cylinder></geometry>
+          <material>
+            <ambient>0.85 0.04 0.04 1</ambient>
+            <diffuse>0.85 0.04 0.04 1</diffuse>
+            <specular>0.15 0.15 0.15 1</specular>
+          </material>
+      </visual>
+    </link>
+    <link name="tube_h">
+      <pose>-1.5 0.25 0.461 1.5708 0 0</pose>
+      <collision name="collision">
+        <geometry><cylinder><radius>0.05</radius><length>0.5</length></cylinder></geometry>
+      </collision>
+      <visual name="visual">
+        <geometry><cylinder><radius>0.05</radius><length>0.5</length></cylinder></geometry>
+          <material>
+            <ambient>0.85 0.04 0.04 1</ambient>
+            <diffuse>0.85 0.04 0.04 1</diffuse>
+            <specular>0.15 0.15 0.15 1</specular>
+          </material>
+      </visual>
+    </link>
+    <link name="tube_diag">
+      <pose>-1.5 0.250 1.461 -2.7073 0 0</pose>
+      <collision name="collision">
+        <geometry><cylinder><radius>0.05</radius><length>1.1883114069973408</length></cylinder></geometry>
+      </collision>
+      <visual name="visual">
+        <geometry><cylinder><radius>0.05</radius><length>1.1883114069973408</length></cylinder></geometry>
+          <material>
+            <ambient>0.85 0.04 0.04 1</ambient>
+            <diffuse>0.85 0.04 0.04 1</diffuse>
+            <specular>0.15 0.15 0.15 1</specular>
+          </material>
+      </visual>
+    </link>
+    <link name="tube_rear">
+      <pose>-0.5 0.0 1.0 0 0 0</pose>
+      <collision name="collision">
+        <geometry><cylinder><radius>0.05</radius><length>2.0</length></cylinder></geometry>
+      </collision>
+      <visual name="visual">
+        <geometry><cylinder><radius>0.05</radius><length>2.0</length></cylinder></geometry>
+          <material>
+            <ambient>0.85 0.04 0.04 1</ambient>
+            <diffuse>0.85 0.04 0.04 1</diffuse>
+            <specular>0.15 0.15 0.15 1</specular>
+          </material>
+      </visual>
+    </link>
+    <!-- Fig.12a OSB panel, inner span 1.5 m, window centers z=1.20. -->
+    <link name="gate1">
+
+        <collision name="gate1_post_l_collision">
+          <pose>-5.5 0.7750 0.900 0 0 0</pose>
+          <geometry><box><size>0.05 0.05 1.80</size></box></geometry>
+        </collision>
+        <visual name="gate1_post_l">
+          <pose>-5.5 0.7750 0.900 0 0 0</pose>
+          <geometry><box><size>0.05 0.05 1.80</size></box></geometry>
+          <material>
+            <ambient>0.45 0.28 0.12 1</ambient>
+            <diffuse>0.45 0.28 0.12 1</diffuse>
+            <specular>0.15 0.15 0.15 1</specular>
+          </material>
+        </visual>
+
+        <collision name="gate1_post_r_collision">
+          <pose>-5.5 -0.7750 0.900 0 0 0</pose>
+          <geometry><box><size>0.05 0.05 1.80</size></box></geometry>
+        </collision>
+        <visual name="gate1_post_r">
+          <pose>-5.5 -0.7750 0.900 0 0 0</pose>
+          <geometry><box><size>0.05 0.05 1.80</size></box></geometry>
+          <material>
+            <ambient>0.45 0.28 0.12 1</ambient>
+            <diffuse>0.45 0.28 0.12 1</diffuse>
+            <specular>0.15 0.15 0.15 1</specular>
+          </material>
+        </visual>
+
+        <collision name="gate1_mullion_l_collision">
+          <pose>-5.5 0.666667 1.200 0 0 0</pose>
+          <geometry><box><size>0.04 0.166667 0.700</size></box></geometry>
+        </collision>
+        <visual name="gate1_mullion_l">
+          <pose>-5.5 0.666667 1.200 0 0 0</pose>
+          <geometry><box><size>0.04 0.166667 0.700</size></box></geometry>
+          <material>
+            <ambient>0.82 0.70 0.48 1</ambient>
+            <diffuse>0.82 0.70 0.48 1</diffuse>
+            <pbr>
+              <metal>
+                <albedo_map>model://imav/meshes/kraft_paper_image.jpg</albedo_map>
+              </metal>
+            </pbr>
+          </material>
+        </visual>
+
+        <collision name="gate1_mullion_m_collision">
+          <pose>-5.5 -0.100000 1.200 0 0 0</pose>
+          <geometry><box><size>0.04 0.166667 0.700</size></box></geometry>
+        </collision>
+        <visual name="gate1_mullion_m">
+          <pose>-5.5 -0.100000 1.200 0 0 0</pose>
+          <geometry><box><size>0.04 0.166667 0.700</size></box></geometry>
+          <material>
+            <ambient>0.82 0.70 0.48 1</ambient>
+            <diffuse>0.82 0.70 0.48 1</diffuse>
+            <pbr>
+              <metal>
+                <albedo_map>model://imav/meshes/kraft_paper_image.jpg</albedo_map>
+              </metal>
+            </pbr>
+          </material>
+        </visual>
+
+        <collision name="gate1_mullion_r_collision">
+          <pose>-5.5 -0.666667 1.200 0 0 0</pose>
+          <geometry><box><size>0.04 0.166667 0.700</size></box></geometry>
+        </collision>
+        <visual name="gate1_mullion_r">
+          <pose>-5.5 -0.666667 1.200 0 0 0</pose>
+          <geometry><box><size>0.04 0.166667 0.700</size></box></geometry>
+          <material>
+            <ambient>0.82 0.70 0.48 1</ambient>
+            <diffuse>0.82 0.70 0.48 1</diffuse>
+            <pbr>
+              <metal>
+                <albedo_map>model://imav/meshes/kraft_paper_image.jpg</albedo_map>
+              </metal>
+            </pbr>
+          </material>
+        </visual>
+
+        <collision name="gate1_below_blue_collision">
+          <pose>-5.5 0.283333 0.9000 0 0 0</pose>
+          <geometry><box><size>0.04 0.60 0.10</size></box></geometry>
+        </collision>
+        <visual name="gate1_below_blue">
+          <pose>-5.5 0.283333 0.9000 0 0 0</pose>
+          <geometry><box><size>0.04 0.60 0.10</size></box></geometry>
+          <material>
+            <ambient>0.82 0.70 0.48 1</ambient>
+            <diffuse>0.82 0.70 0.48 1</diffuse>
+            <pbr>
+              <metal>
+                <albedo_map>model://imav/meshes/kraft_paper_image.jpg</albedo_map>
+              </metal>
+            </pbr>
+          </material>
+        </visual>
+
+        <collision name="gate1_above_blue_collision">
+          <pose>-5.5 0.283333 1.5000 0 0 0</pose>
+          <geometry><box><size>0.04 0.60 0.10</size></box></geometry>
+        </collision>
+        <visual name="gate1_above_blue">
+          <pose>-5.5 0.283333 1.5000 0 0 0</pose>
+          <geometry><box><size>0.04 0.60 0.10</size></box></geometry>
+          <material>
+            <ambient>0.82 0.70 0.48 1</ambient>
+            <diffuse>0.82 0.70 0.48 1</diffuse>
+            <pbr>
+              <metal>
+                <albedo_map>model://imav/meshes/kraft_paper_image.jpg</albedo_map>
+              </metal>
+            </pbr>
+          </material>
+        </visual>
+
+        <collision name="gate1_below_red_collision">
+          <pose>-5.5 -0.383333 0.9250 0 0 0</pose>
+          <geometry><box><size>0.04 0.40 0.15</size></box></geometry>
+        </collision>
+        <visual name="gate1_below_red">
+          <pose>-5.5 -0.383333 0.9250 0 0 0</pose>
+          <geometry><box><size>0.04 0.40 0.15</size></box></geometry>
+          <material>
+            <ambient>0.82 0.70 0.48 1</ambient>
+            <diffuse>0.82 0.70 0.48 1</diffuse>
+            <pbr>
+              <metal>
+                <albedo_map>model://imav/meshes/kraft_paper_image.jpg</albedo_map>
+              </metal>
+            </pbr>
+          </material>
+        </visual>
+
+        <collision name="gate1_above_red_collision">
+          <pose>-5.5 -0.383333 1.4750 0 0 0</pose>
+          <geometry><box><size>0.04 0.40 0.15</size></box></geometry>
+        </collision>
+        <visual name="gate1_above_red">
+          <pose>-5.5 -0.383333 1.4750 0 0 0</pose>
+          <geometry><box><size>0.04 0.40 0.15</size></box></geometry>
+          <material>
+            <ambient>0.82 0.70 0.48 1</ambient>
+            <diffuse>0.82 0.70 0.48 1</diffuse>
+            <pbr>
+              <metal>
+                <albedo_map>model://imav/meshes/kraft_paper_image.jpg</albedo_map>
+              </metal>
+            </pbr>
+          </material>
+        </visual>
+
+        <visual name="gate1_blue_top">
+          <pose>-5.5 0.283333 1.4650 0 0 0</pose>
+          <geometry><box><size>0.050 0.6600 0.0300</size></box></geometry>
+          <material>
+            <ambient>0.05 0.15 0.85 1</ambient>
+            <diffuse>0.05 0.15 0.85 1</diffuse>
+            <specular>0.15 0.15 0.15 1</specular>
+          </material>
+        </visual>
+
+        <visual name="gate1_blue_bot">
+          <pose>-5.5 0.283333 0.9350 0 0 0</pose>
+          <geometry><box><size>0.050 0.6600 0.0300</size></box></geometry>
+          <material>
+            <ambient>0.05 0.15 0.85 1</ambient>
+            <diffuse>0.05 0.15 0.85 1</diffuse>
+            <specular>0.15 0.15 0.15 1</specular>
+          </material>
+        </visual>
+
+        <visual name="gate1_blue_l">
+          <pose>-5.5 0.598333 1.2000 0 0 0</pose>
+          <geometry><box><size>0.050 0.0300 0.5000</size></box></geometry>
+          <material>
+            <ambient>0.05 0.15 0.85 1</ambient>
+            <diffuse>0.05 0.15 0.85 1</diffuse>
+            <specular>0.15 0.15 0.15 1</specular>
+          </material>
+        </visual>
+
+        <visual name="gate1_blue_r">
+          <pose>-5.5 -0.031667 1.2000 0 0 0</pose>
+          <geometry><box><size>0.050 0.0300 0.5000</size></box></geometry>
+          <material>
+            <ambient>0.05 0.15 0.85 1</ambient>
+            <diffuse>0.05 0.15 0.85 1</diffuse>
+            <specular>0.15 0.15 0.15 1</specular>
+          </material>
+        </visual>
+
+        <visual name="gate1_red_top">
+          <pose>-5.5 -0.383333 1.4150 0 0 0</pose>
+          <geometry><box><size>0.050 0.4600 0.0300</size></box></geometry>
+          <material>
+            <ambient>0.85 0.04 0.04 1</ambient>
+            <diffuse>0.85 0.04 0.04 1</diffuse>
+            <specular>0.15 0.15 0.15 1</specular>
+          </material>
+        </visual>
+
+        <visual name="gate1_red_bot">
+          <pose>-5.5 -0.383333 0.9850 0 0 0</pose>
+          <geometry><box><size>0.050 0.4600 0.0300</size></box></geometry>
+          <material>
+            <ambient>0.85 0.04 0.04 1</ambient>
+            <diffuse>0.85 0.04 0.04 1</diffuse>
+            <specular>0.15 0.15 0.15 1</specular>
+          </material>
+        </visual>
+
+        <visual name="gate1_red_l">
+          <pose>-5.5 -0.168333 1.2000 0 0 0</pose>
+          <geometry><box><size>0.050 0.0300 0.4000</size></box></geometry>
+          <material>
+            <ambient>0.85 0.04 0.04 1</ambient>
+            <diffuse>0.85 0.04 0.04 1</diffuse>
+            <specular>0.15 0.15 0.15 1</specular>
+          </material>
+        </visual>
+
+        <visual name="gate1_red_r">
+          <pose>-5.5 -0.598333 1.2000 0 0 0</pose>
+          <geometry><box><size>0.050 0.0300 0.4000</size></box></geometry>
+          <material>
+            <ambient>0.85 0.04 0.04 1</ambient>
+            <diffuse>0.85 0.04 0.04 1</diffuse>
+            <specular>0.15 0.15 0.15 1</specular>
+          </material>
+        </visual>
+    </link>
+    <!-- Fig.12a OSB panel, inner span 1.5 m, window centers z=1.20. -->
+    <link name="gate2">
+
+        <collision name="gate2_post_l_collision">
+          <pose>0.25 0.7750 0.900 0 0 0</pose>
+          <geometry><box><size>0.05 0.05 1.80</size></box></geometry>
+        </collision>
+        <visual name="gate2_post_l">
+          <pose>0.25 0.7750 0.900 0 0 0</pose>
+          <geometry><box><size>0.05 0.05 1.80</size></box></geometry>
+          <material>
+            <ambient>0.45 0.28 0.12 1</ambient>
+            <diffuse>0.45 0.28 0.12 1</diffuse>
+            <specular>0.15 0.15 0.15 1</specular>
+          </material>
+        </visual>
+
+        <collision name="gate2_post_r_collision">
+          <pose>0.25 -0.7750 0.900 0 0 0</pose>
+          <geometry><box><size>0.05 0.05 1.80</size></box></geometry>
+        </collision>
+        <visual name="gate2_post_r">
+          <pose>0.25 -0.7750 0.900 0 0 0</pose>
+          <geometry><box><size>0.05 0.05 1.80</size></box></geometry>
+          <material>
+            <ambient>0.45 0.28 0.12 1</ambient>
+            <diffuse>0.45 0.28 0.12 1</diffuse>
+            <specular>0.15 0.15 0.15 1</specular>
+          </material>
+        </visual>
+
+        <collision name="gate2_mullion_l_collision">
+          <pose>0.25 0.666667 1.200 0 0 0</pose>
+          <geometry><box><size>0.04 0.166667 0.700</size></box></geometry>
+        </collision>
+        <visual name="gate2_mullion_l">
+          <pose>0.25 0.666667 1.200 0 0 0</pose>
+          <geometry><box><size>0.04 0.166667 0.700</size></box></geometry>
+          <material>
+            <ambient>0.82 0.70 0.48 1</ambient>
+            <diffuse>0.82 0.70 0.48 1</diffuse>
+            <pbr>
+              <metal>
+                <albedo_map>model://imav/meshes/kraft_paper_image.jpg</albedo_map>
+              </metal>
+            </pbr>
+          </material>
+        </visual>
+
+        <collision name="gate2_mullion_m_collision">
+          <pose>0.25 -0.100000 1.200 0 0 0</pose>
+          <geometry><box><size>0.04 0.166667 0.700</size></box></geometry>
+        </collision>
+        <visual name="gate2_mullion_m">
+          <pose>0.25 -0.100000 1.200 0 0 0</pose>
+          <geometry><box><size>0.04 0.166667 0.700</size></box></geometry>
+          <material>
+            <ambient>0.82 0.70 0.48 1</ambient>
+            <diffuse>0.82 0.70 0.48 1</diffuse>
+            <pbr>
+              <metal>
+                <albedo_map>model://imav/meshes/kraft_paper_image.jpg</albedo_map>
+              </metal>
+            </pbr>
+          </material>
+        </visual>
+
+        <collision name="gate2_mullion_r_collision">
+          <pose>0.25 -0.666667 1.200 0 0 0</pose>
+          <geometry><box><size>0.04 0.166667 0.700</size></box></geometry>
+        </collision>
+        <visual name="gate2_mullion_r">
+          <pose>0.25 -0.666667 1.200 0 0 0</pose>
+          <geometry><box><size>0.04 0.166667 0.700</size></box></geometry>
+          <material>
+            <ambient>0.82 0.70 0.48 1</ambient>
+            <diffuse>0.82 0.70 0.48 1</diffuse>
+            <pbr>
+              <metal>
+                <albedo_map>model://imav/meshes/kraft_paper_image.jpg</albedo_map>
+              </metal>
+            </pbr>
+          </material>
+        </visual>
+
+        <collision name="gate2_below_blue_collision">
+          <pose>0.25 0.283333 0.9000 0 0 0</pose>
+          <geometry><box><size>0.04 0.60 0.10</size></box></geometry>
+        </collision>
+        <visual name="gate2_below_blue">
+          <pose>0.25 0.283333 0.9000 0 0 0</pose>
+          <geometry><box><size>0.04 0.60 0.10</size></box></geometry>
+          <material>
+            <ambient>0.82 0.70 0.48 1</ambient>
+            <diffuse>0.82 0.70 0.48 1</diffuse>
+            <pbr>
+              <metal>
+                <albedo_map>model://imav/meshes/kraft_paper_image.jpg</albedo_map>
+              </metal>
+            </pbr>
+          </material>
+        </visual>
+
+        <collision name="gate2_above_blue_collision">
+          <pose>0.25 0.283333 1.5000 0 0 0</pose>
+          <geometry><box><size>0.04 0.60 0.10</size></box></geometry>
+        </collision>
+        <visual name="gate2_above_blue">
+          <pose>0.25 0.283333 1.5000 0 0 0</pose>
+          <geometry><box><size>0.04 0.60 0.10</size></box></geometry>
+          <material>
+            <ambient>0.82 0.70 0.48 1</ambient>
+            <diffuse>0.82 0.70 0.48 1</diffuse>
+            <pbr>
+              <metal>
+                <albedo_map>model://imav/meshes/kraft_paper_image.jpg</albedo_map>
+              </metal>
+            </pbr>
+          </material>
+        </visual>
+
+        <collision name="gate2_below_red_collision">
+          <pose>0.25 -0.383333 0.9250 0 0 0</pose>
+          <geometry><box><size>0.04 0.40 0.15</size></box></geometry>
+        </collision>
+        <visual name="gate2_below_red">
+          <pose>0.25 -0.383333 0.9250 0 0 0</pose>
+          <geometry><box><size>0.04 0.40 0.15</size></box></geometry>
+          <material>
+            <ambient>0.82 0.70 0.48 1</ambient>
+            <diffuse>0.82 0.70 0.48 1</diffuse>
+            <pbr>
+              <metal>
+                <albedo_map>model://imav/meshes/kraft_paper_image.jpg</albedo_map>
+              </metal>
+            </pbr>
+          </material>
+        </visual>
+
+        <collision name="gate2_above_red_collision">
+          <pose>0.25 -0.383333 1.4750 0 0 0</pose>
+          <geometry><box><size>0.04 0.40 0.15</size></box></geometry>
+        </collision>
+        <visual name="gate2_above_red">
+          <pose>0.25 -0.383333 1.4750 0 0 0</pose>
+          <geometry><box><size>0.04 0.40 0.15</size></box></geometry>
+          <material>
+            <ambient>0.82 0.70 0.48 1</ambient>
+            <diffuse>0.82 0.70 0.48 1</diffuse>
+            <pbr>
+              <metal>
+                <albedo_map>model://imav/meshes/kraft_paper_image.jpg</albedo_map>
+              </metal>
+            </pbr>
+          </material>
+        </visual>
+
+        <visual name="gate2_blue_top">
+          <pose>0.25 0.283333 1.4650 0 0 0</pose>
+          <geometry><box><size>0.050 0.6600 0.0300</size></box></geometry>
+          <material>
+            <ambient>0.05 0.15 0.85 1</ambient>
+            <diffuse>0.05 0.15 0.85 1</diffuse>
+            <specular>0.15 0.15 0.15 1</specular>
+          </material>
+        </visual>
+
+        <visual name="gate2_blue_bot">
+          <pose>0.25 0.283333 0.9350 0 0 0</pose>
+          <geometry><box><size>0.050 0.6600 0.0300</size></box></geometry>
+          <material>
+            <ambient>0.05 0.15 0.85 1</ambient>
+            <diffuse>0.05 0.15 0.85 1</diffuse>
+            <specular>0.15 0.15 0.15 1</specular>
+          </material>
+        </visual>
+
+        <visual name="gate2_blue_l">
+          <pose>0.25 0.598333 1.2000 0 0 0</pose>
+          <geometry><box><size>0.050 0.0300 0.5000</size></box></geometry>
+          <material>
+            <ambient>0.05 0.15 0.85 1</ambient>
+            <diffuse>0.05 0.15 0.85 1</diffuse>
+            <specular>0.15 0.15 0.15 1</specular>
+          </material>
+        </visual>
+
+        <visual name="gate2_blue_r">
+          <pose>0.25 -0.031667 1.2000 0 0 0</pose>
+          <geometry><box><size>0.050 0.0300 0.5000</size></box></geometry>
+          <material>
+            <ambient>0.05 0.15 0.85 1</ambient>
+            <diffuse>0.05 0.15 0.85 1</diffuse>
+            <specular>0.15 0.15 0.15 1</specular>
+          </material>
+        </visual>
+
+        <visual name="gate2_red_top">
+          <pose>0.25 -0.383333 1.4150 0 0 0</pose>
+          <geometry><box><size>0.050 0.4600 0.0300</size></box></geometry>
+          <material>
+            <ambient>0.85 0.04 0.04 1</ambient>
+            <diffuse>0.85 0.04 0.04 1</diffuse>
+            <specular>0.15 0.15 0.15 1</specular>
+          </material>
+        </visual>
+
+        <visual name="gate2_red_bot">
+          <pose>0.25 -0.383333 0.9850 0 0 0</pose>
+          <geometry><box><size>0.050 0.4600 0.0300</size></box></geometry>
+          <material>
+            <ambient>0.85 0.04 0.04 1</ambient>
+            <diffuse>0.85 0.04 0.04 1</diffuse>
+            <specular>0.15 0.15 0.15 1</specular>
+          </material>
+        </visual>
+
+        <visual name="gate2_red_l">
+          <pose>0.25 -0.168333 1.2000 0 0 0</pose>
+          <geometry><box><size>0.050 0.0300 0.4000</size></box></geometry>
+          <material>
+            <ambient>0.85 0.04 0.04 1</ambient>
+            <diffuse>0.85 0.04 0.04 1</diffuse>
+            <specular>0.15 0.15 0.15 1</specular>
+          </material>
+        </visual>
+
+        <visual name="gate2_red_r">
+          <pose>0.25 -0.598333 1.2000 0 0 0</pose>
+          <geometry><box><size>0.050 0.0300 0.4000</size></box></geometry>
+          <material>
+            <ambient>0.85 0.04 0.04 1</ambient>
+            <diffuse>0.85 0.04 0.04 1</diffuse>
+            <specular>0.15 0.15 0.15 1</specular>
+          </material>
+        </visual>
     </link>
   </model>
 </sdf>

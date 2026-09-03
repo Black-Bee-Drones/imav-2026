@@ -6,12 +6,32 @@ Competition arena for the IMAV 2026 indoor cage (`imav_world.sdf`).
 
 | Path | Purpose |
 |------|---------|
-| `models/imav/` | Arena meshes + `imav_world.sdf` (full Gazebo world with iris) |
+| `models/imav/` | Arena mesh + SDF overlays + `imav_world.sdf` (full Gazebo world with iris) |
 | `imav_scenery.sdf` | Scenery-only check (no vehicle) |
 | `../launch/sitl_gazebo.launch.py` | Loads `imav_world.sdf` via Nectar with vision on |
 
-Arena footprint: **14 × 7 m**, centered at origin. First gate ~`x=-5.5`.
-Spawn is set inside `imav_world.sdf` (currently `-6 3.2 0.195`).
+Arena footprint: **14 × 7 m**, centered at origin.
+
+**Frames.** World origin is the cage center. Spawn / takeoff is on ArUco Id0 at `(-6, 2.29)`.
+Takeoff-frame `+X` is world `+X`; takeoff-frame `y = -2.29` is the center strip (`world y = 0`).
+
+| Element | World `x, y` | Takeoff-frame `x, y` |
+|---------|--------------|----------------------|
+| Spawn / ArUco Id0 (left strip) | -6.0, 2.29 | 0.0, 0.0 |
+| First gate | -5.5, 0.0 | 0.5, -2.29 |
+| Red bar (step 3, 1.98 m) | -4.5, 0.0 | 1.5, -2.29 |
+| Red–blue gap center | -4.0, 0.0 | 2.0, -2.29 |
+| Blue bar 1 (step 2, 0.80 m) | -3.5, 0.0 | 2.5, -2.29 |
+| Blue bar 2 (step 2, 0.80 m) | -2.5, 0.0 | 3.5, -2.29 |
+| Blue–tube gap (depth stop) | -2.2, 0.0 | 3.8, -2.29 |
+| Tubes (front cluster) | -1.5, 0.0 | 4.5, -2.29 |
+| Tubes (rear vertical) | -0.5, 0.0 | 5.5, -2.29 |
+| Second gate | 0.25, 0.0 | 6.25, -2.29 |
+| ArUco Id1 (landing strip) | -6.0, -2.30 | 0.0, -4.59 |
+
+Wallpaper (Fig. 8) is tiled along the mission-1 path: center **1.2 m** on `y=0` (two 0.6 m rows), side **0.6 m** at `y=±2.3`. ArUco **5×5**, **0.4 m**, Ids 0–3 on the side strips. Sandy **2.5×2.5 m** at `x=5.75, y=2.25`. Windows (Fig. 12a): OSB panel, inner span **1.5 m**, blue **0.60×0.50 m** and red **0.40×0.40 m**, centers at **z = 1.20 m**.
+
+Spawn is set inside `imav_world.sdf` (`-6 2.29 0.195`).
 
 ## Launch with Nectar
 
@@ -65,7 +85,8 @@ python3 ~/ros2_ws/src/nectar-sdk/scripts/simulation/gz_vision_source.py
 ```
 
 
-Cameras: `/north_camera/image`, `/down_camera`.
+Cameras: `/front_camera/image`, `/front_camera/depth_image`, `/down_camera`.
+SITL maps those onto `camera_north_*` / `camera_down_*`. There is no south/C920 camera in Gazebo; `--sitl` skips it.
 
 ## Scenery-only check
 
@@ -74,4 +95,3 @@ cd ~/ros2_ws/src/imav-2026/indoor
 export GZ_SIM_RESOURCE_PATH=$PWD/simulation/models:$PWD/simulation:${GZ_SIM_RESOURCE_PATH:-}
 gz sim -v4 -r simulation/imav_scenery.sdf
 ```
-

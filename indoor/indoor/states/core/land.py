@@ -1,8 +1,11 @@
 import yasmin
-from yasmin import State, Blackboard
-from yasmin_ros.basic_outcomes import SUCCEED, ABORT
+from yasmin import Blackboard, State
+from yasmin_ros.basic_outcomes import ABORT, SUCCEED
 
 from nectar.control import MavlinkDrone
+from nectar.control.types import RTLMethod
+
+from ...config import Config
 
 
 class Land(State):
@@ -11,13 +14,14 @@ class Land(State):
 
     def execute(self, blackboard: Blackboard):
         drone: MavlinkDrone = blackboard.get('drone')
+        config: Config = blackboard.get('config')
 
-        if blackboard.get('rlt'):
+        if config.rtl:
             yasmin.YASMIN_LOG_INFO('RTL...')
-            status = drone.rtl()
+            if drone.rtl(method=RTLMethod.NAVIGATE):
+                return SUCCEED
+            yasmin.YASMIN_LOG_WARN('RTL failed')
 
-        if not self.rtl or not status:
-            yasmin.YASMIN_LOG_INFO('Landing...')
-            drone.land()
-
+        yasmin.YASMIN_LOG_INFO('Landing...')
+        drone.land()
         return SUCCEED

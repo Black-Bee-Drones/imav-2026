@@ -8,8 +8,9 @@ from .obstacle import (
     GoToObstacles,
     Window,
     ReacquireWindow,
-    RedBar,
-    BlueBar,
+    ToBarCorridor,
+    FindCenterDescendBars,
+    PassBlue,
     Tubes,
 )
 

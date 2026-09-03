@@ -9,24 +9,24 @@ from nectar.control import MavlinkDrone, MoveReference
 
 from ...config import Config
 
-class RedBar(State):
+class ToBarCorridor(State):
     def __init__(self):
         super().__init__(outcomes=[SUCCEED, TIMEOUT])
 
         self.node = YasminNode.get_instance()
 
     def execute(self, blackboard: Blackboard):
-        drone: MavlinkDrone = blackboard.get('drone')
         config: Config = blackboard.get('config')
+        drone: MavlinkDrone = blackboard.get("drone")
 
         safe_alt: float = config.safe_alt
-        self.start_time: Time = blackboard.get('start_time')
+        self.start_time: Time = blackboard.get("start_time")
         self.timeout: int = config.timeout
 
         self.start_mission: Time = config.obstacle_start_time
         self.mission_timeout: int = config.obstacle_timeout
 
-        start_x: float = config.obstacle_start_x
+        start_x: float = config.obstacle_bar_start_x
         start_y: float = config.obstacle_start_y
 
         match config.obstacle_red:
@@ -40,21 +40,24 @@ class RedBar(State):
                 alt: float = safe_alt
 
         points = [
-            (start_x+1.25, start_y, alt),
-            (start_x+2.0, start_y, alt),
+            (None, None, alt),
+            (start_x, start_y, alt),
         ]
 
         if self.check_timeout():
             return TIMEOUT
 
         for x, y, z in points:
-            yasmin.YASMIN_LOG_INFO(f'Fly to x={x}; y={y}; z={z}...')
+            yasmin.YASMIN_LOG_INFO(
+                f"Bar corridor: x={x} y={y} z={z:.2f} (takeoff, yaw hold)."
+            )
             drone.move_to(
                 x=x,
                 y=y,
                 z=z,
-                yaw=0,
+                yaw=None,
                 reference=MoveReference.TAKEOFF,
+                precision=0.12,
             )
 
             if self.check_timeout():
@@ -65,5 +68,6 @@ class RedBar(State):
     def check_timeout(self):
         now = self.node.get_clock().now()
 
-        return now - self.start_time > Duration(seconds=self.timeout) or \
-            now - self.start_mission > Duration(seconds=self.mission_timeout)
+        return now - self.start_time > Duration(
+            seconds=self.timeout
+        ) or now - self.start_mission > Duration(seconds=self.mission_timeout)

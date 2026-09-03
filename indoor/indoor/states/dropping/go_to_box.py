@@ -3,7 +3,7 @@ from rclpy.time import Time, Duration
 import yasmin
 from yasmin import State, Blackboard
 from yasmin_ros.yasmin_node import YasminNode
-from yasmin_ros.basic_outcomes import SUCCEED, TIMEOUT
+from yasmin_ros.basic_outcomes import CANCEL, SUCCEED, TIMEOUT
 
 from nectar.control import MavlinkDrone, MoveReference
 
@@ -12,13 +12,15 @@ from ...config import Config
 
 class GoToBox(State):
     def __init__(self):
-        super().__init__(outcomes=[SUCCEED, TIMEOUT])
+        super().__init__(outcomes=[SUCCEED, TIMEOUT, CANCEL])
 
         self.node = YasminNode.get_instance()
 
     def execute(self, blackboard: Blackboard):
         drone: MavlinkDrone = blackboard.get('drone')
         config: Config = blackboard.get('config')
+        if config.droping_skip:
+            return CANCEL
 
         self.start_time: Time = blackboard.get('start_time')
         self.start_state = self.node.get_clock().now()

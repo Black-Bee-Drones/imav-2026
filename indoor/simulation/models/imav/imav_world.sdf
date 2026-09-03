@@ -112,17 +112,17 @@
         <real_time_factor>true</real_time_factor>
         <iterations>false</iterations>
       </plugin>
-      <plugin filename="ImageDisplay" name="north Camera RGB">
+      <plugin filename="ImageDisplay" name="Front Camera RGB">
         <gz-gui>
           <property type="string" key="state">docked_collapsed</property>
         </gz-gui>
-        <topic>/north_camera/image</topic>
+        <topic>/front_camera/image</topic>
       </plugin>
-      <plugin filename="ImageDisplay" name="north Camera Depth">
+      <plugin filename="ImageDisplay" name="Front Camera Depth">
         <gz-gui>
           <property type="string" key="state">docked_collapsed</property>
         </gz-gui>
-        <topic>/north_camera/depth_image</topic>
+        <topic>/front_camera/depth_image</topic>
       </plugin>
       <plugin filename="ImageDisplay" name="Down Camera">
         <gz-gui>
@@ -182,33 +182,16 @@
       </attenuation>
     </light>
 
-    <model name="imav">
-      <static>true</static>
-      <pose>0 0 0 0 0 0</pose> 
-      <link name="base_link">
-        <collision name="collision">
-          <geometry>
-            <mesh>
-              <uri>model://imav/meshes/all.stl</uri>
-              <scale>1 1 1</scale>
-            </mesh>
-          </geometry>
-        </collision>
-        <visual name="visual">
-          <geometry>
-            <mesh>
-              <uri>model://imav/meshes/all.dae</uri>
-              <scale>1 1 1</scale>
-            </mesh>
-          </geometry>
-        </visual>
-      </link>
-    </model>
+    <include>
+      <uri>model://imav</uri>
+      <name>imav</name>
+      <pose>0 0 0 0 0 0</pose>
+    </include>
 
     <include>
       <uri>model://iris_with_gimbal</uri>
       <name>iris</name>
-      <pose degrees="true">-6 3.2 0.195 0 0 0</pose>
+      <pose degrees="true">-6 2.29 0.195 0 0 0</pose>
       
       <plugin filename="gz-sim-pose-publisher-system"
         name="gz::sim::systems::PosePublisher">
@@ -218,7 +201,7 @@
       </plugin>
     </include>
 
-    <model name="north_camera">
+    <model name="front_camera">
       <static>false</static>
       <pose relative_to="iris::iris_with_standoffs::base_link">0.18 0 -0.02 0 0 0</pose>
       <link name="link">
@@ -237,12 +220,12 @@
             <diffuse>0.6 0.6 0.6 1</diffuse>
           </material>
         </visual>
-        <sensor name="north_rgbd" type="rgbd_camera">
+        <sensor name="front_rgbd" type="rgbd_camera">
           <always_on>true</always_on>
           <update_rate>15</update_rate>
-          <topic>/north_camera</topic>
+          <topic>/front_camera</topic>
           <camera>
-            <horizontal_fov>1.5184</horizontal_fov>
+            <horizontal_fov>1.2043</horizontal_fov>
             <image>
               <width>640</width>
               <height>480</height>
@@ -262,9 +245,9 @@
         </sensor>
       </link>
     </model>
-    <joint name="north_camera_joint" type="fixed">
+    <joint name="front_camera_joint" type="fixed">
       <parent>iris::iris_with_standoffs::base_link</parent>
-      <child>north_camera::link</child>
+      <child>front_camera::link</child>
     </joint>
 
     <model name="down_camera">
@@ -291,7 +274,7 @@
           <update_rate>15</update_rate>
           <topic>/down_camera</topic>
           <camera>
-            <horizontal_fov>1.047</horizontal_fov>
+            <horizontal_fov>1.5009</horizontal_fov>
             <image>
               <width>640</width>
               <height>480</height>

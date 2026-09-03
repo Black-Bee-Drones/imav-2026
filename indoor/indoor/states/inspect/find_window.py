@@ -29,7 +29,10 @@ class FindWindow(State):
 
         drone: MavlinkDrone = blackboard.get('drone')
 
-        handler: ImageHandler = blackboard.get('image_handler_south')
+        handler: ImageHandler | None = blackboard.get('image_handler_south')
+        if handler is None:
+            yasmin.YASMIN_LOG_WARN('FindWindow: no south camera, skip.')
+            return CANCEL
         handler.image_processing_callback = blackboard.get('callback_gate')
 
         for _ in range(30):

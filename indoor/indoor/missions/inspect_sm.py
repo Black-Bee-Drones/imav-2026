@@ -39,8 +39,9 @@ class InspectSM(StateMachine):
             Window('room'),
             transitions={
                 SUCCEED: 'COUNT_BABIES',
+                'skip': 'COUNT_BABIES',
                 TIMEOUT: CANCEL,
-                'reacquire': 'FIND_WINDOW'
+                'reacquire': 'FIND_WINDOW',
             },
         )
 

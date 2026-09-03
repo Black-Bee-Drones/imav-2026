@@ -53,6 +53,7 @@ class GoToObstacles(State):
                 z=z,
                 yaw=0,
                 reference=MoveReference.TAKEOFF,
+                precision=0.12,
             )
 
             if self.check_timeout():

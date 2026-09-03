@@ -23,6 +23,18 @@ class TESTGATE(Config):
     droping_skip: bool = True
     precise_skip: bool = True
     rtl: bool = False
+    obstacle_gate_first_skip: bool = True
+    obstacle_gate_second_skip: bool = True
+
+
+@dataclass
+class TESTWINDOWS(Config):
+    inspect_skip: bool = True
+    droping_skip: bool = True
+    precise_skip: bool = True
+    rtl: bool = False
+    obstacle_gate_first_skip: bool = False
+    obstacle_gate_second_skip: bool = False
 
 
 @dataclass
@@ -54,6 +66,7 @@ PRESETS: dict[str, Type[Config]] = {
     'CLEITINHO': CLEITINHO,
     'JORGE': JORGE,
     'TESTGATE': TESTGATE,
+    'TESTWINDOWS': TESTWINDOWS,
     'TESTBABIES': TESTBABIES,
     'COMPLETE_MISSION1': COMPLETE_MISSION1,
 }
@@ -70,7 +83,4 @@ def list_presets() -> list[str]:
 
 
 def register_preset(name: str, cls: Type[Config]) -> None:
-    """Used by customization.py to make a freshly-saved preset available
-    for the rest of this process (e.g. immediately listable), on top of
-    it being appended to presets.py on disk for future runs."""
     PRESETS[name] = cls

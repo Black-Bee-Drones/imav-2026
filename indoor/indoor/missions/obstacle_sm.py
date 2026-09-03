@@ -5,8 +5,9 @@ from indoor.states import (
     GoToObstacles,
     Window,
     ReacquireWindow,
-    RedBar,
-    BlueBar,
+    ToBarCorridor,
+    FindCenterDescendBars,
+    PassBlue,
     Tubes,
 )
 
@@ -16,80 +17,91 @@ class ObstacleSM(StateMachine):
         super().__init__(outcomes=[SUCCEED, CANCEL])
 
         self.add_state(
-            'GO_TO_OBSTACLES',
+            "GO_TO_OBSTACLES",
             GoToObstacles(),
             transitions={
-                SUCCEED: 'FIRST_WINDOW',
+                SUCCEED: "FIRST_WINDOW",
                 CANCEL: CANCEL,
                 TIMEOUT: CANCEL,
-            }
-        )
-
-        self.add_state(
-            'FIRST_WINDOW',
-            Window('first'),
-            transitions={
-                SUCCEED: 'RED_BAR',
-                TIMEOUT: CANCEL,
-                'reacquire': 'REACQUIRE_FIRST_WINDOW',
             },
         )
 
         self.add_state(
-            'REACQUIRE_FIRST_WINDOW',
-            ReacquireWindow('first'),
+            "FIRST_WINDOW",
+            Window("first"),
             transitions={
-                SUCCEED: 'FIRST_WINDOW',
-                CANCEL: 'FIRST_WINDOW',
+                SUCCEED: "TO_BAR_CORRIDOR",
+                "skip": "TO_BAR_CORRIDOR",
                 TIMEOUT: CANCEL,
+                "reacquire": "REACQUIRE_FIRST_WINDOW",
             },
         )
 
         self.add_state(
-            'RED_BAR',
-            RedBar(),
+            "REACQUIRE_FIRST_WINDOW",
+            ReacquireWindow("first"),
             transitions={
-                SUCCEED: 'BLUE_BAR',
+                SUCCEED: "FIRST_WINDOW",
+                CANCEL: "TO_BAR_CORRIDOR",
                 TIMEOUT: CANCEL,
             },
         )
 
         self.add_state(
-            'BLUE_BAR',
-            BlueBar(),
+            "TO_BAR_CORRIDOR",
+            ToBarCorridor(),
             transitions={
-                SUCCEED: 'TUBES',
+                SUCCEED: "FIND_CENTER_DESCEND_BARS",
                 TIMEOUT: CANCEL,
             },
         )
 
         self.add_state(
-            'TUBES',
+            "FIND_CENTER_DESCEND_BARS",
+            FindCenterDescendBars(),
+            transitions={
+                SUCCEED: "PASS_BLUE",
+                TIMEOUT: CANCEL,
+            },
+        )
+
+        self.add_state(
+            "PASS_BLUE",
+            PassBlue(),
+            transitions={
+                SUCCEED: "TUBES",
+                TIMEOUT: CANCEL,
+            },
+        )
+
+        self.add_state(
+            "TUBES",
             Tubes(),
             transitions={
-                SUCCEED: 'SECOND_WINDOW',
+                SUCCEED: "SECOND_WINDOW",
                 TIMEOUT: CANCEL,
             },
         )
 
         self.add_state(
-            'SECOND_WINDOW',
-            Window('second'),
+            "SECOND_WINDOW",
+            Window("second"),
             transitions={
                 SUCCEED: SUCCEED,
+                "skip": SUCCEED,
                 TIMEOUT: CANCEL,
-                'reacquire': 'REACQUIRE_SECOND_WINDOW',
+                "reacquire": "REACQUIRE_SECOND_WINDOW",
             },
         )
 
         self.add_state(
-            'REACQUIRE_SECOND_WINDOW',
-            ReacquireWindow('second'),
+            "REACQUIRE_SECOND_WINDOW",
+            ReacquireWindow("second"),
             transitions={
-                SUCCEED: 'SECOND_WINDOW',
-                CANCEL: 'SECOND_WINDOW',
+                SUCCEED: "SECOND_WINDOW",
+                CANCEL: SUCCEED,
                 TIMEOUT: CANCEL,
             },
         )
 
-        self.set_start_state('GO_TO_OBSTACLES')
+        self.set_start_state("GO_TO_OBSTACLES")
