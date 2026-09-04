@@ -27,15 +27,18 @@ _EDGE_PX = 16
 _MOVE_PRECISION = 0.12
 _GAP_OVERRUN_M = 0.25
 
+
 def _in_fov(cx: float, cy: float, width: int, height: int) -> bool:
     if isnan(cx) or isnan(cy):
         return False
     return _EDGE_PX <= cx < width - _EDGE_PX and _EDGE_PX <= cy < height - _EDGE_PX
 
+
 def _half_gap_px(focal: float, bar_gap: float, altitude: float | None) -> float:
     if altitude is None:
         return 0.0
     return ImageCalculus.meters_to_pixels(bar_gap / 2.0, max(altitude, 0.5), focal)
+
 
 def _takeoff_x(drone: MavlinkDrone) -> float | None:
     pose = drone.position or getattr(drone, "local_pose", None)
@@ -58,7 +61,7 @@ class FindCenterDescendBars(State):
         self.node = YasminNode.get_instance()
 
     def execute(self, blackboard: Blackboard):
-        config: Config = blackboard.get('config')
+        config: Config = blackboard.get("config")
         drone: MavlinkDrone = blackboard.get("drone")
 
         safe_alt: float = config.safe_alt

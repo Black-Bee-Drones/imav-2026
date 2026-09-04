@@ -8,7 +8,7 @@ from ament_index_python.packages import get_package_share_directory
 
 
 def _models_path() -> Path:
-    return Path(get_package_share_directory('indoor')) / 'models'
+    return Path(get_package_share_directory("indoor")) / "models"
 
 
 def _resolve_model(value: str) -> str:
@@ -26,52 +26,58 @@ class Config:
     safe_alt: float = 3.0
     max_alt: float = 7.0
 
-    drone_type: str = 'mavlink'
-    drone_connection_string: str = 'udp:127.0.0.1:14551'
+    drone_type: str = "mavlink"
+    drone_connection_string: str = "udp:127.0.0.1:14551"
 
-    model_gate_source: str = 'gate-mangalarga.pt'
+    model_gate_source: str = "gate-mangalarga.pt"
     model_gate_conf: float = 0.5
-    model_gate_class_name: str = 'blue'
+    model_gate_class_name: str = "blue"
 
-    model_baby_source: str = 'yolo26n.pt'
+    model_baby_source: str = "yolo26n.pt"
     model_baby_conf: float = 0.25
     model_baby_overlap_iou: float = 0.3
     model_baby_classes_names: list = field(
-        default_factory=lambda: ['person', 'teddy bear']
+        default_factory=lambda: ["person", "teddy bear"]
     )
     model_baby_sample_count: int = 15
 
-    model_box_source: str = 'package.pt'
+    model_box_source: str = "package.pt"
     model_box_conf: float = 0.5
 
     aruco_marker_dict: int = 5
     aruco_size: float = 1.0
     color_calibration_path: Optional[str] = None
 
-    # North: RealSense D435i (color + depth)
-    camera_north_source: str = 'ros_depth'
-    camera_north_topic: str = '/camera/color/image_raw/compressed'
+    # North: RealSense D435i RGB (Intel 69.4° x 42.5° x 77° ±3°)
+    camera_north_source: str = "ros_depth"
+    camera_north_topic: str = "/camera/color/image_raw/compressed"
     camera_north_is_compressed: bool = True
     camera_north_id: int = 2
-    camera_north_depth_topic: str = '/camera/depth/image_rect_raw'
+    camera_north_depth_topic: str = "/camera/depth/image_rect_raw"
     camera_north_offset_z: float = 0.08
     camera_north_offset_y: float = 0.0
-    camera_north_hfov: float = radians(69)
+    camera_north_hfov: float = radians(69.4)
+    camera_north_vfov: float = radians(42.5)
 
-    # South: Logitech C920, looking aft
-    camera_south_source: str = 'opencv'
-    camera_south_topic: str = '/south_camera'
+    # South: Logitech C920, looking aft (70.42° H, 43.3° V, 78° diag)
+    camera_south_source: str = "opencv"
+    camera_south_topic: str = "/south_camera"
     camera_south_is_compressed: bool = True
-    camera_south_id: int = 2
+    camera_south_id: int = 10
+    camera_south_offset_z: float = 0.0
+    camera_south_offset_y: float = 0.0
+    camera_south_hfov: float = radians(70.42)
+    camera_south_vfov: float = radians(43.3)
 
-    # Down: IMX662
-    camera_down_source: str = 'opencv'
-    camera_down_topic: str = '/down_camera'
+    # Down: IMX662 (Arducam datasheet 86° H x 47° V)
+    camera_down_source: str = "opencv"
+    camera_down_topic: str = "/down_camera"
     camera_down_is_compressed: bool = True
-    camera_down_id: int = 0
+    camera_down_id: int = 6
     camera_down_offset_x: float = 0.05
     camera_down_offset_y: float = 0.0
     camera_down_hfov: float = radians(86)
+    camera_down_vfov: float = radians(47)
 
     takeoff_alt: float = 1.2
     skip_takeoff: bool = False
@@ -79,12 +85,15 @@ class Config:
 
     obstacle_skip: bool = False
     obstacle_timeout: int = 300
-    obstacle_xy_kp: float = 0.00058
+    obstacle_xy_kp: float = 0.00069
     obstacle_xy_kd: float = 0.0
     obstacle_xy_ki: float = 0.0
-    obstacle_z_kp: float = 0.00072
+    obstacle_z_kp: float = 0.00076
     obstacle_z_kd: float = 0.0
     obstacle_z_ki: float = 0.0
+    obstacle_output_min: float = -0.19
+    obstacle_output_max: float = 0.19
+    obstacle_output_deadband: float = 0.08
     obstacle_alt_kp: float = 0.4
 
     obstacle_start_x: float = -0.5
@@ -96,8 +105,15 @@ class Config:
     obstacle_gate_align_only: bool = False
     obstacle_gate_alt: float = 1.2
     obstacle_gate_lost_tolerance: int = 15
-    obstacle_gate_aligned_tolerance: int = 70
-    obstacle_gate_aligned_threshold: int = 5
+    obstacle_gate_aligned_tolerance: int = 35
+    obstacle_gate_aligned_threshold: int = 9
+    obstacle_gate_aligned_tolerance_m: float = 0.05
+    obstacle_gate_kp: float = 0.60
+    obstacle_gate_kd: float = 0.0
+    obstacle_gate_ki: float = 0.0
+    obstacle_gate_output_min: float = -0.18
+    obstacle_gate_output_max: float = 0.18
+    obstacle_gate_output_deadband: float = 0.03
     obstacle_gate_pass_x: float = 1.5
     obstacle_gate_creep_vx: float = 0.15
     obstacle_gate_standoff: float = 1.3
@@ -112,8 +128,8 @@ class Config:
     obstacle_blue_step_alt_1: float = 0.2
     obstacle_blue_step_alt_2: float = 0.4
     obstacle_blue_step_alt_3: float = 0.6
-    obstacle_bar_red_color: str = 'red'
-    obstacle_bar_blue_color: str = 'blue'
+    obstacle_bar_red_color: str = "red"
+    obstacle_bar_blue_color: str = "blue"
     obstacle_bar_center_tolerance: float = 20.0
     obstacle_bar_acquire_timeout: float = 30.0
     obstacle_bar_find_vx: float = 0.15
@@ -178,7 +194,7 @@ class Config:
     controller_yaw_integral_max: float = 0.1
 
     inspect_babies_output_path: Path = field(
-        default_factory=lambda: Path.home() / 'ros2_ws'
+        default_factory=lambda: Path.home() / "ros2_ws"
     )
     obstacle_start_time: object = None
     inspect_start_time: object = None
@@ -193,42 +209,45 @@ class Config:
     @classmethod
     def list_preset(cls) -> list:
         from indoor import presets
+
         return presets.list_presets()
 
-    def apply_args(self, args: Namespace) -> 'Config':
+    def apply_args(self, args: Namespace) -> "Config":
         config = self
 
         if args.preset is not None:
-            if args.preset == 'custom':
+            if args.preset == "custom":
                 from indoor.customization import run_customization_wizard
+
                 config = replace(config, **run_customization_wizard())
             else:
                 from indoor import presets
+
                 config = presets.get_preset(args.preset)()
 
         if args.sitl:
             calib = None
             try:
                 calib = str(
-                    Path(get_package_share_directory('indoor'))
-                    / 'config'
-                    / 'sitl_color_calibration.json'
+                    Path(get_package_share_directory("indoor"))
+                    / "config"
+                    / "sitl_color_calibration.json"
                 )
             except Exception:
                 calib = None
             config = replace(
                 config,
                 sitl=True,
-                drone_connection_string='tcp:127.0.0.1:5762',
-                camera_north_source='ros_depth',
-                camera_north_topic='/front_camera/image',
+                drone_connection_string="tcp:127.0.0.1:5762",
+                camera_north_source="ros_depth",
+                camera_north_topic="/front_camera/image",
                 camera_north_is_compressed=False,
-                camera_north_depth_topic='/front_camera/depth_image',
+                camera_north_depth_topic="/front_camera/depth_image",
                 camera_north_offset_z=-0.02,
                 camera_north_offset_y=0.0,
-                camera_south_source='skip',
-                camera_down_source='ros',
-                camera_down_topic='/down_camera',
+                camera_south_source="skip",
+                camera_down_source="ros",
+                camera_down_topic="/down_camera",
                 camera_down_is_compressed=False,
                 camera_down_offset_x=0.0,
                 camera_down_offset_y=0.0,
@@ -244,7 +263,7 @@ class Config:
             config = replace(config, droping_skip=True)
         if args.precise_skip:
             config = replace(config, precise_skip=True)
-        if getattr(args, 'no_takeoff', False):
+        if getattr(args, "no_takeoff", False):
             config = replace(config, skip_takeoff=True)
 
         return config

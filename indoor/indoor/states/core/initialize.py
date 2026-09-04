@@ -100,6 +100,7 @@ class Initialize(State):
         self._save_q = queue.Queue(maxsize=24)
         self._save_thread = threading.Thread(target=self._save_worker, daemon=True)
         self._save_thread.start()
+        blackboard.set('save_jpg', self._save_jpg)
 
         yasmin.YASMIN_LOG_INFO('Initializing...')
 
@@ -262,7 +263,6 @@ class Initialize(State):
         annotated = self.detector_gate.draw_detections(image, result)
         result.annotated_image = annotated
         self._save_jpg('gate', 'raw', image)
-        self._save_jpg('gate_annotated', 'annotated', annotated)
         return result
 
     def callback_detector_box(self, image: np.ndarray) -> DetectionResult:
