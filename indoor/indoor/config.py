@@ -53,8 +53,9 @@ class Config:
     camera_north_topic: str = "/camera/color/image_raw/compressed"
     camera_north_is_compressed: bool = True
     camera_north_id: int = 2
-    camera_north_depth_topic: str = "/camera/depth/image_rect_raw"
-    camera_north_offset_z: float = 0.08
+    camera_north_depth_topic: str = "/camera/aligned_depth_to_color/image_raw"
+    camera_north_depth_topic_fallback: str = "/camera/depth/image_rect_raw"
+    camera_north_offset_z: float = 0.11
     camera_north_offset_y: float = 0.0
     camera_north_hfov: float = radians(69.4)
     camera_north_vfov: float = radians(42.5)
@@ -74,12 +75,12 @@ class Config:
     camera_down_topic: str = "/down_camera"
     camera_down_is_compressed: bool = True
     camera_down_id: int = 6
-    camera_down_offset_x: float = 0.05
+    camera_down_offset_x: float = 0.11
     camera_down_offset_y: float = 0.0
     camera_down_hfov: float = radians(86)
     camera_down_vfov: float = radians(47)
 
-    takeoff_alt: float = 1.2
+    takeoff_alt: float = 1.1
     skip_takeoff: bool = False
     rtl: bool = False
 
@@ -88,45 +89,49 @@ class Config:
     obstacle_xy_kp: float = 0.00069
     obstacle_xy_kd: float = 0.0
     obstacle_xy_ki: float = 0.0
-    obstacle_z_kp: float = 0.00076
-    obstacle_z_kd: float = 0.0
-    obstacle_z_ki: float = 0.0
-    obstacle_output_min: float = -0.19
-    obstacle_output_max: float = 0.19
-    obstacle_output_deadband: float = 0.08
     obstacle_alt_kp: float = 0.4
 
-    obstacle_start_x: float = -0.5
-    obstacle_start_y: float = -2.29
+    obstacle_start_x: float = -0.48
+    obstacle_start_y: float = -2.5
 
     obstacle_gate_first_skip: bool = False
     obstacle_gate_second_skip: bool = False
     obstacle_gate_room_skip: bool = False
+    obstacle_after_first_skip: bool = False
     obstacle_gate_align_only: bool = False
-    obstacle_gate_alt: float = 1.2
+    obstacle_gate_alt: float = 1.1
     obstacle_gate_lost_tolerance: int = 15
     obstacle_gate_aligned_tolerance: int = 35
-    obstacle_gate_aligned_threshold: int = 9
+    obstacle_gate_aligned_threshold: int = 10
     obstacle_gate_aligned_tolerance_m: float = 0.05
-    obstacle_gate_kp: float = 0.60
+    obstacle_gate_center_z_down_m: float = 0.121
+    obstacle_gate_kp: float = 0.5874
+    obstacle_gate_z_kp: float = 0.731
     obstacle_gate_kd: float = 0.0
     obstacle_gate_ki: float = 0.0
     obstacle_gate_output_min: float = -0.18
     obstacle_gate_output_max: float = 0.18
     obstacle_gate_output_deadband: float = 0.03
     obstacle_gate_pass_x: float = 1.5
-    obstacle_gate_creep_vx: float = 0.15
-    obstacle_gate_standoff: float = 1.3
+    obstacle_gate_creep_vx: float = 0.071
+    obstacle_gate_standoff: float = 0.79
+    obstacle_gate_width: float = 0.60
+    obstacle_gate_height: float = 0.50
+    obstacle_gate_bbox_frac: float = 0.75
+    obstacle_gate_depth_min: float = 0.45
+    obstacle_gate_depth_max: float = 2.2
+    obstacle_gate_frame_expand: float = 0.27
+    obstacle_gate_fuse_delta: float = 0.4
+    obstacle_gate_commit_extra: float = 0.65
 
     obstacle_red: Optional[int] = 3
     obstacle_red_step_alt_1: float = 1.7
     obstacle_red_step_alt_2: float = 2.1
-    obstacle_red_step_alt_3: float = 3.1
+    obstacle_red_step_alt_3: float = 2.71
 
     obstacle_blue_1: Optional[int] = 2
-    obstacle_blue_2: Optional[int] = 2
     obstacle_blue_step_alt_1: float = 0.2
-    obstacle_blue_step_alt_2: float = 0.4
+    obstacle_blue_step_alt_2: float = 0.22
     obstacle_blue_step_alt_3: float = 0.6
     obstacle_bar_red_color: str = "red"
     obstacle_bar_blue_color: str = "blue"
@@ -134,7 +139,7 @@ class Config:
     obstacle_bar_acquire_timeout: float = 30.0
     obstacle_bar_find_vx: float = 0.15
     obstacle_bar_pass_x: float = 1.8
-    obstacle_bar_start_x: float = 2.0
+    obstacle_bar_start_x: float = 1.84
     obstacle_bar_gap: float = 1.0
     obstacle_bar_roi_w: int = 640
     obstacle_bar_roi_h: int = 480
@@ -154,7 +159,6 @@ class Config:
     inspect_babies_count: Optional[int] = None
     inspect_go_out_x: float = 1.5
 
-    drop_cone_enabled: bool = True
     droping_skip: bool = False
 
     precise_skip: bool = False
@@ -178,13 +182,6 @@ class Config:
     controller_xy_output_max: float = 0.1
     controller_xy_integral_min: float = -0.1
     controller_xy_integral_max: float = 0.1
-    controller_z_kp: float = 0.000711
-    controller_z_kd: float = 0.0
-    controller_z_ki: float = 0.0
-    controller_z_output_min: float = -0.1
-    controller_z_output_max: float = 0.1
-    controller_z_integral_min: float = -0.1
-    controller_z_integral_max: float = 0.1
     controller_yaw_kp: float = 0.0000111
     controller_yaw_kd: float = 0.0
     controller_yaw_ki: float = 0
@@ -199,7 +196,6 @@ class Config:
     obstacle_start_time: object = None
     inspect_start_time: object = None
     precise_start_time: object = None
-    inspect_babies_boxes: Optional[list] = None
 
     def __post_init__(self):
         self.model_gate_source = _resolve_model(self.model_gate_source)

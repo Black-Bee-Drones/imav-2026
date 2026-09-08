@@ -25,6 +25,7 @@ from nectar.vision import (
 )
 
 from ...config import Config
+from ...gate_range import pick_depth_topic
 
 _JPEG_QUALITY = 80
 
@@ -200,6 +201,20 @@ class Initialize(State):
         source = getattr(config, f'camera_{which}_source')
         yasmin.YASMIN_LOG_INFO(f'Initializing ImageHandler({which})...')
         try:
+            if which == 'north' and source == 'ros_depth' and not config.sitl:
+                picked = pick_depth_topic(
+                    self.node,
+                    config.camera_north_depth_topic,
+                    config.camera_north_depth_topic_fallback,
+                )
+                if picked != config.camera_north_depth_topic:
+                    yasmin.YASMIN_LOG_WARN(
+                        f'North depth {config.camera_north_depth_topic} missing, '
+                        f'using {picked}.'
+                    )
+                else:
+                    yasmin.YASMIN_LOG_INFO(f'North depth topic {picked}.')
+                config.camera_north_depth_topic = picked
             handler_config = _camera_config(source, config, which)
             if handler_config is None:
                 yasmin.YASMIN_LOG_WARN(f'ImageHandler({which}) skipped.')

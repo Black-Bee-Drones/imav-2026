@@ -117,7 +117,6 @@ def customize_obstacle_stage():
     window1 = select_single("Obstacle stage: Window 1 - which color?", _COLOR_OR_SKIP)
     red_bar = select_single("Obstacle stage: Red bar - which height? (skip = don't attempt)", _BAR_STEP_OR_SKIP)
     blue_bar1 = select_single("Obstacle stage: Blue bar 1 - which height?", _BAR_STEP_OR_SKIP)
-    blue_bar2 = select_single("Obstacle stage: Blue bar 2 - which height?", _BAR_STEP_OR_SKIP)
     tubes = select_single("Obstacle stage: Attempt the tube obstacle avoidance?", _YES_NO)
     window2 = select_single("Obstacle stage: Window 2 - which color?", _COLOR_OR_SKIP)
 
@@ -125,7 +124,6 @@ def customize_obstacle_stage():
         "obstacle_gate_first_skip": window1 is None,
         "obstacle_red": red_bar,
         "obstacle_blue_1": blue_bar1,
-        "obstacle_blue_2": blue_bar2,
         "obstacle_tubes_skip": not tubes,
         "obstacle_gate_second_skip": window2 is None,
     }
@@ -155,12 +153,6 @@ def customize_inspect_stage():
     return overrides
 
 
-def customize_dropping_stage():
-    """Dropping stage: drop the cone or not."""
-    drop = select_single("Dropping stage: Drop the cone?", _YES_NO)
-    return {"drop_cone_enabled": drop}
-
-
 def customize_landing():
     """Landing behavior after the selected stages are done."""
     return select_single(
@@ -182,7 +174,6 @@ _RUNTIME_FIELDS = {
     'obstacle_start_time',
     'inspect_start_time',
     'precise_start_time',
-    'inspect_babies_boxes',
 }
 
 
@@ -339,8 +330,6 @@ def run_customization_wizard():
         overrides.update(customize_obstacle_stage())
     if "inspect" in stage_choices:
         overrides.update(customize_inspect_stage())
-    if "dropping" in stage_choices:
-        overrides.update(customize_dropping_stage())
 
     landing_mode = customize_landing()
     overrides["rtl"] = landing_mode == "rtl"

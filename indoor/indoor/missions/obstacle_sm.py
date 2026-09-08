@@ -52,6 +52,7 @@ class ObstacleSM(StateMachine):
             ToBarCorridor(),
             transitions={
                 SUCCEED: "FIND_CENTER_DESCEND_BARS",
+                CANCEL: CANCEL,
                 TIMEOUT: CANCEL,
             },
         )

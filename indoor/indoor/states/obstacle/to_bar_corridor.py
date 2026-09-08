@@ -3,7 +3,7 @@ from rclpy.time import Time, Duration
 import yasmin
 from yasmin import State, Blackboard
 from yasmin_ros.yasmin_node import YasminNode
-from yasmin_ros.basic_outcomes import SUCCEED, TIMEOUT
+from yasmin_ros.basic_outcomes import SUCCEED, CANCEL, TIMEOUT
 
 from nectar.control import MavlinkDrone, MoveReference
 
@@ -11,7 +11,7 @@ from ...config import Config
 
 class ToBarCorridor(State):
     def __init__(self):
-        super().__init__(outcomes=[SUCCEED, TIMEOUT])
+        super().__init__(outcomes=[SUCCEED, CANCEL, TIMEOUT])
 
         self.node = YasminNode.get_instance()
 
@@ -25,6 +25,9 @@ class ToBarCorridor(State):
 
         self.start_mission: Time = config.obstacle_start_time
         self.mission_timeout: int = config.obstacle_timeout
+
+        if config.obstacle_after_first_skip:
+            return CANCEL
 
         start_x: float = config.obstacle_bar_start_x
         start_y: float = config.obstacle_start_y

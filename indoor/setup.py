@@ -45,7 +45,8 @@ setup(
     },
     entry_points={
         'console_scripts': [
-            f'mangalarga = {package_name}.mangalarga:main'
+            f'mangalarga = {package_name}.mangalarga:main',
+            f'gate_depth_check = {package_name}.gate_depth_check:main',
         ],
     },
 )
