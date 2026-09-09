@@ -109,7 +109,7 @@ class Config:
     obstacle_gate_aligned_tolerance: int = 35
     obstacle_gate_aligned_threshold: int = 10
     obstacle_gate_aligned_tolerance_m: float = 0.05
-    obstacle_gate_center_z_down_m: float = 0.121
+    obstacle_gate_center_z_down_m: float = 0.1116
     obstacle_gate_kp: float = 0.5874
     obstacle_gate_z_kp: float = 0.731
     obstacle_gate_kd: float = 0.0
