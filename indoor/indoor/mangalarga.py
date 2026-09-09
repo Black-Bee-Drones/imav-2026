@@ -34,7 +34,9 @@ def main(args=None):
 
     rclpy.init(args=args)
     set_ros_loggers()
-    nectar.use_executor(YasminNode.get_instance()._executor)
+    executor = YasminNode.get_instance()._executor
+    if executor is not None:
+        nectar.use_executor(executor)
 
     indoor_sm = None
     try:
