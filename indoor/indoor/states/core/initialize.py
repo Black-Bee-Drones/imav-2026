@@ -113,7 +113,7 @@ class Initialize(State):
             return detector
 
         try:
-            with ThreadPoolExecutor(max_workers=3) as pool:
+            with ThreadPoolExecutor(max_workers=4) as pool:
                 fut_gate = pool.submit(
                     load_detector, 'gate', config.model_gate_source, config.model_gate_conf
                 )
@@ -122,6 +122,12 @@ class Initialize(State):
                 )
                 fut_box = pool.submit(
                     load_detector, 'box', config.model_box_source, config.model_box_conf
+                )
+                fut_lines = pool.submit(
+                    load_detector,
+                    'lines',
+                    config.model_lines_source,
+                    config.model_lines_conf,
                 )
 
                 drone_type = config.drone_type
@@ -148,6 +154,7 @@ class Initialize(State):
                 self.detector_gate = fut_gate.result()
                 self.detector_baby = fut_baby.result()
                 self.detector_box = fut_box.result()
+                self.detector_lines = fut_lines.result()
 
             blackboard.set('detector_gate', self.detector_gate)
             blackboard.set('callback_gate', self.callback_detector_gate)
@@ -155,6 +162,8 @@ class Initialize(State):
             blackboard.set('callback_baby', self.callback_detector_baby)
             blackboard.set('detector_box', self.detector_box)
             blackboard.set('callback_box', self.callback_detector_box)
+            blackboard.set('detector_lines', self.detector_lines)
+            blackboard.set('callback_lines', self.callback_detector_lines)
         except KeyboardInterrupt:
             yasmin.YASMIN_LOG_WARN('Execution interrupted by user.')
             return ABORT
@@ -296,6 +305,15 @@ class Initialize(State):
         result.annotated_image = annotated
         self._save_jpg('baby', 'raw', image)
         self._save_jpg('baby_annotated', 'annotated', annotated)
+        return result
+
+    def callback_detector_lines(self, image: np.ndarray) -> DetectionResult:
+        result = self.detector_lines.detect(image)
+        result.image = image
+        annotated = self.detector_lines.draw_detections(image, result)
+        result.annotated_image = annotated
+        self._save_jpg('lines', 'raw', image)
+        self._save_jpg('lines_annotated', 'annotated', annotated)
         return result
 
     def callback_aruco(self, image: np.ndarray):

@@ -44,6 +44,11 @@ class Config:
     model_box_source: str = "package.pt"
     model_box_conf: float = 0.5
 
+    model_lines_source: str = "lines.pt"
+    model_lines_conf: float = 0.25
+    model_lines_red_class_name: str = "red"
+    model_lines_blue_class_name: str = "blue"
+
     aruco_marker_dict: int = 5
     aruco_size: float = 1.0
     color_calibration_path: Optional[str] = None
@@ -202,6 +207,7 @@ class Config:
         self.model_gate_source = _resolve_model(self.model_gate_source)
         self.model_baby_source = _resolve_model(self.model_baby_source)
         self.model_box_source = _resolve_model(self.model_box_source)
+        self.model_lines_source = _resolve_model(self.model_lines_source)
 
     @classmethod
     def list_preset(cls) -> list:

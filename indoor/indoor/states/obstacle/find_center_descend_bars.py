@@ -9,13 +9,11 @@ from yasmin import State, Blackboard
 from yasmin_ros.yasmin_node import YasminNode
 from yasmin_ros.basic_outcomes import SUCCEED, TIMEOUT
 
+from nectar.ai import DetectionResult
 from nectar.control import MavlinkDrone, MoveReference, PIDController
 from nectar.vision import (
-    ColorSpace,
     ImageCalculus,
     ImageHandler,
-    LineDetector,
-    RotatedRect,
 )
 
 from ...config import Config
@@ -37,6 +35,15 @@ def _half_gap_px(focal: float, bar_gap: float, altitude: float | None) -> float:
     if altitude is None:
         return 0.0
     return ImageCalculus.meters_to_pixels(bar_gap / 2.0, max(altitude, 0.5), focal)
+
+
+def _class_center(result: DetectionResult, class_name: str):
+    detections = result.filter_by_class([class_name])
+    if not detections:
+        return float("nan"), float("nan")
+    detection = max(detections, key=lambda item: item.confidence)
+    x1, y1, x2, y2 = detection.xyxy
+    return 0.5 * (x1 + x2), 0.5 * (y1 + y2)
 
 
 class FindCenterDescendBars(State):
@@ -76,34 +83,7 @@ class FindCenterDescendBars(State):
             return self._hold_and_descend(drone, alt_1)
 
         handler: ImageHandler = blackboard.get("image_handler_down")
-        handler.image_processing_callback = None
-
-        det_red = det_blue = None
-        calib = config.color_calibration_path
-        if calib and not Path(calib).exists():
-            yasmin.YASMIN_LOG_WARN(
-                f"Bars: calibration missing ({calib}), using default."
-            )
-            calib = None
-
-        try:
-            det_red = LineDetector(
-                color=config.obstacle_bar_red_color,
-                estimation_method=RotatedRect(),
-                color_space=ColorSpace.HSV,
-                file_path=calib,
-            )
-            det_blue = LineDetector(
-                color=config.obstacle_bar_blue_color,
-                estimation_method=RotatedRect(),
-                color_space=ColorSpace.LAB,
-                file_path=calib,
-            )
-        except ValueError as e:
-            yasmin.YASMIN_LOG_WARN(
-                f"Bars: LineDetector load failed ({e}). Hold altitude."
-            )
-            return self._hold_and_descend(drone, alt_1)
+        handler.image_processing_callback = blackboard.get("callback_lines")
 
         center_tol = config.obstacle_bar_center_tolerance
         acquire_timeout = config.obstacle_bar_acquire_timeout
@@ -141,10 +121,11 @@ class FindCenterDescendBars(State):
                 drone.move_velocity()
                 return TIMEOUT
 
-            frame = handler.take_photo()
-            if frame is None:
+            result: DetectionResult = handler.take_photo()
+            if result is None or result.image is None:
                 yasmin.YASMIN_LOG_WARN("Bars: no down frame.")
                 continue
+            frame = result.image
 
             height, width = frame.shape[:2]
             altitude = drone.get_altitude()
@@ -185,14 +166,8 @@ class FindCenterDescendBars(State):
                     offset_y_m, altitude, fx
                 )
 
-            vis_red = frame.copy()
-            vis_blue = frame.copy()
-            _, _, cx_r, cy_r, _, _, _ = det_red.detect_line(
-                vis_red, region=roi, draw=True
-            )
-            _, _, cx_b, cy_b, _, _, _ = det_blue.detect_line(
-                vis_blue, region=roi, draw=True
-            )
+            cx_r, cy_r = _class_center(result, config.model_lines_red_class_name)
+            cx_b, cy_b = _class_center(result, config.model_lines_blue_class_name)
             have_red = not isnan(cx_r) and not isnan(cy_r)
             have_blue = not isnan(cx_b) and not isnan(cy_b)
             use_red = _in_fov(cx_r, cy_r, width, height)
@@ -278,7 +253,10 @@ class FindCenterDescendBars(State):
             drone.move_velocity(vx=vx, vy=vy)
 
             if jpeg_dir is not None:
-                vis = vis_red.copy()
+                vis = result.annotated_image
+                if vis is None:
+                    vis = frame
+                vis = vis.copy()
                 cv.circle(vis, (int(mid_x), int(mid_y)), 6, (0, 255, 255), 2)
                 cv.circle(
                     vis,
