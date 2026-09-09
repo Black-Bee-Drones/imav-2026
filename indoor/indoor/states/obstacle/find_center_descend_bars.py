@@ -229,12 +229,9 @@ class FindCenterDescendBars(State):
                 continue
 
             err_x = mid_x - pid_y.setpoint
-            err_y = mid_y - pid_x.setpoint
-            offset = hypot(err_x, err_y)
             vx = -pid_x.update(mid_y)
-            vy = pid_y.update(mid_x)
 
-            if offset < center_tol:
+            if err_x < center_tol:
                 centered += 1
             else:
                 centered = 0
@@ -244,13 +241,13 @@ class FindCenterDescendBars(State):
                 f"red=({cx_r:.0f},{cy_r:.0f}) "
                 f"blue=({cx_b:.0f},{cy_b:.0f}) "
                 f"mid=({mid_x:.0f},{mid_y:.0f}) "
-                f"err x={err_x:.0f} y={err_y:.0f} px ({offset:.0f}"
-                f'{" in-gap" if offset <= center_tol else ""}) '
+                f"err x={err_x:.0f}"
+                f'{" in-gap" if err_x <= center_tol else ""}) '
                 f"{centered}/{_CENTER_FRAMES} "
-                f"| vel x={vx:.2f} y={vy:.2f} z=0.00 m/s"
+                f"| vel x={vx:.2f} z=0.00 m/s"
                 f'{"" if altitude is None else f" alt={altitude:.2f}"}'
             )
-            drone.move_velocity(vx=vx, vy=vy)
+            drone.move_velocity(vx=vx)
 
             if jpeg_dir is not None:
                 vis = result.annotated_image

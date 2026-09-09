@@ -141,7 +141,7 @@ class Config:
     obstacle_bar_red_color: str = "red"
     obstacle_bar_blue_color: str = "blue"
     obstacle_bar_center_skip: bool = False
-    obstacle_bar_center_tolerance: float = 20.0
+    obstacle_bar_center_tolerance: float = 30.0
     obstacle_bar_acquire_timeout: float = 30.0
     obstacle_bar_find_vx: float = 0.15
     obstacle_bar_pass_x: float = 1.8
