@@ -25,7 +25,6 @@ _XY_LIMIT = 0.18
 _CENTER_FRAMES = 8
 _EDGE_PX = 16
 _MOVE_PRECISION = 0.12
-_GAP_OVERRUN_M = 0.25
 
 
 def _in_fov(cx: float, cy: float, width: int, height: int) -> bool:
@@ -38,20 +37,6 @@ def _half_gap_px(focal: float, bar_gap: float, altitude: float | None) -> float:
     if altitude is None:
         return 0.0
     return ImageCalculus.meters_to_pixels(bar_gap / 2.0, max(altitude, 0.5), focal)
-
-
-def _takeoff_x(drone: MavlinkDrone) -> float | None:
-    pose = drone.position or getattr(drone, "local_pose", None)
-    takeoff = getattr(drone, "_takeoff_position", None) or getattr(
-        drone, "_takeoff_local", None
-    )
-    if pose is None or takeoff is None:
-        return None
-    px = getattr(getattr(pose, "position", None), "x", None)
-    tx = getattr(getattr(takeoff, "position", None), "x", None)
-    if px is None or tx is None:
-        return None
-    return float(px) - float(tx)
 
 
 class FindCenterDescendBars(State):
@@ -83,6 +68,12 @@ class FindCenterDescendBars(State):
 
         if self.check_timeout():
             return TIMEOUT
+
+        if config.obstacle_bar_center_skip:
+            yasmin.YASMIN_LOG_INFO(
+                f"Bars: center skip, descend to {alt_1:.2f} m."
+            )
+            return self._hold_and_descend(drone, alt_1)
 
         handler: ImageHandler = blackboard.get("image_handler_down")
         handler.image_processing_callback = None
@@ -118,10 +109,10 @@ class FindCenterDescendBars(State):
         acquire_timeout = config.obstacle_bar_acquire_timeout
         find_vx = config.obstacle_bar_find_vx
         bar_gap = config.obstacle_bar_gap
-        gap_x = config.obstacle_bar_start_x
         offset_x_m = config.camera_down_offset_x
         offset_y_m = config.camera_down_offset_y
         hfov = config.camera_down_hfov
+        vfov = config.camera_down_vfov
         roi = (
             int(config.obstacle_bar_roi_w),
             int(config.obstacle_bar_roi_h),
@@ -134,6 +125,7 @@ class FindCenterDescendBars(State):
 
         pid_x = None
         pid_y = None
+        fx = fy = 0.0
 
         phase = "find"
         centered = 0
@@ -157,13 +149,14 @@ class FindCenterDescendBars(State):
             height, width = frame.shape[:2]
             altitude = drone.get_altitude()
             if pid_x is None:
-                focal = ImageCalculus.focal_length_px(width, hfov)
+                fx = ImageCalculus.focal_length_px(width, hfov)
+                fy = ImageCalculus.focal_length_px(height, vfov)
                 pid_x = PIDController(
                     kp=config.obstacle_xy_kp,
                     kd=config.obstacle_xy_kd,
                     ki=config.obstacle_xy_ki,
                     setpoint=height / 2
-                    + ImageCalculus.meters_to_pixels(offset_x_m, altitude, focal),
+                    + ImageCalculus.meters_to_pixels(offset_x_m, altitude, fy),
                     output_limits=(-_XY_LIMIT, _XY_LIMIT),
                     output_deadband=0.02,
                 )
@@ -172,24 +165,24 @@ class FindCenterDescendBars(State):
                     kd=config.obstacle_xy_kd,
                     ki=config.obstacle_xy_ki,
                     setpoint=width / 2
-                    + ImageCalculus.meters_to_pixels(offset_y_m, altitude, focal),
+                    + ImageCalculus.meters_to_pixels(offset_y_m, altitude, fx),
                     output_limits=(-_XY_LIMIT, _XY_LIMIT),
                     output_deadband=0.02,
                 )
                 yasmin.YASMIN_LOG_INFO(
-                    f"Bars: image {width}x{height}, roi={roi[0]}x{roi[1]}, "
+                    f"Bars: image {width}x{height}, fx={fx:.0f} fy={fy:.0f} "
+                    f"roi={roi[0]}x{roi[1]}, "
                     f"setpoint=({pid_y.setpoint:.0f}, {pid_x.setpoint:.0f}) "
                     f"shift x={pid_y.setpoint - width / 2:.0f} "
                     f"y={pid_x.setpoint - height / 2:.0f} px "
                     f"(offset x={offset_x_m:.3f} y={offset_y_m:.3f} m)."
                 )
             else:
-                focal = ImageCalculus.focal_length_px(width, hfov)
                 pid_x.setpoint = height / 2 + ImageCalculus.meters_to_pixels(
-                    offset_x_m, altitude, focal
+                    offset_x_m, altitude, fy
                 )
                 pid_y.setpoint = width / 2 + ImageCalculus.meters_to_pixels(
-                    offset_y_m, altitude, focal
+                    offset_y_m, altitude, fx
                 )
 
             vis_red = frame.copy()
@@ -204,7 +197,6 @@ class FindCenterDescendBars(State):
             have_blue = not isnan(cx_b) and not isnan(cy_b)
             use_red = _in_fov(cx_r, cy_r, width, height)
             use_blue = _in_fov(cx_b, cy_b, width, height)
-            pose_x = _takeoff_x(drone)
 
             if phase == "find":
                 if use_red or use_blue:
@@ -221,13 +213,6 @@ class FindCenterDescendBars(State):
                     ):
                         yasmin.YASMIN_LOG_WARN("Bars: acquire timeout, hold altitude.")
                         return self._hold_and_descend(drone, alt_1)
-                    at_gap = pose_x is not None and pose_x >= gap_x
-                    if at_gap:
-                        yasmin.YASMIN_LOG_WARN(
-                            f"Bars: reached gap x={pose_x:.2f} m with no "
-                            "detection, hold."
-                        )
-                        return self._hold_and_descend(drone, alt_1)
                     seen = []
                     if have_red:
                         seen.append(f"red=({cx_r:.0f},{cy_r:.0f})")
@@ -235,8 +220,7 @@ class FindCenterDescendBars(State):
                         seen.append(f"blue=({cx_b:.0f},{cy_b:.0f})")
                     yasmin.YASMIN_LOG_INFO(
                         f"Bars find vx={find_vx:.2f} "
-                        f'detections=[{", ".join(seen) or "none"}]'
-                        f'{"" if pose_x is None else f" x={pose_x:.2f}"}.'
+                        f'detections=[{", ".join(seen) or "none"}].'
                     )
                     drone.move_velocity(vx=find_vx)
                     continue
@@ -246,12 +230,12 @@ class FindCenterDescendBars(State):
                 mid_y = 0.5 * (cy_r + cy_b)
                 source = "both"
             elif use_blue:
-                dpx = _half_gap_px(focal, bar_gap, altitude)
+                dpx = _half_gap_px(fy, bar_gap, altitude)
                 mid_x = cx_b
                 mid_y = cy_b + dpx
                 source = "blue"
             elif use_red:
-                dpx = _half_gap_px(focal, bar_gap, altitude)
+                dpx = _half_gap_px(fy, bar_gap, altitude)
                 mid_x = cx_r
                 mid_y = cy_r - dpx
                 source = "red"
@@ -274,8 +258,6 @@ class FindCenterDescendBars(State):
             offset = hypot(err_x, err_y)
             vx = -pid_x.update(mid_y)
             vy = pid_y.update(mid_x)
-            if pose_x is not None and pose_x > gap_x + _GAP_OVERRUN_M:
-                vx = min(0.0, vx)
 
             if offset < center_tol:
                 centered += 1
@@ -292,7 +274,6 @@ class FindCenterDescendBars(State):
                 f"{centered}/{_CENTER_FRAMES} "
                 f"| vel x={vx:.2f} y={vy:.2f} z=0.00 m/s"
                 f'{"" if altitude is None else f" alt={altitude:.2f}"}'
-                f'{"" if pose_x is None else f" x={pose_x:.2f}"}'
             )
             drone.move_velocity(vx=vx, vy=vy)
 

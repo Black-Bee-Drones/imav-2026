@@ -9,6 +9,7 @@ from nectar.control import MavlinkDrone, MoveReference
 
 from ...config import Config
 
+
 class ToBarCorridor(State):
     def __init__(self):
         super().__init__(outcomes=[SUCCEED, CANCEL, TIMEOUT])
@@ -16,7 +17,7 @@ class ToBarCorridor(State):
         self.node = YasminNode.get_instance()
 
     def execute(self, blackboard: Blackboard):
-        config: Config = blackboard.get('config')
+        config: Config = blackboard.get("config")
         drone: MavlinkDrone = blackboard.get("drone")
 
         safe_alt: float = config.safe_alt
@@ -29,9 +30,6 @@ class ToBarCorridor(State):
         if config.obstacle_after_first_skip:
             return CANCEL
 
-        start_x: float = config.obstacle_bar_start_x
-        start_y: float = config.obstacle_start_y
-
         match config.obstacle_red:
             case 1:
                 alt: float = config.obstacle_red_step_alt_1
@@ -42,29 +40,36 @@ class ToBarCorridor(State):
             case _:
                 alt: float = safe_alt
 
-        points = [
-            (None, None, alt),
-            (start_x, start_y, alt),
-        ]
+        approach_x: float = config.obstacle_bar_approach_x
 
         if self.check_timeout():
             return TIMEOUT
 
-        for x, y, z in points:
-            yasmin.YASMIN_LOG_INFO(
-                f"Bar corridor: x={x} y={y} z={z:.2f} (takeoff, yaw hold)."
-            )
-            drone.move_to(
-                x=x,
-                y=y,
-                z=z,
-                yaw=None,
-                reference=MoveReference.TAKEOFF,
-                precision=0.12,
-            )
+        yasmin.YASMIN_LOG_INFO(f"Bar corridor: climb z={alt:.2f} m AGL.")
+        drone.move_to(
+            x=None,
+            y=None,
+            z=alt,
+            yaw=None,
+            reference=MoveReference.TAKEOFF,
+            precision=0.12,
+        )
+        if self.check_timeout():
+            return TIMEOUT
 
-            if self.check_timeout():
-                return TIMEOUT
+        yasmin.YASMIN_LOG_INFO(
+            f"Bar corridor: +{approach_x:.2f} m body-forward to bar gap."
+        )
+        drone.move_to(
+            x=approach_x,
+            y=0.0,
+            z=0.0,
+            yaw=0.0,
+            reference=MoveReference.BODY,
+            precision=0.12,
+        )
+        if self.check_timeout():
+            return TIMEOUT
 
         return SUCCEED
 
