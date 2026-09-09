@@ -117,6 +117,7 @@ def customize_obstacle_stage():
     window1 = select_single("Obstacle stage: Window 1 - which color?", _COLOR_OR_SKIP)
     red_bar = select_single("Obstacle stage: Red bar - which height? (skip = don't attempt)", _BAR_STEP_OR_SKIP)
     blue_bar1 = select_single("Obstacle stage: Blue bar 1 - which height?", _BAR_STEP_OR_SKIP)
+    bar_center_skip = select_single("Obstacle stage: Skip bar centralization?", _YES_NO)
     tubes = select_single("Obstacle stage: Attempt the tube obstacle avoidance?", _YES_NO)
     window2 = select_single("Obstacle stage: Window 2 - which color?", _COLOR_OR_SKIP)
 
@@ -124,6 +125,7 @@ def customize_obstacle_stage():
         "obstacle_gate_first_skip": window1 is None,
         "obstacle_red": red_bar,
         "obstacle_blue_1": blue_bar1,
+        "obstacle_bar_center_skip": bar_center_skip,
         "obstacle_tubes_skip": not tubes,
         "obstacle_gate_second_skip": window2 is None,
     }

@@ -140,12 +140,13 @@ class Config:
     obstacle_blue_step_alt_3: float = 0.6
     obstacle_bar_red_color: str = "red"
     obstacle_bar_blue_color: str = "blue"
-    obstacle_bar_center_skip: bool = True
+    obstacle_bar_center_skip: bool = False
     obstacle_bar_center_tolerance: float = 20.0
     obstacle_bar_acquire_timeout: float = 30.0
     obstacle_bar_find_vx: float = 0.15
     obstacle_bar_pass_x: float = 1.8
     obstacle_bar_approach_x: float = 1.0
+    obstacle_bar_approach_y: float = -0.3
     obstacle_bar_gap: float = 1.0
     obstacle_bar_roi_w: int = 640
     obstacle_bar_roi_h: int = 480

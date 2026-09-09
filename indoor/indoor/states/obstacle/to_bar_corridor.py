@@ -41,6 +41,7 @@ class ToBarCorridor(State):
                 alt: float = safe_alt
 
         approach_x: float = config.obstacle_bar_approach_x
+        approach_y: float = config.obstacle_bar_approach_y
 
         if self.check_timeout():
             return TIMEOUT
@@ -62,7 +63,7 @@ class ToBarCorridor(State):
         )
         drone.move_to(
             x=approach_x,
-            y=0.0,
+            y=approach_y,
             z=0.0,
             yaw=0.0,
             reference=MoveReference.BODY,
