@@ -89,7 +89,6 @@ class Tubes(State):
         start_y = config.obstacle_start_y
 
         alt = config.obstacle_tubes_alt
-        offset = config.obstacle_tubes_offset
         standoff = config.obstacle_tubes_standoff
 
         if self.check_timeout():
@@ -113,16 +112,10 @@ class Tubes(State):
             if not self._creep_to_standoff(drone, depth_cam, standoff, save_jpg):
                 return TIMEOUT
 
-        # Left first at current altitude, then past the cluster, then partial
-        # right (not lane center — that is tube_rear Y), then climb.
-        left_y = start_y + offset
-        end_y = start_y + config.obstacle_tubes_end_offset
-        past_x = start_x + 5.75
         points = [
-            (None, left_y, None),
-            (past_x, left_y, None),
-            (past_x, end_y, None),
-            (None, None, alt),
+            (0.0, 0.0, alt),
+            (0.0, 1.0, 0.0),
+            (1.5, 0.0, 0.0),
         ]
         return self._fly_points(drone, points)
 
@@ -165,7 +158,7 @@ class Tubes(State):
                 y=y,
                 z=z,
                 yaw=None,
-                reference=MoveReference.TAKEOFF,
+                reference=MoveReference.BODY,
                 precision=_MOVE_PRECISION,
             )
             if self.check_timeout():

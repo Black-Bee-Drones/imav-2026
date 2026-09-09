@@ -136,7 +136,7 @@ class Config:
 
     obstacle_blue_1: Optional[int] = 2
     obstacle_blue_step_alt_1: float = 0.2
-    obstacle_blue_step_alt_2: float = 0.22
+    obstacle_blue_step_alt_2: float = 0.18
     obstacle_blue_step_alt_3: float = 0.6
     obstacle_bar_red_color: str = "red"
     obstacle_bar_blue_color: str = "blue"
