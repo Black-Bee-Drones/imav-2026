@@ -104,7 +104,6 @@ class FindCenterDescendBars(State):
             jpeg_dir.mkdir(parents=True, exist_ok=True)
 
         pid_x = None
-        pid_y = None
         fx = fy = 0.0
 
         phase = "find"
@@ -141,29 +140,16 @@ class FindCenterDescendBars(State):
                     output_limits=(-_XY_LIMIT, _XY_LIMIT),
                     output_deadband=0.02,
                 )
-                pid_y = PIDController(
-                    kp=config.obstacle_xy_kp,
-                    kd=config.obstacle_xy_kd,
-                    ki=config.obstacle_xy_ki,
-                    setpoint=width / 2
-                    + ImageCalculus.meters_to_pixels(offset_y_m, altitude, fx),
-                    output_limits=(-_XY_LIMIT, _XY_LIMIT),
-                    output_deadband=0.02,
-                )
                 yasmin.YASMIN_LOG_INFO(
                     f"Bars: image {width}x{height}, fx={fx:.0f} fy={fy:.0f} "
                     f"roi={roi[0]}x{roi[1]}, "
-                    f"setpoint=({pid_y.setpoint:.0f}, {pid_x.setpoint:.0f}) "
-                    f"shift x={pid_y.setpoint - width / 2:.0f} "
+                    f"setpoint={pid_x.setpoint:.0f} "
                     f"y={pid_x.setpoint - height / 2:.0f} px "
                     f"(offset x={offset_x_m:.3f} y={offset_y_m:.3f} m)."
                 )
             else:
                 pid_x.setpoint = height / 2 + ImageCalculus.meters_to_pixels(
                     offset_x_m, altitude, fy
-                )
-                pid_y.setpoint = width / 2 + ImageCalculus.meters_to_pixels(
-                    offset_y_m, altitude, fx
                 )
 
             cx_r, cy_r = _class_center(result, config.model_lines_red_class_name)
@@ -228,10 +214,10 @@ class FindCenterDescendBars(State):
                 drone.move_velocity()
                 continue
 
-            err_x = mid_x - pid_y.setpoint
+            err_x = mid_y - pid_x.setpoint
             vx = -pid_x.update(mid_y)
 
-            if err_x < center_tol:
+            if abs(err_x) < center_tol:
                 centered += 1
             else:
                 centered = 0
@@ -257,7 +243,7 @@ class FindCenterDescendBars(State):
                 cv.circle(vis, (int(mid_x), int(mid_y)), 6, (0, 255, 255), 2)
                 cv.circle(
                     vis,
-                    (int(pid_y.setpoint), int(pid_x.setpoint)),
+                    (int(width * 0.5), int(pid_x.setpoint)),
                     4,
                     (0, 255, 0),
                     2,

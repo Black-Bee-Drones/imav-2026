@@ -157,6 +157,9 @@ class GoToWindow(State):
             bbox, marker_id = self.aruco.detect(img)
 
             if marker_id is None:
+                yasmin.YASMIN_LOG_INFO(
+                    f'Lost detection {lost_count}/{config.obstacle_gate_lost_tolerance}'
+                )
                 lost_count += 1
                 if lost_count >= config.obstacle_gate_lost_tolerance:
                     return False

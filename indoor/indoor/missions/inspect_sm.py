@@ -3,7 +3,7 @@ from yasmin_ros.basic_outcomes import SUCCEED, TIMEOUT, CANCEL
 
 from indoor.states import (
     GoToWindow,
-    FindWindow,
+    ReacquireWindow,
     Window,
     CountBabies,
     GoOut,
@@ -12,21 +12,11 @@ from indoor.states import (
 
 class InspectSM(StateMachine):
     def __init__(self):
-        super().__init__(outcomes=[SUCCEED, CANCEL])
+        super().__init__(outcomes=[SUCCEED, CANCEL, TIMEOUT])
 
         self.add_state(
             'GO_TO_WINDOW',
             GoToWindow(),
-            transitions={
-                SUCCEED: 'COUNT_BABIES',
-                CANCEL: CANCEL,
-                TIMEOUT: CANCEL,
-            },
-        )
-
-        self.add_state(
-            'FIND_WINDOW',
-            FindWindow(),
             transitions={
                 SUCCEED: 'WINDOW',
                 CANCEL: CANCEL,
@@ -41,8 +31,17 @@ class InspectSM(StateMachine):
                 SUCCEED: 'COUNT_BABIES',
                 'skip': 'COUNT_BABIES',
                 TIMEOUT: CANCEL,
-                'reacquire': 'FIND_WINDOW',
+                'reacquire': 'REACQUIRE',
             },
+        )
+
+        self.add_state(
+            'REACQUIRE',
+            ReacquireWindow('room'),
+            transitions={
+                SUCCEED:'WINDOW',
+                CANCEL:CANCEL
+            }
         )
 
         self.add_state(

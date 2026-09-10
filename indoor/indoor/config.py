@@ -109,7 +109,7 @@ class Config:
     obstacle_gate_aligned_tolerance: int = 35
     obstacle_gate_aligned_threshold: int = 10
     obstacle_gate_aligned_tolerance_m: float = 0.05
-    obstacle_gate_center_z_down_m: float = 0.1116
+    obstacle_gate_center_z_down_m: float = 0.0892
     obstacle_gate_kp: float = 0.5874
     obstacle_gate_z_kp: float = 0.731
     obstacle_gate_kd: float = 0.0
@@ -135,7 +135,7 @@ class Config:
     obstacle_red_step_alt_3: float = 2.71
 
     obstacle_blue_1: Optional[int] = 2
-    obstacle_blue_step_alt_1: float = 0.2
+    obstacle_blue_step_alt_1: float = 0.17
     obstacle_blue_step_alt_2: float = 0.18
     obstacle_blue_step_alt_3: float = 0.6
     obstacle_bar_red_color: str = "red"
@@ -146,7 +146,7 @@ class Config:
     obstacle_bar_find_vx: float = 0.15
     obstacle_bar_pass_x: float = 1.8
     obstacle_bar_approach_x: float = 1.0
-    obstacle_bar_approach_y: float = -0.3
+    obstacle_bar_approach_y: float = -0.5
     obstacle_bar_gap: float = 1.0
     obstacle_bar_roi_w: int = 640
     obstacle_bar_roi_h: int = 480
@@ -159,9 +159,9 @@ class Config:
 
     inspect_skip: bool = False
     inspect_timeout: int = 300
-    inspect_start_x: float = 10.0
+    inspect_start_x: float = 8.0
     inspect_start_y: float = 0.0
-    inspect_start_z: float = 1.70
+    inspect_start_z: float = 1.20
     inspect_back_speed: float = -0.5
     inspect_babies_count: Optional[int] = None
     inspect_go_out_x: float = 1.5
@@ -172,7 +172,7 @@ class Config:
     precise_timeout: int = 300
     precise_fixed: bool = True
     precise_fixed_x: float = 0.0
-    precise_fixed_y: float = 2.0
+    precise_fixed_y: float = -4.0
     precise_mobile_x: float = 0.0
     precise_mobile_y: float = -2.0
     center_threshold_xy: float = 0.2

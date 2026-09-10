@@ -83,6 +83,23 @@ class COMPLETE_MISSION1(Config):
     precise_fixed: bool = True
 
 
+@dataclass
+class TESTUAUUAU(Config):
+    obstacle_skip: bool = False
+    inspect_skip: bool = True
+    droping_skip: bool = True
+    obstacle_gate_first_skip: bool = False
+    obstacle_red: int = 3
+    obstacle_blue_1: int = 1
+    obstacle_bar_center_skip: bool = False
+    obstacle_tubes_skip: bool = False
+    obstacle_gate_second_skip: bool = False
+    model_gate_class_name: str = 'blue'
+    rtl: bool = False
+    precise_skip: bool = False
+    precise_fixed: bool = True
+
+
 PRESETS: dict[str, Type[Config]] = {
     "CLEITINHO": CLEITINHO,
     "JORGE": JORGE,
@@ -92,6 +109,7 @@ PRESETS: dict[str, Type[Config]] = {
     "TESTUAU": TESTUAU,
     "TESTBABIES": TESTBABIES,
     "COMPLETE_MISSION1": COMPLETE_MISSION1,
+    "TESTUAUUAU": TESTUAUUAU,
 }
 
 
