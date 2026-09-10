@@ -56,15 +56,22 @@ class Window(State):
         save_jpg = blackboard.get("save_jpg")
 
         pass_x = config.obstacle_gate_pass_x
-        creep_vx = config.obstacle_gate_creep_vx
-        standoff = config.obstacle_gate_standoff
+        if self.position == "room":
+            creep_vx = config.inspect_gate_creep_vx
+            standoff = config.inspect_gate_standoff
+            bbox_frac = config.inspect_gate_bbox_frac
+            expand = config.inspect_gate_frame_expand
+            commit_extra = config.inspect_gate_commit_extra
+        else:
+            creep_vx = config.obstacle_gate_creep_vx
+            standoff = config.obstacle_gate_standoff
+            bbox_frac = config.obstacle_gate_bbox_frac
+            expand = config.obstacle_gate_frame_expand
+            commit_extra = config.obstacle_gate_commit_extra
         gate_width = config.obstacle_gate_width
-        bbox_frac = config.obstacle_gate_bbox_frac
         z_min = config.obstacle_gate_depth_min
         z_max = config.obstacle_gate_depth_max
-        expand = config.obstacle_gate_frame_expand
         fuse_delta = config.obstacle_gate_fuse_delta
-        commit_extra = config.obstacle_gate_commit_extra
         skip = getattr(config, f"obstacle_gate_{self.position}_skip")
         is_north = self.position != "room"
 
@@ -223,7 +230,7 @@ class Window(State):
             xyxy = det.xyxy
             clipped = bbox_clipped(xyxy, (height, width))
             w_px = float(xyxy[2] - xyxy[0])
-            z_box = None if clipped else z_from_bbox(w_px, fx, gate_width)
+            z_box = z_from_bbox(w_px, fx, gate_width)
 
             depth_color = None
             z_depth = None
@@ -249,7 +256,7 @@ class Window(State):
             error_z = cy_sp - cy
             err_y_m = px_to_m(error_y, range_m, fx)
             err_z_m = px_to_m(error_z, range_m, fy)
-            output_y = pid_y.update(-err_y_m)
+            output_y = pass_sign * pid_y.update(-err_y_m)
             y_centered = abs(err_y_m) < aligned_tolerance_m
             centered = y_centered and abs(err_z_m) < aligned_tolerance_m
             agl = drone.get_altitude()
@@ -305,10 +312,8 @@ class Window(State):
                 )
                 drone.move_velocity(vy=output_y, vz=output_z)
                 if aligned >= aligned_threshold:
-                    if not is_north:
-                        if config.obstacle_gate_align_only:
-                            continue
-                        return self._commit(drone, pass_sign * pass_x, "standoff")
+                    if config.obstacle_gate_align_only:
+                        continue
                     hold_alt = agl if agl is not None else config.obstacle_gate_alt
                     pid_alt = PIDController(
                         kp=config.obstacle_alt_kp,

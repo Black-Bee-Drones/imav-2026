@@ -50,7 +50,7 @@ class GoToWindow(State):
 
         self.aruco: Aruco = blackboard.get('aruco')
 
-        img = handler.take_photo()
+        img, _, _, _ = handler.take_photo()
         if img is not None:
             height, width = img.shape[:2]
         else:
@@ -168,9 +168,14 @@ class GoToWindow(State):
                 continue
 
             lost_count = 0
-            error_x, error_y, _ = translation
-            output_x = self.pid_x.update(error_x)
-            output_y = self.pid_y.update(error_y)
+            error_y, error_x, _ = translation
+            output_x = -self.pid_x.update(error_x)
+            output_y = -self.pid_y.update(error_y)
+
+            yasmin.YASMIN_LOG_INFO(
+                f"error x={error_x} y={error_y:.0f}px"
+                f"| vel x={output_x:.2f} y={output_y:.2f} m/s "
+            )
 
             drone.move_velocity(
                 vx=output_x,
@@ -202,11 +207,17 @@ class GoToWindow(State):
                 continue
 
             lost_count = 0
-            error_x, error_y, _ = translation
-            output_y = self.pid_x.update(error_x)
-            output_z = self.pid_y.update(error_y)
+            error_y, error_x, _ = translation
+            output_x = -self.pid_x.update(error_x)
+            output_y = -self.pid_y.update(error_y)
             output_yaw = self.pid_yaw.update(yaw)
-            drone.move_velocity(0.0, vy=output_y, vz=output_z, vyaw=output_yaw)
+
+            yasmin.YASMIN_LOG_INFO(
+                f"error x={error_x} y={error_y:.0f}px yaw={yaw} deg"
+                f"| vel x={output_x:.2f} y={output_y:.2f} m/s yaw={output_yaw}"
+            )
+
+            drone.move_velocity(vx=output_x, vy=output_y, vz=0.0, vyaw=output_yaw)
 
             if (abs(error_x) < config.obstacle_gate_aligned_threshold and
                     abs(error_y) < config.obstacle_gate_aligned_threshold):

@@ -166,6 +166,11 @@ class Config:
     inspect_back_speed: float = -0.5
     inspect_babies_count: Optional[int] = None
     inspect_go_out_x: float = 1.5
+    inspect_gate_creep_vx: float = 0.085
+    inspect_gate_standoff: float = 0.675
+    inspect_gate_bbox_frac: float = 0.75
+    inspect_gate_frame_expand: float = 0.27
+    inspect_gate_commit_extra: float = 0.90
 
     droping_skip: bool = False
 
