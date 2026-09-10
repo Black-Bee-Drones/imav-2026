@@ -28,3 +28,7 @@ SIM_IMAGE_SOURCE  = "/down_camera"
 REAL_IMAGE_SOURCE = "webcam"
 
 IMAGE_SOURCE = SIM_IMAGE_SOURCE if SIM_MODE else REAL_IMAGE_SOURCE
+
+# ── Drone Configuration ─────────────────────────────────────────────────────
+CONNECTION_STRING = "/dev/ttyAMA1"
+DRONE_TYPE = "mavlink"

@@ -6,6 +6,7 @@ from yasmin import(
     State,
     Blackboard,
     YASMIN_LOG_INFO,
+    YASMIN_LOG_WARN,
     YASMIN_LOG_ERROR,
     YASMIN_LOG_DEBUG
 )
@@ -14,6 +15,7 @@ from yasmin_ros.yasmin_node import YasminNode
 
 from nectar.control import(
     DroneFactory,
+    PoseSource,
     MavrosConfig,
     MavlinkConfig,
     MavrosDrone,
@@ -39,17 +41,48 @@ class Initialize(State):
         try:
             # ---- Yasmin ----
             node = YasminNode.get_instance()
-            YASMIN_LOG_INFO("Initializing drone...")
+            YASMIN_LOG_INFO(f'Inicializing Drone Config ("{DRONE_TYPE}")...')
 
             # ---- Nectar ----
-            config = (
-                SITL_GAZEBO_CONFIG if SIM_MODE
-                else MavlinkConfig(connection_string="udp:127.0.0.1:14551")
-            )
             
-            drone = DroneFactory.create("mavlink", config, node._executor)
+            if SIM_MODE :
+                config = SITL_GAZEBO_CONFIG
+            
+            elif DRONE_TYPE == "mavlink":
+                MavlinkConfig(
+                    pose_source=PoseSource.GPS,
+                    connection_string=CONNECTION_STRING
+                )
+            elif DRONE_TYPE == "mavros" :
+                MavrosConfig(
+                    pose_source=PoseSource.GPS,
+                    connection_string=CONNECTION_STRING
+                )
+            else :
+                YASMIN_LOG_INFO('\033[31m Invalid Drone Type!\033[0m')
+                return ABORT
 
-            # ---- Camera ----
+            # config = (
+            #     SITL_GAZEBO_CONFIG if SIM_MODE
+            #     else MavlinkConfig(connection_string=CONNECTION_STRING)
+            # )
+            
+            drone = DroneFactory.create(DRONE_TYPE, config, node._executor)
+            
+        except KeyboardInterrupt:
+            YASMIN_LOG_ERROR('Execution interrupted by user!')
+            return ABORT
+        
+        except Exception as error:
+            YASMIN_LOG_ERROR(f'[31mDRONE FACTORY FAILED: {error}')
+            print_exc()
+            return ABORT
+
+        # ---- Camera ----
+        
+        try:
+            YASMIN_LOG_INFO('Inicializing Camera...')
+            
             if SIM_MODE:
                 cam_config = ROSConfig(
                     topic=IMAGE_SOURCE,
@@ -93,9 +126,13 @@ class Initialize(State):
             blackboard["camera"]      = camera
 
             return SUCCEED
+        
+        except KeyboardInterrupt:
+            YASMIN_LOG_ERROR('Execution interrupted by user!')
+            return ABORT
 
-        except Exception as e:
-            YASMIN_LOG_ERROR(f"Init error {e}")
+        except Exception as error:
+            YASMIN_LOG_ERROR(f"Camera failed: {error}")
             print_exc()
             return ABORT
 
