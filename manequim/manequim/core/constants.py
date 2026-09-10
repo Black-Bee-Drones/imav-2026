@@ -32,3 +32,8 @@ IMAGE_SOURCE = SIM_IMAGE_SOURCE if SIM_MODE else REAL_IMAGE_SOURCE
 # ── Drone Configuration ─────────────────────────────────────────────────────
 CONNECTION_STRING = "/dev/ttyAMA1"
 DRONE_TYPE = "mavlink"
+
+# ── Detector ─────────────────────────────────────────────────────────────────
+DETECTOR_MODEL_SOURCE          = "yolo11n.pt"
+DETECTOR_CONFIDENCE_THRESHOLD  = 0.5
+
