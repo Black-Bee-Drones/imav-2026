@@ -162,6 +162,7 @@ class Config:
     inspect_start_x: float = 8.0
     inspect_start_y: float = 0.0
     inspect_start_z: float = 1.20
+    inspect_descent_speed: float = -0.2
     inspect_back_speed: float = -0.5
     inspect_babies_count: Optional[int] = None
     inspect_go_out_x: float = 1.5
