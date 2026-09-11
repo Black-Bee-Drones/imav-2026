@@ -41,7 +41,7 @@ class CenterFixed(State):
             kp=0.0865,
             kd=config.obstacle_xy_kd,
             ki=0.04,
-            setpoint=0.0,
+            setpoint=-0.04,
             output_limits=output_limits,
         )
         pid_z = PIDController(
