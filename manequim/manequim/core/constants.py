@@ -1,7 +1,4 @@
-# =============================================================================
-#  Core Constants
-#  General configuration shared across the hang_the_hook system.
-# =============================================================================
+from math import radians
 
 
 # ── Simulation ───────────────────────────────────────────────────────────────
@@ -16,8 +13,6 @@ PWM_VALUE_CLOSE = 1000
 
 
 # ── Image Handler ────────────────────────────────────────────────────────────
-IMAGE_WIDTH      = 640
-IMAGE_HEIGHT     = 480
 IMAGE_COMPRESSED = False
 
 # Image source per mode:
@@ -34,6 +29,36 @@ CONNECTION_STRING = "/dev/ttyAMA1"
 DRONE_TYPE = "mavlink"
 
 # ── Detector ─────────────────────────────────────────────────────────────────
-DETECTOR_MODEL_SOURCE          = "yolo11n.pt"
+DETECTOR_MODEL_SOURCE          = "yolo26n.pt"
 DETECTOR_CONFIDENCE_THRESHOLD  = 0.5
 
+
+CAMERA_SOURCE = "opencv"
+CAMERA_MODEL = "C920"  # Opções disponíveis: "C920" ou "IMX"
+
+if CAMERA_MODEL == "C920":
+    # Logitech C920 (70.42° H, 43.3° V)
+    CAMERA_HFOV = radians(70.42)
+    CAMERA_VFOV = radians(43.3)
+    IMAGE_WIDTH = 640
+    IMAGE_HEIGHT = 640
+    CAMERA_OFFSET_X = 0.0
+    CAMERA_OFFSET_Y = 0.0
+    CAMERA_OFFSET_Z = 0.0
+elif CAMERA_MODEL == "IMX":
+    # IMX662 (Arducam datasheet 86° H x 47° V)
+    CAMERA_HFOV = radians(86.0)
+    CAMERA_VFOV = radians(47.0)
+    IMAGE_WIDTH = 640
+    IMAGE_HEIGHT = 640
+    CAMERA_OFFSET_X = 0.11
+    CAMERA_OFFSET_Y = 0.0
+    CAMERA_OFFSET_Z = 0.0
+else:
+    CAMERA_HFOV = radians(70.42)
+    CAMERA_VFOV = radians(43.3)
+    IMAGE_WIDTH = 640
+    IMAGE_HEIGHT = 480
+    CAMERA_OFFSET_X = 0.0
+    CAMERA_OFFSET_Y = 0.0
+    CAMERA_OFFSET_Z = 0.0
