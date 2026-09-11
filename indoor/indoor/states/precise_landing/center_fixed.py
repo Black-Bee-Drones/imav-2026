@@ -21,14 +21,43 @@ class CenterFixed(State):
         drone: MavlinkDrone = blackboard.get('drone')
         config: Config = blackboard.get('config')
 
-        pid_x: PIDController = blackboard.get('pid_x')
-        pid_y: PIDController = blackboard.get('pid_y')
-        pid_z: PIDController = blackboard.get('pid_z')
-        pid_yaw: PIDController = blackboard.get('pid_yaw')
+        output_limits = (
+            config.obstacle_gate_output_min,
+            config.obstacle_gate_output_max,
+        )
 
         image_handler_down: ImageHandler = blackboard.get('image_handler_down')
         image_handler_down.image_processing_callback = blackboard.get(
             'callback_aruco')
+
+        pid_x = PIDController(
+            kp=0.0765,
+            kd=config.obstacle_xy_kd,
+            ki=config.obstacle_xy_ki,
+            setpoint=0.0,
+            output_limits=output_limits,
+        )
+        pid_y = PIDController(
+            kp=0.0765,
+            kd=config.obstacle_xy_kd,
+            ki=config.obstacle_xy_ki,
+            setpoint=0.0,
+            output_limits=output_limits,
+        )
+        pid_z = PIDController(
+            kp=config.obstacle_alt_kp,
+            kd=config.obstacle_xy_kd,
+            ki=config.obstacle_xy_ki,
+            setpoint=0.0,
+            output_limits=output_limits,
+        )
+        pid_yaw = PIDController(
+            kp=config.obstacle_xy_kp,
+            kd=config.obstacle_xy_kd,
+            ki=config.obstacle_xy_ki,
+            setpoint=0.0,
+            output_limits=output_limits,
+        )
 
         self.start_time: Time = blackboard.get('start_time')
         self.start_state = self.node.get_clock().now()
@@ -48,20 +77,20 @@ class CenterFixed(State):
         lost_count = 0
         while True:
             now = self.node.get_clock().now()
-            image, marker_id, translation, yaw = image_handler_down.take_photo()
+            image, marker_id, translation, error_yaw = image_handler_down.take_photo()
 
             if marker_id is not None:
                 lost_count = 0
 
-                error_x, error_y, _ = translation
-                error_z = drone.get_altitude() - config.land_altitude
-                error_yaw = yaw
+                error_y, error_x, _ = translation
+                error_z = drone.get_altitude()
 
                 if (error_x**2 + error_y**2) <= config.center_threshold_xy**2 and \
                         abs(drone.get_altitude()) <= config.center_threshold_z and \
                         abs(error_yaw) <= config.center_threshold_yaw:
                     drone.move_velocity()
                     yasmin.YASMIN_LOG_INFO('Completed successfully!!!')
+                    drone.land()
                     return SUCCEED
 
                 output_x = pid_x.update(error_x)
@@ -70,26 +99,24 @@ class CenterFixed(State):
                 output_yaw = pid_yaw.update(error_yaw)
 
                 yasmin.YASMIN_LOG_INFO(
-                    'Error:',
-                    f'x={error_x:.0f};',
-                    f'y={error_y:.0f};',
-                    f'z={error_z:.0f};',
-                    f'yaw={error_yaw:.0f}.'
+                    'Error:'
+                    f'x={error_x:.2f};'
+                    f'y={error_y:.2f};'
+                    f'z={error_z:.2f};'
+                    f'yaw={error_yaw:.2f}.'
                 )
 
                 yasmin.YASMIN_LOG_INFO(
-                    'Output:',
-                    f'x={output_x:.1f};',
-                    f'y={output_y:.1f};',
-                    f'z={output_z:.1f};',
-                    f'yaw={output_yaw:.1f}.'
+                    'Output:'
+                    f'vx={output_x:.2f};'
+                    f'vy={output_y:.2f};'
+                    f'vz={output_z:.2f};'
+                    f'vyaw={output_yaw:.2f}.'
                 )
 
                 drone.move_velocity(
                     vx=output_x,
                     vy=output_y,
-                    vz=output_z,
-                    vyaw=output_yaw,
                 )
 
             else:
@@ -109,9 +136,9 @@ class CenterFixed(State):
 
             self.node.get_clock().sleep_until(now + Duration(seconds=1 / 30))
 
-    def check_timeout(self):
+    def check_timeout(self, config: Config):
         now = self.node.get_clock().now()
 
         return now - self.start_time > Duration(seconds=config.timeout) or \
             now - \
-            self.start_state > Duration(seconds=config.timeout_per_state)
+            self.start_state > Duration(seconds=config.precise_timeout)

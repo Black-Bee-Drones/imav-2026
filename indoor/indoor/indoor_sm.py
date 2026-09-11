@@ -29,7 +29,7 @@ class IndoorSM(StateMachine):
         self.add_state(
             'TAKEOFF',
             Takeoff(),
-            transitions={SUCCEED: 'OBSTACLESM', ABORT: ABORT},
+            transitions={SUCCEED: 'PRECISION_LANDING', ABORT: ABORT},
         )
 
         self.add_state(

@@ -49,7 +49,7 @@ class Config:
     model_lines_red_class_name: str = "red"
     model_lines_blue_class_name: str = "blue"
 
-    aruco_marker_dict: int = 5
+    aruco_marker_dict: int = 4
     aruco_size: float = 1.0
     color_calibration_path: Optional[str] = None
 
@@ -85,7 +85,7 @@ class Config:
     camera_down_hfov: float = radians(86)
     camera_down_vfov: float = radians(47)
 
-    takeoff_alt: float = 1.1
+    takeoff_alt: float = 1.4
     skip_takeoff: bool = False
     rtl: bool = False
 
@@ -178,7 +178,7 @@ class Config:
     precise_timeout: int = 300
     precise_fixed: bool = True
     precise_fixed_x: float = 0.0
-    precise_fixed_y: float = -4.0
+    precise_fixed_y: float = -5.0
     precise_mobile_x: float = 0.0
     precise_mobile_y: float = -2.0
     center_threshold_xy: float = 0.2
