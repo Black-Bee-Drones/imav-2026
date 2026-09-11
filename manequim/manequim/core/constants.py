@@ -32,6 +32,7 @@ DRONE_TYPE = "mavlink"
 DETECTOR_MODEL_SOURCE          = "yolo26n.pt"
 DETECTOR_CONFIDENCE_THRESHOLD  = 0.5
 
+DETECTOR_CLASS: str = "manequim"
 
 CAMERA_SOURCE = "opencv"
 CAMERA_MODEL = "C920"  # Opções disponíveis: "C920" ou "IMX"
