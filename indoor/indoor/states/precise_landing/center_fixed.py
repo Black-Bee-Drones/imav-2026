@@ -5,7 +5,7 @@ from yasmin import State, Blackboard
 from yasmin_ros.yasmin_node import YasminNode
 from yasmin_ros.basic_outcomes import SUCCEED, FAIL, TIMEOUT
 
-from nectar.control import MavlinkDrone, PIDController
+from nectar.control import MavlinkDrone, PIDController, MoveReference
 from nectar.vision import ImageHandler
 
 from indoor import Config
@@ -31,17 +31,17 @@ class CenterFixed(State):
             'callback_aruco')
 
         pid_x = PIDController(
-            kp=0.0865,
+            kp=config.precise_xy_kp,
             kd=config.obstacle_xy_kd,
-            ki=0.04,
+            ki=config.precise_xy_ki,
             setpoint=0.0,
             output_limits=output_limits,
         )
         pid_y = PIDController(
-            kp=0.0865,
+            kp=config.precise_xy_kp,
             kd=config.obstacle_xy_kd,
-            ki=0.04,
-            setpoint=-0.06,
+            ki=config.precise_xy_ki,
+            setpoint=0.0,
             output_limits=output_limits,
         )
         pid_z = PIDController(
@@ -80,25 +80,22 @@ class CenterFixed(State):
             image, marker_id, translation, error_yaw = image_handler_down.take_photo()
 
             if marker_id is not None:
+                error_yaw %= 90 # correction
                 lost_count = 0
 
                 error_y, error_x, _ = translation
                 error_z = drone.get_altitude()
 
                 if (error_x**2 + error_y**2) <= config.center_threshold_xy**2:
-                    drone.move_velocity(vz=-0.20)
-                    yasmin.YASMIN_LOG_INFO(
-                        'Output:'
-                        f'vz={-0.20:.2f}'
-                    )
-                    yasmin.YASMIN_LOG_INFO('Completed successfully!!!')
-                    if drone.get_altitude() <= 0.5:
+                    output_z = config.precise_vz
+                    if drone.get_altitude() <= config.land_altitude:
                         yasmin.YASMIN_LOG_INFO('Altitude settled, landing...')
                         return SUCCEED
+                else:
+                    output_z = 0
 
-                output_x = pid_x.update(error_x)
-                output_y = pid_y.update(error_y)
-                output_z = pid_z.update(error_z)
+                output_x = -pid_x.update(error_x - config.precise_x_offset)
+                output_y = pid_y.update(error_y - config.precise_y_offset)
                 output_yaw = pid_yaw.update(error_yaw)
 
                 yasmin.YASMIN_LOG_INFO(
@@ -113,12 +110,15 @@ class CenterFixed(State):
                     'Output:'
                     f'vx={output_x:.2f};'
                     f'vy={output_y:.2f};'
+                    f'vz={output_z:.2f}'
                     f'vyaw={output_yaw:.2f}'
                 )
 
                 drone.move_velocity(
                     vx=output_x,
                     vy=output_y,
+                    vz=output_z,
+                    vyaw=output_yaw
                 )
 
             else:
