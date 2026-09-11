@@ -185,13 +185,13 @@ class Config:
     center_threshold_z: float = 0.2
     center_threshold_yaw: float = 5.0
     lost_tolerance: int = 10
-    land_altitude: float = 1.4
+    land_altitude: float = 1.0
     precise_reacquire_vz: float = 0.3
     precise_xy_kp: float = 0.0865
     precise_xy_ki:float = 0.04
-    precise_vz:float = 0.2
+    precise_descend_vz:float = -0.2
     precise_x_offset: float = 0.0
-    precise_y_offset: float = 0.06
+    precise_y_offset: float = 0.0
 
     controller_xy_kp: float = 0.000511
     controller_xy_kd: float = 0.0

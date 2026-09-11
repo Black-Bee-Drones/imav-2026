@@ -81,20 +81,22 @@ class CenterFixed(State):
 
             if marker_id is not None:
                 error_yaw %= 90 # correction
+                if error_yaw > 45:
+                    error_yaw = abs(error_yaw - 90)
                 lost_count = 0
 
                 error_y, error_x, _ = translation
                 error_z = drone.get_altitude()
 
                 if (error_x**2 + error_y**2) <= config.center_threshold_xy**2:
-                    output_z = config.precise_vz
+                    output_z = config.precise_descend_vz
                     if drone.get_altitude() <= config.land_altitude:
                         yasmin.YASMIN_LOG_INFO('Altitude settled, landing...')
                         return SUCCEED
                 else:
                     output_z = 0
 
-                output_x = -pid_x.update(error_x - config.precise_x_offset)
+                output_x = pid_x.update(error_x - config.precise_x_offset)
                 output_y = pid_y.update(error_y - config.precise_y_offset)
                 output_yaw = pid_yaw.update(error_yaw)
 
