@@ -85,7 +85,7 @@ class Config:
     camera_down_hfov: float = radians(86)
     camera_down_vfov: float = radians(47)
 
-    takeoff_alt: float = 1.4
+    takeoff_alt: float = 1.6
     skip_takeoff: bool = False
     rtl: bool = False
 

@@ -31,16 +31,16 @@ class CenterFixed(State):
             'callback_aruco')
 
         pid_x = PIDController(
-            kp=0.0765,
+            kp=0.0865,
             kd=config.obstacle_xy_kd,
-            ki=config.obstacle_xy_ki,
+            ki=0.04,
             setpoint=0.0,
             output_limits=output_limits,
         )
         pid_y = PIDController(
-            kp=0.0765,
+            kp=0.0865,
             kd=config.obstacle_xy_kd,
-            ki=config.obstacle_xy_ki,
+            ki=0.04,
             setpoint=0.0,
             output_limits=output_limits,
         )
@@ -85,13 +85,13 @@ class CenterFixed(State):
                 error_y, error_x, _ = translation
                 error_z = drone.get_altitude()
 
-                if (error_x**2 + error_y**2) <= config.center_threshold_xy**2 and \
-                        abs(drone.get_altitude()) <= config.center_threshold_z and \
-                        abs(error_yaw) <= config.center_threshold_yaw:
-                    drone.move_velocity()
+                if (error_x**2 + error_y**2) <= config.center_threshold_xy**2:
+                    drone.move_velocity(vz=0.10)
                     yasmin.YASMIN_LOG_INFO('Completed successfully!!!')
-                    drone.land()
-                    return SUCCEED
+                    if drone.get_altitude() <= 0.5:
+                        yasmin.YASMIN_LOG_INFO('Altitude settled, landing...')
+                        drone.land()
+                        return SUCCEED
 
                 output_x = pid_x.update(error_x)
                 output_y = pid_y.update(error_y)
