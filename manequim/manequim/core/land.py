@@ -2,7 +2,7 @@ import yasmin
 from yasmin import State, Blackboard
 from yasmin_ros.basic_outcomes import SUCCEED, ABORT
 
-from nectar.control import MavrosDrone
+from nectar.control import MavrosDrone, MavlinkDrone
 
 class Land(State):
     def __init__(self):

@@ -1,4 +1,5 @@
 import datetime
+from traceback import print_exc
 
 import yasmin
 from yasmin import State, Blackboard
@@ -6,6 +7,7 @@ from yasmin_ros.basic_outcomes import SUCCEED, ABORT
 from yasmin_ros.yasmin_node import YasminNode
 
 from nectar.control import (
+    MavlinkConfig,
     DroneFactory,
     MavrosConfig,
     PoseSource,
@@ -15,13 +17,15 @@ from nectar.vision import ImageHandler, OpenCVConfig
 from nectar.vision.camera import ROSConfig
 from nectar.ai import Detector
 
-from core.constants import (
+from core.constants import(
     SIM_MODE,
     CAMERA_SOURCE,
     IMAGE_WIDTH,
     IMAGE_HEIGHT,
     DETECTOR_MODEL_SOURCE,
     DETECTOR_CONFIDENCE_THRESHOLD,
+    DRONE_TYPE,
+    CONNECTION_STRING,
 )
 
 class Initialize(State):
@@ -38,7 +42,7 @@ class Initialize(State):
         try:
             # ---- Yasmin ----
             node = YasminNode.get_instance()
-            YASMIN_LOG_INFO(f'Inicializing Drone Config ("{DRONE_TYPE}")...')
+            yasmin.YASMIN_LOG_INFO(f'Inicializing Drone Config ("{DRONE_TYPE}")...')
 
             # ---- Nectar ----
             
@@ -56,7 +60,7 @@ class Initialize(State):
                     connection_string=CONNECTION_STRING
                 )
             else :
-                YASMIN_LOG_INFO('\033[31m Invalid Drone Type!\033[0m')
+                yasmin.YASMIN_LOG_INFO('\033[31m Invalid Drone Type!\033[0m')
                 return ABORT
 
             # config = (
@@ -67,7 +71,7 @@ class Initialize(State):
             drone = DroneFactory.create(DRONE_TYPE, config, node._executor)
 
         except KeyboardInterrupt:
-            YASMIN_LOG_ERROR('Execution interrupted by user!')
+            yasmin.YASMIN_LOG_ERROR('Execution interrupted by user!')
             return ABORT
 
         except Exception as e:

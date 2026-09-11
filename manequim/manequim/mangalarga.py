@@ -10,7 +10,7 @@ from yasmin_ros.yasmin_node import YasminNode
 from yasmin_ros.basic_outcomes import SUCCEED, ABORT
 from yasmin_viewer import YasminViewerPub
 
-from core.states import Initialize, Takeoff, ReturnToLaunch, End
+from .core import Initialize, Takeoff, ReturnToLaunch, End
 
 class ManequimSM(StateMachine):
     def __init__(self) -> None:

@@ -1,5 +1,5 @@
 from yasmin import State, Blackboard, YASMIN_LOG_INFO, YASMIN_LOG_ERROR
-from yasmin.basic_outcomes import SUCCEED, ABORT
+from yasmin_ros.basic_outcomes import SUCCEED, ABORT
 
 from nectar.control import MavrosDrone, MavlinkDrone
 
