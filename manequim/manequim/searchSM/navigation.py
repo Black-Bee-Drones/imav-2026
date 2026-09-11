@@ -20,6 +20,8 @@ from nectar.control import(
     RTLMethod,
 )
 
+from nectar.ai import DetectionResult
+
 class InitPosition(State):
     def __init__(self):
         super().__init__(outcomes=[SUCCEED, ABORT])
@@ -40,21 +42,46 @@ class InitPosition(State):
 
 class Ascend(State):
     def __init__(self):
-        super().__init__(outcomes=[SUCCEED, ABORT])
+        super().__init__(outcomes=[SUCCEED, ABORT, "SQUARE_SEARCH", "FOUND_MANEQUIM"])
 
         self.drone: MavrosDrone | MavlinkDrone
+        self.detector
 
     def execute(self, blackboard: Blackboard):
-        self.drone = blackboard["drone"]
+
+        if "drone" not in blackboard:
+            yasmin.YASMIN_LOG_ERROR("Drone Type (MavrosDrone or MavlinkDrone) Not Find")
+            return ABORT
+
+        if config.DRONE_TYPE == 'mavros':
+            drone : MavrosDrone = blackboard.get('drone')
+
+        elif config.DRONE_TYPE == 'mavlink':
+            drone : MavlinkDrone = blackboard.get('drone')
+
+        if "camera" not in blackboard:
+            yasmin.YASMIN_LOG_ERROR("Camera not available.")
+            return ABORT
+        camera: ImageHandler = blackboard["camera"]
 
         try:
             yasmin.YASMIN_LOG_INFO(f"Ascending to {ASCEND_HEIGHT}m for initial scan...")
             self.drone.move_to(x=0.0, y=0.0, z=(ASCEND_HEIGHT - TAKEOFF_HEIGHT), frame=MoveReference.BODY)
 
-            # TODO: rodar detecção aqui e retornar FOUND se detectar o manequim
+            result: DetectionResult = camera.take_photo()
 
-            yasmin.YASMIN_LOG_INFO("Nothing detected from above, switching to square search.")
-            return SUCCEED
+            if result is None:
+                yasmin.YASMIN_LOG_ERROR("Image not captured.")
+                return ABORT
+
+            detections = result.filter_by_class(DETECTOR_CLASS)
+
+            if detections:
+                yasmin.YASMIN_LOG_INFO("Manequim detectado do alto!")
+                return "FOUND_MANEQUIM"
+            else:
+                yasmin.YASMIN_LOG_INFO("Nothing detected, going to squared spiral state")
+                return "SQUARE_SEARCH"
 
         except Exception as e:
             yasmin.YASMIN_LOG_ERROR(f"Ascend failed: {e}")
@@ -64,11 +91,11 @@ class Ascend(State):
 class SearchNavigation(State):
 
     def __init__(self):
-        super().__init__(outcomes=[SUCCEED, ABORT])
+        super().__init__(outcomes=[SUCCEED, ABORT, "FOUND_MANEQUIM"])
 
         self.drone: MavrosDrone | MavlinkDrone
 
-        step = (2.0 * SEARCH_ALTITUDE * math.tan(math.radians(CAMERA_FOV_H / 2.0)) - 1.0) #Calculo de quantos metros a camera pega usando o FOV (margem de 1.0m)
+        step = (2.0 * SEARCH_ALTITUDE * math.tan(CAMERA_HFOV / 2.0) - 1.0) #Calculo de quantos metros a camera pega usando o FOV (margem de 1.0m)
         self._waypoints = self._build_square_spiral(SEARCH_RADIUS, step)
 
         yasmin.YASMIN_LOG_INFO(
@@ -104,8 +131,27 @@ class SearchNavigation(State):
         return waypoints
 
     def execute(self, blackboard: Blackboard):
-        self.drone = blackboard["drone"]
+        if "drone" not in blackboard:
+            yasmin.YASMIN_LOG_ERROR("Drone Type (MavrosDrone or MavlinkDrone) Not Find")
+            return ABORT
 
+        if config.DRONE_TYPE == 'mavros':
+            drone : MavrosDrone = blackboard.get('drone')
+
+        elif config.DRONE_TYPE == 'mavlink':
+            drone : MavlinkDrone = blackboard.get('drone')
+
+        if "camera" not in blackboard:
+            yasmin.YASMIN_LOG_ERROR("Camera not available.")
+            return ABORT
+        camera: ImageHandler = blackboard["camera"]
+
+        if "pid_cx" not in blackboard:
+            yasmin.YASMIN_LOG_ERROR("X PID Controller not available.")
+            return ABORT
+        if "pid_cy" not in blackboard:
+            yasmin.YASMIN_LOG_ERROR("Y PID Controller not available.")
+            return ABORT
         try:
             yasmin.YASMIN_LOG_INFO(
                 f"Descending to search altitude {SEARCH_ALTITUDE}m..."
@@ -116,16 +162,27 @@ class SearchNavigation(State):
             )
 
             total = len(self._waypoints)
+            prev_x, prev_y = 0.0, 0.0
+
             for i, (wx, wy) in enumerate(self._waypoints):
+                yaw = math.degrees(math.atan2(wy - prev_y, wx - prev_x))
+                
                 yasmin.YASMIN_LOG_INFO(
-                    f"[{i+1}/{total}] Moving to ({wx:.1f}, {wy:.1f}) @ {SEARCH_ALTITUDE}m"
+                    f"[{i+1}/{total}] Moving to ({wx:.1f}, {wy:.1f}) @ {SEARCH_ALTITUDE}m | yaw={yaw:.1f}°"
                 )
                 self.drone.move_to(
                     x=wx, y=wy, z=SEARCH_ALTITUDE,
-                    frame=MoveReference.LOCAL,
+                    yaw=yaw,
+                    frame=MoveReference.TAKEOFF,
                 )
+                prev_x, prev_y = wx, wy
 
-                # TODO: verificar detecção do manequim a cada waypoint
+                result: DetectionResult = camera.take_photo()
+                if result:
+                    detections = result.filter_by_class(DETECTOR_CLASS)
+                    if detections:
+                        yasmin.YASMIN_LOG_INFO("Manequim detectado na espiral!")
+                        return "FOUND_MANEQUIM"
 
             yasmin.YASMIN_LOG_INFO("Square search complete — manequim not found.")
             return SUCCEED
