@@ -2,6 +2,7 @@ from rclpy.time import Time, Duration
 
 import yasmin
 from yasmin import State, Blackboard
+from yasmin_ros.yasmin_node import YasminNode
 from yasmin_ros.basic_outcomes import SUCCEED, CANCEL, TIMEOUT
 
 from nectar.control import MavlinkDrone
@@ -13,6 +14,9 @@ from ...config import Config
 class Reacquire(State):
     def __init__(self):
         super().__init__(outcomes=[SUCCEED, CANCEL, TIMEOUT])
+
+        self.node = YasminNode.get_instance()
+
 
     def execute(self, blackboard: Blackboard):
         config: Config = blackboard.get('config')
@@ -39,7 +43,7 @@ class Reacquire(State):
                 return SUCCEED
 
             yasmin.YASMIN_LOG_INFO(f'Up...')
-            drone.move_velocity(z=vz)
+            drone.move_velocity(vz=vz)
 
         return CANCEL
 

@@ -120,12 +120,12 @@ class CenterFixed(State):
                 )
 
             else:
-                yasmin.YASMIN_LOG_ERROR(
+                yasmin.YASMIN_LOG_INFO(
                     f'Lost detection ({lost_count}/{config.lost_tolerance}).')
                 lost_count += 1
 
                 if config.lost_tolerance <= lost_count:
-                    yasmin.YASMIN_LOG_ERROR('Lost detection exceeded.')
+                    yasmin.YASMIN_LOG_INFO('Lost detection exceeded.')
                     drone.move_velocity()
                     return FAIL
 

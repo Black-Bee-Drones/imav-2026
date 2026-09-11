@@ -100,6 +100,16 @@ class TESTUAUUAU(Config):
     precise_fixed: bool = True
 
 
+@dataclass
+class PRECISIONLAND(Config):
+    obstacle_skip: bool = True
+    inspect_skip: bool = True
+    droping_skip: bool = True
+    rtl: bool = False
+    precise_skip: bool = False
+    precise_fixed: bool = True
+
+
 PRESETS: dict[str, Type[Config]] = {
     "CLEITINHO": CLEITINHO,
     "JORGE": JORGE,
@@ -110,6 +120,7 @@ PRESETS: dict[str, Type[Config]] = {
     "TESTBABIES": TESTBABIES,
     "COMPLETE_MISSION1": COMPLETE_MISSION1,
     "TESTUAUUAU": TESTUAUUAU,
+    "PRECISIONLAND": PRECISIONLAND,
 }
 
 

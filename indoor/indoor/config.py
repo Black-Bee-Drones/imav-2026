@@ -49,7 +49,7 @@ class Config:
     model_lines_red_class_name: str = "red"
     model_lines_blue_class_name: str = "blue"
 
-    aruco_marker_dict: int = 4
+    aruco_marker_dict: int = 4 # MUDA NAO ESQUECE DE MUDAR POHA CHANGE CHANGE
     aruco_size: float = 1.0
     color_calibration_path: Optional[str] = None
 
@@ -161,7 +161,7 @@ class Config:
     inspect_timeout: int = 300
     inspect_start_x: float = 8.0
     inspect_start_y: float = 0.0
-    inspect_start_z: float = 1.20
+    inspect_start_z: float = 1.20 # MUDA NAO ESQUECE DE MUDAR POHA CHANGE CHANGE
     inspect_descent_speed: float = -0.2
     inspect_back_speed: float = -0.5
     inspect_babies_count: Optional[int] = None
