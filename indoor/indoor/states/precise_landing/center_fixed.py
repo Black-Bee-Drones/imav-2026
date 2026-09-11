@@ -41,7 +41,7 @@ class CenterFixed(State):
             kp=0.0865,
             kd=config.obstacle_xy_kd,
             ki=0.04,
-            setpoint=-0.04,
+            setpoint=-0.06,
             output_limits=output_limits,
         )
         pid_z = PIDController(
@@ -86,11 +86,14 @@ class CenterFixed(State):
                 error_z = drone.get_altitude()
 
                 if (error_x**2 + error_y**2) <= config.center_threshold_xy**2:
-                    drone.move_velocity(vz=0.10)
+                    drone.move_velocity(vz=-0.20)
+                    yasmin.YASMIN_LOG_INFO(
+                        'Output:'
+                        f'vz={-0.20:.2f}'
+                    )
                     yasmin.YASMIN_LOG_INFO('Completed successfully!!!')
                     if drone.get_altitude() <= 0.5:
                         yasmin.YASMIN_LOG_INFO('Altitude settled, landing...')
-                        drone.land()
                         return SUCCEED
 
                 output_x = pid_x.update(error_x)
@@ -110,8 +113,7 @@ class CenterFixed(State):
                     'Output:'
                     f'vx={output_x:.2f};'
                     f'vy={output_y:.2f};'
-                    f'vz={output_z:.2f};'
-                    f'vyaw={output_yaw:.2f}.'
+                    f'vyaw={output_yaw:.2f}'
                 )
 
                 drone.move_velocity(
