@@ -29,6 +29,7 @@ from .inspect import (
 
 from .dropping import (
     GoToBox,
+    MapBoxes,
     CenterBox,
     Drop,
 )

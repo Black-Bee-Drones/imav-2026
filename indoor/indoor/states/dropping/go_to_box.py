@@ -34,7 +34,7 @@ class GoToBox(State):
         drone.move_to(
             x=None,
             y=None,
-            z=config.safe_altitude,
+            z=config.safe_alt,
             yaw=0,
             reference=MoveReference.TAKEOFF,
         )
@@ -43,11 +43,11 @@ class GoToBox(State):
             yasmin.YASMIN_LOG_ERROR('Timeout.')
             return TIMEOUT
 
-        yasmin.YASMIN_LOG_INFO(f'fly to y={config.box_y}...')
+        yasmin.YASMIN_LOG_INFO(f'Flying to y={config.box_start_pos_y}...')
         drone.move_to(
             x=None,
-            y=config.box_y,
-            z=config.safe_altitude,
+            y=config.box_start_pos_y,
+            z=config.safe_alt,
             yaw=0,
             reference=MoveReference.TAKEOFF,
         )
@@ -56,11 +56,11 @@ class GoToBox(State):
             yasmin.YASMIN_LOG_ERROR('Timeout.')
             return TIMEOUT
 
-        yasmin.YASMIN_LOG_INFO(f'fly to x={config.box_x}...')
+        yasmin.YASMIN_LOG_INFO(f'flying to x={config.box_start_pos_x}...')
         drone.move_to(
-            x=config.box_x,
-            y=config.box_y,
-            z=config.safe_altitude,
+            x=config.box_start_pos_x,
+            y=config.box_start_pos_y,
+            z=config.safe_alt,
             yaw=0,
             reference=MoveReference.TAKEOFF,
         )

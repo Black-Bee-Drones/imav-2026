@@ -1,15 +1,21 @@
 from rclpy.time import Time, Duration
 
+import numpy as np
+import math
+
 import yasmin
-from yasmin import State, Blackboard
+from yasmin import State, Blackboard, YASMIN_LOG_INFO
 from yasmin_ros.yasmin_node import YasminNode
 from yasmin_ros.basic_outcomes import SUCCEED, FAIL, TIMEOUT
 
-from nectar.control import MavlinkDrone, PIDController
+from nectar.control import MavlinkDrone, MavrosDrone, PIDController
 from nectar.vision import ImageHandler
+from nectar.ai import DetectionResult
 
 from ...config import Config
 
+Point2D = tuple[float, float]       # (x, y)
+Pose2D = tuple[float, float, float] # (x, y, yaw)
 
 class CenterBox(State):
     def __init__(self):
@@ -18,15 +24,14 @@ class CenterBox(State):
         self.node = YasminNode.get_instance()
 
     def execute(self, blackboard: Blackboard):
-        drone: MavlinkDrone = blackboard.get('drone')
+        drone: MavlinkDrone | MavrosDrone = blackboard.get('drone')
         config: Config = blackboard.get('config')
 
         pid_x: PIDController = blackboard.get('pid_x')
         pid_y: PIDController = blackboard.get('pid_y')
 
         image_handler_down: ImageHandler = blackboard.get('image_handler_down')
-        image_handler_down.image_processing_callback = blackboard.get(
-            'callback_box')
+        image_handler_down.image_processing_callback = blackboard.get('callback_box')
 
         self.start_time: Time = blackboard.get('start_time')
         self.start_state = self.node.get_clock().now()

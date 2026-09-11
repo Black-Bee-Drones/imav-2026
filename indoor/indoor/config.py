@@ -84,6 +84,7 @@ class Config:
     camera_down_offset_y: float = 0.0
     camera_down_hfov: float = radians(86)
     camera_down_vfov: float = radians(47)
+    camera_down_frame: tuple[int, int] = 640, 640
 
     takeoff_alt: float = 1.6
     skip_takeoff: bool = False
@@ -173,6 +174,8 @@ class Config:
     inspect_gate_commit_extra: float = 0.90
 
     droping_skip: bool = False
+    box_start_pos_x: float = 11.0
+    box_start_pos_y: float = 0.0
 
     precise_skip: bool = False
     precise_timeout: int = 300
