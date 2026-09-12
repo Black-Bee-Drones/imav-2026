@@ -44,6 +44,7 @@ class Reacquire(State):
 
             yasmin.YASMIN_LOG_INFO(f'Up...')
             drone.move_velocity(vz=vz)
+            blackboard.set('align_debug', {'output_z': vz})
 
         return CANCEL
 

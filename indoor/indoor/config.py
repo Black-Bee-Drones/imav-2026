@@ -183,16 +183,16 @@ class Config:
     precise_fixed_y: float = -5.0
     precise_mobile_x: float = 0.0
     precise_mobile_y: float = -2.0
-    center_threshold_xy: float = 0.2
+    center_threshold_xy: float = 0.12
     center_threshold_z: float = 0.2
     center_threshold_yaw: float = 5.0
     lost_tolerance: int = 10
-    land_altitude: float = 1.5
-    precise_reacquire_vz: float = 0.3
-    precise_xy_kp: float = 0.0865
-    precise_xy_ki:float = 0.04
+    land_altitude: float = 1.8
+    precise_reacquire_vz: float = 0.18
+    precise_xy_kp: float = 0.1065
+    precise_xy_ki:float = 0.0
     precise_descend_vz:float = -0.2
-    precise_x_offset: float = 0.0
+    precise_x_offset: float = -0.1
     precise_y_offset: float = 0.0
 
     controller_xy_kp: float = 0.000511

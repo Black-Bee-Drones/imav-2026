@@ -24,6 +24,7 @@ from nectar.vision import (
     ROSDepthConfig,
 )
 
+from ..inspect.align_overlay import build_detector, draw_align_overlay
 from ...config import Config
 from ...gate_range import pick_depth_topic
 
@@ -84,10 +85,13 @@ class Initialize(State):
         self._save_dirs: set[str] = set()
         self._save_q: queue.Queue | None = None
         self._save_thread: threading.Thread | None = None
+        self.blackboard: Blackboard | None = None
+        self._aruco_detector = None
 
     def execute(self, blackboard: Blackboard):
         config = self.config
         blackboard.set('config', config)
+        self.blackboard = blackboard
 
         start = datetime.fromtimestamp(self.start_time.nanoseconds / 1e9)
         self._debug_root = (
@@ -188,6 +192,11 @@ class Initialize(State):
             )
             blackboard.set('inspect_aruco', self.inspect_aruco)
             blackboard.set('callback_inspect_aruco', self.callback_inspect_aruco)
+
+            # Detector used only to recover the marker's pixel-space center
+            # for the debug HUD; pose_estimate() already does its own
+            # detection for the actual PnP solve, this is just for drawing.
+            self._aruco_detector = build_detector(config.aruco_marker_dict)
             yasmin.YASMIN_LOG_INFO('successful start Arucos!')
         except KeyboardInterrupt:
             yasmin.YASMIN_LOG_WARN('Execution interrupted by user.')
@@ -324,9 +333,20 @@ class Initialize(State):
         self._save_jpg('lines_annotated', 'annotated', annotated)
         return result
 
+    def _align_debug(self) -> dict | None:
+        if self.blackboard is None:
+            return None
+        try:
+            return self.blackboard.get('align_debug')
+        except Exception:
+            return None
+
     def callback_land_aruco(self, image: np.ndarray):
         self._save_jpg('land_aruco', 'raw', image)
         marker_id, translation, yaw = self.land_aruco.pose_estimate(image, draw=True)
+        draw_align_overlay(
+            image, self._aruco_detector, marker_id, yaw, self._align_debug()
+        )
         self._save_jpg('land_aruco_annotated', 'annotated', image)
         return image, marker_id, translation, yaw
 
@@ -334,6 +354,9 @@ class Initialize(State):
         self._save_jpg('inspect_aruco', 'raw', image)
         marker_id, translation, yaw = self.inspect_aruco.pose_estimate(
             image, draw=True
+        )
+        draw_align_overlay(
+            image, self._aruco_detector, marker_id, yaw, self._align_debug()
         )
         self._save_jpg('inspect_aruco_annotated', 'annotated', image)
         return image, marker_id, translation, yaw

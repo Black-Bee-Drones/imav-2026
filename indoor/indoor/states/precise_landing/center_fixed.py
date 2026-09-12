@@ -100,6 +100,22 @@ class CenterFixed(State):
                 output_y = pid_y.update(error_y - config.precise_y_offset)
                 output_yaw = pid_yaw.update(error_yaw)
 
+                # Published so the aruco callback's debug HUD (drawn on the
+                # *next* frame) can show this loop's error/output values.
+                blackboard.set('align_debug', {
+                    'error_x': error_x,
+                    'error_y': error_y,
+                    'error_z': error_z,
+                    'output_x': output_x,
+                    'output_y': output_y,
+                    'output_z': output_z,
+                    'output_yaw': output_yaw,
+                    'lost_count': lost_count,
+                    'lost_tolerance': config.lost_tolerance,
+                    'within_xy': (error_x**2 + error_y**2) <= config.center_threshold_xy**2,
+                    'landing': drone.get_altitude() <= config.land_altitude,
+                })
+
                 yasmin.YASMIN_LOG_INFO(
                     'Error:'
                     f'x={error_x:.2f};'
@@ -127,6 +143,10 @@ class CenterFixed(State):
                 yasmin.YASMIN_LOG_INFO(
                     f'Lost detection ({lost_count}/{config.lost_tolerance}).')
                 lost_count += 1
+                blackboard.set('align_debug', {
+                    'lost_count': lost_count,
+                    'lost_tolerance': config.lost_tolerance,
+                })
 
                 if config.lost_tolerance <= lost_count:
                     yasmin.YASMIN_LOG_INFO('Lost detection exceeded.')
