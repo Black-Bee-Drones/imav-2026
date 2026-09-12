@@ -35,7 +35,7 @@ class Config:
 
     model_baby_source: str = "yolo26n.pt"
     model_baby_conf: float = 0.25
-    model_baby_overlap_iou: float = 0.3
+    model_baby_overlap_iou: float = 0.6
     model_baby_classes_names: list = field(
         default_factory=lambda: ["person", "teddy bear"]
     )
@@ -49,8 +49,9 @@ class Config:
     model_lines_red_class_name: str = "red"
     model_lines_blue_class_name: str = "blue"
 
-    aruco_marker_dict: int = 5 # MUDA NAO ESQUECE DE MUDAR POHA CHANGE CHANGE
-    aruco_size: float = 1.0
+    aruco_marker_dict: int = 4 # MUDA NAO ESQUECE DE MUDAR POHA CHANGE CHANGE
+    land_aruco_size: float = 0.8
+    inspect_aruco_size: float = 0.6
     color_calibration_path: Optional[str] = None
 
     # North: RealSense D435i RGB (Intel 69.4° x 42.5° x 77° ±3°)
@@ -70,7 +71,7 @@ class Config:
     camera_south_topic: str = "/south_camera"
     camera_south_is_compressed: bool = True
     camera_south_id: int = 10
-    camera_south_offset_z: float = 0.0
+    camera_south_offset_z: float = 0.09
     camera_south_offset_y: float = 0.0
     camera_south_hfov: float = radians(70.42)
     camera_south_vfov: float = radians(43.3)
@@ -167,10 +168,11 @@ class Config:
     inspect_babies_count: Optional[int] = None
     inspect_go_out_x: float = 1.5
     inspect_gate_creep_vx: float = 0.085
-    inspect_gate_standoff: float = 0.675
+    inspect_gate_standoff: float = 0.550
     inspect_gate_bbox_frac: float = 0.75
     inspect_gate_frame_expand: float = 0.27
-    inspect_gate_commit_extra: float = 0.90
+    inspect_gate_commit_extra: float = 1.38
+    inspect_gate_alignment_alt: float | None = None
 
     droping_skip: bool = False
 

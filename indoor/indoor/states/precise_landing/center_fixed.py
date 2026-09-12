@@ -28,7 +28,7 @@ class CenterFixed(State):
 
         image_handler_down: ImageHandler = blackboard.get('image_handler_down')
         image_handler_down.image_processing_callback = blackboard.get(
-            'callback_aruco')
+            'callback_land_aruco')
 
         pid_x = PIDController(
             kp=config.precise_xy_kp,

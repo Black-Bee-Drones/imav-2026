@@ -8,7 +8,7 @@ from yasmin_ros.yasmin_node import YasminNode
 from yasmin_ros.basic_outcomes import SUCCEED, FAIL, TIMEOUT
 
 from nectar.control import MavlinkDrone, PIDController
-from nectar.vision import ImageHandler, Aruco
+from nectar.vision import ImageHandler
 
 from indoor import Config
 
@@ -33,7 +33,7 @@ class CenterMoving(State):
 
         image_handler_down: ImageHandler = blackboard.get('image_handler_down')
         image_handler_down.image_processing_callback = blackboard.get(
-            'callback_aruco')
+            'callback_land_aruco')
 
         # Overall mission-timeout reference (set once, outside this state)
         # vs. this state's own start time (used for the per-state timeout).
@@ -45,7 +45,7 @@ class CenterMoving(State):
         pid_z.reset()
         pid_yaw.reset()
 
-        aruco = Aruco(marker_dict=5, tag_size=1.0)
+        aruco = blackboard.get('land_aruco')
 
         is_yaw_aligned = False
 

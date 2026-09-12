@@ -173,14 +173,22 @@ class Initialize(State):
             return ABORT
 
         try:
-            yasmin.YASMIN_LOG_INFO('Initializing Aruco...')
-            self.aruco = Aruco(
+            yasmin.YASMIN_LOG_INFO('Initializing landing Aruco...')
+            self.land_aruco = Aruco(
                 marker_dict=config.aruco_marker_dict,
-                tag_size=config.aruco_size,
+                tag_size=config.land_aruco_size,
             )
-            blackboard.set('aruco', self.aruco)
-            blackboard.set('callback_aruco', self.callback_aruco)
-            yasmin.YASMIN_LOG_INFO('successful start Aruco!')
+            blackboard.set('land_aruco', self.land_aruco)
+            blackboard.set('callback_land_aruco', self.callback_land_aruco)
+
+            yasmin.YASMIN_LOG_INFO('Initializing inspection Aruco...')
+            self.inspect_aruco = Aruco(
+                marker_dict=config.aruco_marker_dict,
+                tag_size=config.inspect_aruco_size,
+            )
+            blackboard.set('inspect_aruco', self.inspect_aruco)
+            blackboard.set('callback_inspect_aruco', self.callback_inspect_aruco)
+            yasmin.YASMIN_LOG_INFO('successful start Arucos!')
         except KeyboardInterrupt:
             yasmin.YASMIN_LOG_WARN('Execution interrupted by user.')
             return ABORT
@@ -316,8 +324,16 @@ class Initialize(State):
         self._save_jpg('lines_annotated', 'annotated', annotated)
         return result
 
-    def callback_aruco(self, image: np.ndarray):
-        self._save_jpg('aruco', 'raw', image)
-        marker_id, translation, yaw = self.aruco.pose_estimate(image, draw=True)
-        self._save_jpg('aruco_annotated', 'annotated', image)
+    def callback_land_aruco(self, image: np.ndarray):
+        self._save_jpg('land_aruco', 'raw', image)
+        marker_id, translation, yaw = self.land_aruco.pose_estimate(image, draw=True)
+        self._save_jpg('land_aruco_annotated', 'annotated', image)
+        return image, marker_id, translation, yaw
+
+    def callback_inspect_aruco(self, image: np.ndarray):
+        self._save_jpg('inspect_aruco', 'raw', image)
+        marker_id, translation, yaw = self.inspect_aruco.pose_estimate(
+            image, draw=True
+        )
+        self._save_jpg('inspect_aruco_annotated', 'annotated', image)
         return image, marker_id, translation, yaw

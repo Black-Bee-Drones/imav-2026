@@ -35,6 +35,8 @@ class GoOut(State):
             config.rtl = False
             return TIMEOUT
 
+        yasmin.YASMIN_LOG_INFO(f'Correcting altitude to {config.inspect_gate_alignment_alt}')
+
         go_out_dist = config.inspect_gate_standoff + config.inspect_gate_commit_extra
         yasmin.YASMIN_LOG_INFO(f'Fly through the window {go_out_dist}m.')
 

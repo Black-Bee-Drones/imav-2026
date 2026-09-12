@@ -10,6 +10,7 @@ from yasmin_ros.basic_outcomes import SUCCEED
 
 from nectar.vision import ImageHandler
 from nectar.ai import DetectionResult
+from nectar.control import MavlinkDrone, MoveReference
 
 from ...config import Config
 
@@ -21,6 +22,7 @@ class CountBabies(State):
         self.node = YasminNode.get_instance()
 
     def execute(self, blackboard: Blackboard):
+        drone: MavlinkDrone = blackboard.get('drone')
         config: Config = blackboard.get('config')
         handler: ImageHandler = blackboard.get('image_handler_down')
         handler.image_processing_callback = blackboard.get('callback_baby')
@@ -53,7 +55,7 @@ class CountBabies(State):
 
         matching = [s for s in samples if final_count is None or s[0] == final_count]
         best_count, best_boxes, best_confidence, best_result = max(
-            matching, key=lambda s: s[2]
+            matching, key=lambda s: s[0]
         )
 
         yasmin.YASMIN_LOG_INFO(f'BABIES AMOUNT: {best_count}')

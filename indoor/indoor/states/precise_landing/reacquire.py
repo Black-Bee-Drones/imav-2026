@@ -22,7 +22,7 @@ class Reacquire(State):
         config: Config = blackboard.get('config')
         drone: MavlinkDrone = blackboard.get('drone')
         handler: ImageHandler = blackboard.get('image_handler_down')
-        handler.image_processing_callback = blackboard.get('callback_aruco')
+        handler.image_processing_callback = blackboard.get('callback_land_aruco')
 
         max_alt: float = config.max_alt
         self.start_time: Time = blackboard.get('start_time')

@@ -347,6 +347,9 @@ class Window(State):
             )
             drone.move_velocity(vx=vx, vy=output_y, vz=output_z)
             if close_enough and not config.obstacle_gate_align_only:
+                if self.position == "room":
+                    config.inspect_gate_alignment_alt = drone.get_altitude()
+                    yasmin.YASMIN_LOG_INFO(f'Saved alignment alt: {config.inspect_gate_alignment_alt}')
                 return self._commit(
                     drone,
                     self._commit_x(pass_sign, z_smooth, commit_extra),

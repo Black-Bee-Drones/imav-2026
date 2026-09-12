@@ -9,7 +9,7 @@ from yasmin_ros.basic_outcomes import SUCCEED, CANCEL, TIMEOUT
 
 from nectar.control import MavlinkDrone, MoveReference
 from nectar.control.pid import PIDController
-from nectar.vision import Aruco, ImageHandler
+from nectar.vision import ImageHandler
 
 from ...config import Config
 
@@ -46,9 +46,7 @@ class GoToWindow(State):
 
         drone: MavlinkDrone = blackboard.get('drone')
         handler: ImageHandler = blackboard.get('image_handler_down')
-        handler.image_processing_callback = blackboard.get('callback_aruco')
-
-        self.aruco: Aruco = blackboard.get('aruco')
+        handler.image_processing_callback = blackboard.get('callback_inspect_aruco')
 
         img, _, _, _ = handler.take_photo()
         if img is not None:

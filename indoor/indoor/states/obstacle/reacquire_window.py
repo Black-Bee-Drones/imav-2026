@@ -11,7 +11,7 @@ from nectar.ai import DetectionResult
 
 from ...config import Config
 
-_SWEEP_SEC = 4.0
+_SWEEP_SEC_BASE = 4.0
 _SWEEP_VY = 0.12
 _CONFIRM = 5
 
@@ -44,15 +44,17 @@ class ReacquireWindow(State):
             output_limits=(-0.2, 0.2),
         )
 
+
         for direction, label in ((_SWEEP_VY, "right"), (-_SWEEP_VY, "left")):
+            sweep_sec = _SWEEP_SEC_BASE if label == "right" else 2*_SWEEP_SEC_BASE
             yasmin.YASMIN_LOG_INFO(
                 f"Gate {self.position} reacquire: sweep {label} "
-                f"{_SWEEP_SEC:.0f} s at {abs(direction):.2f} m/s, "
+                f"{sweep_sec:.0f} s at {abs(direction):.2f} m/s, "
                 f"need {_CONFIRM} consecutive detections."
             )
             found = 0
             start = self.node.get_clock().now()
-            while self.node.get_clock().now() - start < Duration(seconds=_SWEEP_SEC):
+            while self.node.get_clock().now() - start < Duration(seconds=sweep_sec):
                 if self.check_timeout():
                     yasmin.YASMIN_LOG_WARN(f"Gate {self.position} reacquire: timeout.")
                     drone.move_velocity()
