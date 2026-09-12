@@ -49,7 +49,7 @@ class Config:
     model_lines_red_class_name: str = "red"
     model_lines_blue_class_name: str = "blue"
 
-    aruco_marker_dict: int = 4 # MUDA NAO ESQUECE DE MUDAR POHA CHANGE CHANGE
+    aruco_marker_dict: int = 5 # MUDA NAO ESQUECE DE MUDAR POHA CHANGE CHANGE
     aruco_size: float = 1.0
     color_calibration_path: Optional[str] = None
 
@@ -85,7 +85,7 @@ class Config:
     camera_down_hfov: float = radians(86)
     camera_down_vfov: float = radians(47)
 
-    takeoff_alt: float = 1.6
+    takeoff_alt: float = 1.4
     skip_takeoff: bool = False
     rtl: bool = False
 
@@ -185,7 +185,7 @@ class Config:
     center_threshold_z: float = 0.2
     center_threshold_yaw: float = 5.0
     lost_tolerance: int = 10
-    land_altitude: float = 1.0
+    land_altitude: float = 1.5
     precise_reacquire_vz: float = 0.3
     precise_xy_kp: float = 0.0865
     precise_xy_ki:float = 0.04
