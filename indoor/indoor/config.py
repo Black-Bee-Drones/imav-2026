@@ -193,6 +193,12 @@ class Config:
     dropping_box_kp_z: float = 0.18
     dropping_box_limits_z: tuple = (-0.15, 0.1)
     dropping_box_deadband: float = 0.0
+    # Servo configs
+    dropping_servo_channel: int = 2
+    dropping_servo_open_pwm: int = 1800
+    dropping_servo_action_delay: float = 2.0
+    dropping_servo_retry_delay: float = 0.5
+    dropping_servo_retries: int = 5
     box_start_pos_x: float = 11.0
     box_start_pos_y: float = 0.0
 
