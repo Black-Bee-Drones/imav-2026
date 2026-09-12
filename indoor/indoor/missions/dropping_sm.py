@@ -26,19 +26,29 @@ class DroppingSM(StateMachine):
         self.add_state(
             'MAP_BOXES',
             MapBoxes(),
-            transitions={SUCCEED: 'CENTER', TIMEOUT: CANCEL, CANCEL: CANCEL}
+            transitions={SUCCEED: 'CENTER_DROP_BOX', TIMEOUT: CANCEL, CANCEL: CANCEL}
         )
 
         self.add_state(
-            'CENTER',
+            'CENTER_DROP_BOX',
             CenterBox(),
             transitions={SUCCEED: 'DROP', FAIL: 'REACQUIRE', TIMEOUT: CANCEL},
+            remappings={"target_coords": "box_cone_pos"}
         )
 
         self.add_state(
             'DROP',
             Drop(),
-            transitions={SUCCEED: SUCCEED, CANCEL: CANCEL},
+            transitions={SUCCEED: "CENTER_LED_BOX" , CANCEL: CANCEL},
         )
+        
+        self.add_state(
+            'CENTER_LED_BOX',
+            CenterBox(),
+            transitions={SUCCEED: SUCCEED, FAIL: 'REACQUIRE', TIMEOUT: CANCEL},
+            remappings={"target_coords": "box_led_pos"}
+        )
+        
+        # adicionar state de piscar led
 
         self.set_start_state('GO_TO_BOX')
