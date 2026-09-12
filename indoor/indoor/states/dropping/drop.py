@@ -21,7 +21,7 @@ def do_gripper(drone, config: Config) -> bool:
     yasmin.YASMIN_LOG_ERROR("Failed to do servo.")
     return False
 
-class Gripper(State):
+class Drop(State):
     def __init__(self, blackboard: Blackboard):
         super().__init__(outcomes=[SUCCEED, FAIL])
 
