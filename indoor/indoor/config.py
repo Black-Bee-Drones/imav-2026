@@ -48,6 +48,10 @@ class Config:
     model_lines_conf: float = 0.25
     model_lines_red_class_name: str = "red"
     model_lines_blue_class_name: str = "blue"
+    
+    model_dropping_box_source: str = "box.pt"
+    model_dropping_box_name: str = "caixas-imav"
+    model_dropping_box_conf: float = 0.25
 
     aruco_marker_dict: int = 4 # MUDA NAO ESQUECE DE MUDAR POHA CHANGE CHANGE
     aruco_size: float = 1.0
@@ -174,6 +178,21 @@ class Config:
     inspect_gate_commit_extra: float = 0.90
 
     droping_skip: bool = False
+    dropping_timeout: int = 300
+    dropping_center_timeout: int = 240
+    dropping_lost_tolerance: int = 15
+    dropping_centralize_tolerance: int = 100    #pixels
+    dropping_center_drop_altitude: float = 1.5  #meters
+    dropping_cone_offset: float = -0.20
+    dropping_required_frames: int = 5
+    # Same PID for x and y axis
+    dropping_box_kp: float = 0.123
+    dropping_box_kd: float = 0.0002
+    dropping_box_ki: float = 0.0
+    dropping_box_limits: tuple = (-0.41, 0.41)
+    dropping_box_kp_z: float = 0.18
+    dropping_box_limits_z: tuple = (-0.15, 0.1)
+    dropping_box_deadband: float = 0.0
     box_start_pos_x: float = 11.0
     box_start_pos_y: float = 0.0
 
