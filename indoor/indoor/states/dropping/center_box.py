@@ -33,7 +33,7 @@ class CenterBox(State):
         target_x, target_y = blackboard["target_coords"]
 
         pid_cx: PIDController = PIDController(
-            kp=config.drop_gate_kp,
+            kp=config.dropping_box_kp,
             kd=config.dropping_box_kd,
             ki=config.dropping_box_ki,
             setpoint=0.0,
@@ -42,7 +42,7 @@ class CenterBox(State):
         )
         
         pid_cy: PIDController = PIDController(
-            kp=config.drop_gate_kp,
+            kp=config.dropping_box_kp,
             kd=config.dropping_box_kd,
             ki=config.dropping_box_ki,
             setpoint=0.0,
@@ -82,7 +82,7 @@ class CenterBox(State):
 
         width, height = config.camera_down_frame
         lost = 0
-        aligned = 0
+        aligned_frames = 0
 
         while True:
             if self.timeout(config):
@@ -156,9 +156,9 @@ class CenterBox(State):
         ratio = (math.tan(angle_rad) * altitude) / (frame_px // 2)
         return delta_pixel * ratio
 
-    def timeout(self) -> bool:
+    def timeout(self, config) -> bool:
         now = self.node.get_clock().now()
-        if self.mission_start_time is not None and hasattr(self.config, "mission_timeout"):
-            if now - self.mission_start_time > Duration(seconds=self.config.mission_timeout):
+        if self.mission_start_time is not None and hasattr(config, "mission_timeout"):
+            if now - self.mission_start_time > Duration(seconds=config.mission_timeout):
                 return True
-        return now - self.state_start_time > Duration(seconds=self.config.center_timeout)
+        return now - self.state_start_time > Duration(seconds=config.dropping_center_timeout)

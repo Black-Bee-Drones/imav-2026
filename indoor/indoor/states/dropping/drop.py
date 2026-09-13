@@ -22,7 +22,7 @@ def do_gripper(drone, config: Config) -> bool:
     return False
 
 class Drop(State):
-    def __init__(self, blackboard: Blackboard):
+    def __init__(self):
         super().__init__(outcomes=[SUCCEED, FAIL])
 
     def execute(self, blackboard: Blackboard):

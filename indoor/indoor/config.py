@@ -183,6 +183,8 @@ class Config:
     dropping_lost_tolerance: int = 15
     dropping_centralize_tolerance: int = 100    #pixels
     dropping_center_drop_altitude: float = 1.5  #meters
+    dropping_center_drop_tolerance: float = 0.15        
+    dropping_center_drop_altitude_tolerance: float = 0.10
     dropping_cone_offset: float = -0.20
     dropping_required_frames: int = 5
     # Same PID for x and y axis
