@@ -11,7 +11,7 @@ from yasmin_ros.basic_outcomes import SUCCEED, FAIL, TIMEOUT
 from nectar.control import MavlinkDrone, MavrosDrone, PIDController, MoveReference, NavigationMethod, AltitudeSource
 from nectar.vision import ImageHandler, ImageCalculus
 from nectar.ai import DetectionResult
-from .map_boxes import pixel_to_takeoff_frame
+from indoor.states import pixel_to_takeoff_frame
 
 from ...config import Config
 

@@ -5,7 +5,7 @@ from yasmin import State, Blackboard
 from yasmin_ros.yasmin_node import YasminNode
 from yasmin_ros.basic_outcomes import CANCEL, SUCCEED, TIMEOUT
 
-from nectar.control import MavlinkDrone, MoveReference
+from nectar.control import MavlinkDrone, MavrosDrone, MoveReference
 
 from ...config import Config
 
@@ -17,7 +17,7 @@ class GoToBox(State):
         self.node = YasminNode.get_instance()
 
     def execute(self, blackboard: Blackboard):
-        drone: MavlinkDrone = blackboard.get('drone')
+        drone: MavlinkDrone | MavrosDrone = blackboard.get('drone')
         config: Config = blackboard.get('config')
         if config.droping_skip:
             return CANCEL
