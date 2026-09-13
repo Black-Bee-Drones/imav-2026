@@ -11,7 +11,7 @@ from yasmin_ros.basic_outcomes import SUCCEED, FAIL, TIMEOUT
 from nectar.control import MavlinkDrone, MavrosDrone, PIDController, MoveReference, NavigationMethod, AltitudeSource
 from nectar.vision import ImageHandler, ImageCalculus
 from nectar.ai import DetectionResult
-from .map_boxes import pixel_to_takeoff_frame   
+from .map_boxes import pixel_to_takeoff_frame
 
 from ...config import Config
 
@@ -26,10 +26,10 @@ class CenterBox(State):
     def execute(self, blackboard: Blackboard):
         drone: MavlinkDrone | MavrosDrone = blackboard.get('drone')
         config: Config = blackboard.get('config')
-        
+
         camera_down: ImageHandler = blackboard.get('image_handler_down')
         camera_down.image_processing_callback = blackboard.get('callback_box')
-        
+
         target_x, target_y = blackboard["target_coords"]
 
         pid_cx: PIDController = PIDController(
@@ -40,7 +40,7 @@ class CenterBox(State):
             output_limits=config.dropping_box_limits,
             output_deadband=config.dropping_box_deadband
         )
-        
+
         pid_cy: PIDController = PIDController(
             kp=config.dropping_box_kp,
             kd=config.dropping_box_kd,
@@ -49,7 +49,7 @@ class CenterBox(State):
             output_limits=config.dropping_box_limits,
             output_deadband=config.dropping_box_deadband,
         )
-        
+
         pid_cz: PIDController = PIDController(
             kp=config.dropping_box_kp_z,
             kd=0.0,
@@ -57,7 +57,7 @@ class CenterBox(State):
             setpoint=0.0,
             output_limits=config.dropping_box_limits_z,
         )
-        
+
         self.mission_start_time: Time = blackboard.get('start_time')
         self.state_start_time = self.node.get_clock().now()
 
@@ -104,7 +104,8 @@ class CenterBox(State):
 
                 if lost >= config.dropping_lost_tolerance:
                     yasmin.YASMIN_LOG_WARN("Detection lost. Increasing altitude to restart search...")
-                    if drone.get_altitude(AltitudeSource.LIDAR) < config.max_altitude:
+                    altitude = drone.get_altitude(AltitudeSource.LIDAR)
+                    if altitude is not None and altitude < config.max_alt:
                         drone.move_to(z=0.2)
                     else:
                         yasmin.YASMIN_LOG_WARN("Detection lost. Max altitude reached, decreasing 30 cm...")
@@ -125,9 +126,10 @@ class CenterBox(State):
             error_y_px = target_y - height // 2
             altitude = drone.get_altitude(AltitudeSource.LIDAR)
 
-            error_x = self.ppm(error_x_px, altitude, config.camera_down_hfov, width)
-            error_y = self.ppm(error_y_px, altitude, config.camera_down_vfov, height) + config.dropping_cone_offset
-            error_z = altitude - config.dropping_center_drop_altitude
+            if altitude is not None:
+                error_x = self.ppm(error_x_px, altitude, config.camera_down_hfov, width)
+                error_y = self.ppm(error_y_px, altitude, config.camera_down_vfov, height) + config.dropping_cone_offset
+                error_z = altitude - config.dropping_center_drop_altitude
 
             # funil: pixel libera o Z (mais frouxo em altitude alta), metro decide o alinhamento final
             px_aligned = max(abs(error_x_px), abs(error_y_px)) <= config.dropping_centralize_tolerance

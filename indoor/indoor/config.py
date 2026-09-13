@@ -2,7 +2,7 @@ from argparse import Namespace
 from dataclasses import dataclass, field, replace
 from math import radians
 from pathlib import Path
-from typing import Optional
+from typing import Optional, cast
 
 from ament_index_python.packages import get_package_share_directory
 
@@ -48,7 +48,7 @@ class Config:
     model_lines_conf: float = 0.25
     model_lines_red_class_name: str = "red"
     model_lines_blue_class_name: str = "blue"
-    
+
     model_dropping_box_source: str = "box.pt"
     model_dropping_box_name: str = "caixas-imav"
     model_dropping_box_conf: float = 0.25
@@ -183,7 +183,7 @@ class Config:
     dropping_lost_tolerance: int = 15
     dropping_centralize_tolerance: int = 100    #pixels
     dropping_center_drop_altitude: float = 1.5  #meters
-    dropping_center_drop_tolerance: float = 0.15        
+    dropping_center_drop_tolerance: float = 0.15
     dropping_center_drop_altitude_tolerance: float = 0.10
     dropping_cone_offset: float = -0.20
     dropping_required_frames: int = 5
@@ -201,8 +201,8 @@ class Config:
     dropping_servo_action_delay: float = 2.0
     dropping_servo_retry_delay: float = 0.5
     dropping_servo_retries: int = 5
-    box_start_pos_x: float = 11.0
-    box_start_pos_y: float = 0.0
+    dropping_start_x: float = 11.0
+    dropping_start_y: float = -2.5
 
     precise_skip: bool = False
     precise_timeout: int = 300
@@ -311,4 +311,4 @@ class Config:
         if getattr(args, "no_takeoff", False):
             config = replace(config, skip_takeoff=True)
 
-        return config
+        return cast(Config, config)
