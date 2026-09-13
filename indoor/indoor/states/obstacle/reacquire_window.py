@@ -12,6 +12,7 @@ from nectar.ai import DetectionResult
 from ...config import Config
 
 _SWEEP_SEC_BASE = 4.0
+_SWEEP_VX = -0.12
 _SWEEP_VY = 0.12
 _CONFIRM = 5
 
@@ -45,8 +46,15 @@ class ReacquireWindow(State):
         )
 
 
-        for direction, label in ((_SWEEP_VY, "right"), (-_SWEEP_VY, "left")):
-            sweep_sec = _SWEEP_SEC_BASE if label == "right" else 2*_SWEEP_SEC_BASE
+        if self.position == "room":
+            sweeps = ((_SWEEP_VX, "backward", _SWEEP_SEC_BASE),
+                      (_SWEEP_VY, "right", _SWEEP_SEC_BASE),
+                      (-_SWEEP_VY, "left", 2 * _SWEEP_SEC_BASE))
+        else:
+            sweeps = ((_SWEEP_VY, "right", _SWEEP_SEC_BASE),
+                      (-_SWEEP_VY, "left", 2 * _SWEEP_SEC_BASE))
+
+        for direction, label, sweep_sec in sweeps:
             yasmin.YASMIN_LOG_INFO(
                 f"Gate {self.position} reacquire: sweep {label} "
                 f"{sweep_sec:.0f} s at {abs(direction):.2f} m/s, "
@@ -87,7 +95,10 @@ class ReacquireWindow(State):
 
                 altitude = drone.get_altitude()
                 output_z = pid_z.update(altitude) if altitude is not None else 0.0
-                drone.move_velocity(vy=direction, vz=output_z)
+                if direction == "backward":
+                    drone.move_velocity(vx=direction, vz=output_z)
+                else:
+                    drone.move_velocity(vy=direction, vz=output_z)
 
         yasmin.YASMIN_LOG_WARN(
             f"Gate {self.position} reacquire: not confirmed, leave gate."

@@ -44,14 +44,14 @@ class Config:
     model_box_source: str = "package.pt"
     model_box_conf: float = 0.5
 
-    model_lines_source: str = "lines.pt"
-    model_lines_conf: float = 0.25
+    model_lines_source: str = "bars2.pt"
+    model_lines_conf: float = 0.60
     model_lines_red_class_name: str = "red"
     model_lines_blue_class_name: str = "blue"
 
-    aruco_marker_dict: int = 4 # MUDA NAO ESQUECE DE MUDAR POHA CHANGE CHANGE
+    aruco_marker_dict: int = 5
     land_aruco_size: float = 0.8
-    inspect_aruco_size: float = 0.6
+    inspect_aruco_size: float = 0.3 # MUDA ESSA POHSA NN ESQUECE ESSA CARALHA CHANGE
     color_calibration_path: Optional[str] = None
 
     # North: RealSense D435i RGB (Intel 69.4° x 42.5° x 77° ±3°)
@@ -97,7 +97,7 @@ class Config:
     obstacle_xy_ki: float = 0.0
     obstacle_alt_kp: float = 0.4
 
-    obstacle_start_x: float = -0.48
+    obstacle_start_x: float = -0.78
     obstacle_start_y: float = -2.5
 
     obstacle_gate_first_skip: bool = False
@@ -157,6 +157,8 @@ class Config:
     obstacle_tubes_offset: float = 1.5
     obstacle_tubes_end_offset: float = 0.5
     obstacle_tubes_standoff: float = 0.7
+    obstacle_tubes_x_avoid: float = 1.5
+    obstacle_tubes_y_avoid: float = 1.0
 
     inspect_skip: bool = False
     inspect_timeout: int = 300
@@ -183,7 +185,7 @@ class Config:
     precise_fixed_y: float = -5.0
     precise_mobile_x: float = 0.0
     precise_mobile_y: float = -2.0
-    center_threshold_xy: float = 0.12
+    center_threshold_xy: float = 0.18
     center_threshold_z: float = 0.2
     center_threshold_yaw: float = 5.0
     lost_tolerance: int = 10

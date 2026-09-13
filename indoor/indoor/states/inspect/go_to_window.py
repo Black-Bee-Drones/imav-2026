@@ -167,11 +167,11 @@ class GoToWindow(State):
 
             lost_count = 0
             error_y, error_x, _ = translation
-            output_x = -self.pid_x.update(error_x)
-            output_y = -self.pid_y.update(error_y)
+            output_x = -self.pid_x.update(error_x - config.precise_x_offset)
+            output_y = -self.pid_y.update(error_y - config.precise_y_offset)
 
             yasmin.YASMIN_LOG_INFO(
-                f"error x={error_x} y={error_y:.0f}px"
+                f"error x={error_x} y={error_y:.0f}m"
                 f"| vel x={output_x:.2f} y={output_y:.2f} m/s "
             )
 
@@ -206,9 +206,13 @@ class GoToWindow(State):
 
             lost_count = 0
             error_y, error_x, _ = translation
-            output_x = -self.pid_x.update(error_x)
-            output_y = -self.pid_y.update(error_y)
-            output_yaw = self.pid_yaw.update(yaw)
+            error_yaw = yaw % 90
+            if error_yaw > 45:
+                error_yaw = abs(error_yaw - 90)
+
+            output_x = -self.pid_x.update(error_x - config.precise_x_offset)
+            output_y = -self.pid_y.update(error_y - config.precise_y_offset)
+            output_yaw = self.pid_yaw.update(error_yaw)
 
             yasmin.YASMIN_LOG_INFO(
                 f"error x={error_x} y={error_y:.0f}px yaw={yaw} deg"

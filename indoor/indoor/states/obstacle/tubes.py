@@ -114,8 +114,9 @@ class Tubes(State):
 
         points = [
             (0.0, 0.0, alt),
-            (0.0, 1.0, 0.0),
-            (1.5, 0.0, 0.0),
+            (0.0, config.obstacle_tubes_y_avoid, 0.0),
+            (config.obstacle_tubes_x_avoid, 0.0, 0.0),
+            (0.0, -config.obstacle_tubes_y_avoid, 0.0),
         ]
         return self._fly_points(drone, points)
 

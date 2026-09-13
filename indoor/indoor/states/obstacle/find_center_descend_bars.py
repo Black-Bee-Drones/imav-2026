@@ -215,7 +215,7 @@ class FindCenterDescendBars(State):
                 continue
 
             err_x = mid_y - pid_x.setpoint
-            vx = -pid_x.update(mid_y)
+            vx = pid_x.update(mid_y)
 
             if abs(err_x) < center_tol:
                 centered += 1

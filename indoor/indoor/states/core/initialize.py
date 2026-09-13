@@ -111,6 +111,11 @@ class Initialize(State):
 
         def load_detector(label: str, source: str, conf: float) -> Detector:
             yasmin.YASMIN_LOG_INFO(f'Load Detector({label})...')
+            if source and pathlib.Path(source).is_absolute() and not pathlib.Path(source).is_file():
+                raise FileNotFoundError(
+                    f'{label} model does not exist at {source}. '
+                    'Rebuild and source the indoor package to update installed models.'
+                )
             detector = Detector(model_source=source, confidence_threshold=conf)
             detector.load()
             yasmin.YASMIN_LOG_INFO(f'successful start Detector({label})!')
@@ -179,7 +184,7 @@ class Initialize(State):
         try:
             yasmin.YASMIN_LOG_INFO('Initializing landing Aruco...')
             self.land_aruco = Aruco(
-                marker_dict=config.aruco_marker_dict,
+                marker_dict=4, # MUDA ESSA POHA CHANGE NN ESQUECE 
                 tag_size=config.land_aruco_size,
             )
             blackboard.set('land_aruco', self.land_aruco)
@@ -193,9 +198,6 @@ class Initialize(State):
             blackboard.set('inspect_aruco', self.inspect_aruco)
             blackboard.set('callback_inspect_aruco', self.callback_inspect_aruco)
 
-            # Detector used only to recover the marker's pixel-space center
-            # for the debug HUD; pose_estimate() already does its own
-            # detection for the actual PnP solve, this is just for drawing.
             self._aruco_detector = build_detector(config.aruco_marker_dict)
             yasmin.YASMIN_LOG_INFO('successful start Arucos!')
         except KeyboardInterrupt:
