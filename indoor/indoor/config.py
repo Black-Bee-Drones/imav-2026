@@ -2,7 +2,8 @@ from argparse import Namespace
 from dataclasses import dataclass, field, replace
 from math import radians
 from pathlib import Path
-from typing import Optional
+from typing import Optional, cast
+from indoor import get_camera_index
 
 from ament_index_python.packages import get_package_share_directory
 
@@ -58,7 +59,7 @@ class Config:
     camera_north_source: str = "ros_depth"
     camera_north_topic: str = "/camera/color/image_raw/compressed"
     camera_north_is_compressed: bool = True
-    camera_north_id: int = 2
+    camera_north_id: int = get_camera_index('RealSense')
     camera_north_depth_topic: str = "/camera/aligned_depth_to_color/image_raw"
     camera_north_depth_topic_fallback: str = "/camera/depth/image_rect_raw"
     camera_north_offset_z: float = 0.11
@@ -70,7 +71,7 @@ class Config:
     camera_south_source: str = "opencv"
     camera_south_topic: str = "/south_camera"
     camera_south_is_compressed: bool = True
-    camera_south_id: int = 10
+    camera_south_id: int = get_camera_index('C920')
     camera_south_offset_z: float = 0.09
     camera_south_offset_y: float = 0.0
     camera_south_hfov: float = radians(70.42)
@@ -80,7 +81,7 @@ class Config:
     camera_down_source: str = "opencv"
     camera_down_topic: str = "/down_camera"
     camera_down_is_compressed: bool = True
-    camera_down_id: int = 6
+    camera_down_id: int = get_camera_index('Arducam')
     camera_down_offset_x: float = 0.11
     camera_down_offset_y: float = 0.0
     camera_down_hfov: float = radians(86)
@@ -285,4 +286,4 @@ class Config:
         if getattr(args, "no_takeoff", False):
             config = replace(config, skip_takeoff=True)
 
-        return config
+        return cast(Config, config)
