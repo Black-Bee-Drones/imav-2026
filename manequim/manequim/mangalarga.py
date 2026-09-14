@@ -11,6 +11,8 @@ from yasmin_ros.basic_outcomes import SUCCEED, ABORT
 from yasmin_viewer import YasminViewerPub
 
 from .core import Initialize, Takeoff, ReturnToLaunch, End
+from .searchSM import SearchSM
+from .packageSM import PackageSM
 
 class ManequimSM(StateMachine):
     def __init__(self) -> None:
@@ -31,6 +33,24 @@ class ManequimSM(StateMachine):
             transitions={
                 SUCCEED: 'RETURN_TO_LAUNCH',
                 ABORT: 'END'
+            }
+        )
+        
+        self.add_state(
+            'SEARCH',
+            SearchSM(),
+            transitions={
+                SUCCEED: 'PACKAGE',
+                ABORT: 'RETURN_TO_LAUNCH'
+            }
+        )
+        
+        self.add_state(
+            'PACKAGE',
+            PackageSM(),
+            transitions={
+                SUCCEED: 'RETURN_TO_LAUNCH',
+                ABORT: 'RETURN_TO_LAUNCH'
             }
         )
 
