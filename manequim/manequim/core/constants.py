@@ -34,6 +34,26 @@ DETECTOR_CONFIDENCE_THRESHOLD  = 0.5
 
 DETECTOR_CLASS: str = "person"
 
+# ── Package delivery configuration ───────────────────────────────────────────
+SERVO_CHANNEL: int = 2
+SERVO_OPEN_PWM: int = 1400
+SERVO_CLOSED_PWM: int = 1900
+DROP_MAX_RETRIES: int = 3
+RETRY_DELAY: float = 1.0
+DROP_HEIGHT: float = 0.65
+
+# ── Package PID gains ─────────────────────────────────────────────────────────
+X_KP: float = 0.123
+X_KI: float = 0.0
+X_KD: float = 0.02
+
+Y_KP: float = 0.123
+Y_KI: float = 0.0
+Y_KD: float = 0.02
+
+XY_OUTPUT_LIM: float = 1.0
+XY_INTEGRAL_LIM: float = 1.0
+
 CAMERA_SOURCE = "opencv"
 CAMERA_MODEL = "C920"  # Opções disponíveis: "C920" ou "IMX"
 

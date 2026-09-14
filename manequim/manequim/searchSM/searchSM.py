@@ -1,16 +1,17 @@
 from yasmin import StateMachine
 from yasmin_ros.basic_outcomes import SUCCEED, ABORT
+from yasmin_ros.yasmin_node import YasminNode
 
-from navigation import (
+from .states import (
     InitPosition,
     Ascend,
     SearchNavigation,
 )
+from .constants import *
 
-from constants import *
 
 class SearchSM(StateMachine):
-    def __init__(self, node: YasminNode):
+    def __init__(self, node: YasminNode | None = None):
         super().__init__(outcomes=[SUCCEED, ABORT])
 
         self.add_state(
@@ -19,7 +20,7 @@ class SearchSM(StateMachine):
             outcomes=[SUCCEED, ABORT],
             transitions={
                 SUCCEED: "ASCEND",
-                ABORT:   ABORT,
+                ABORT: ABORT,
             },
         )
 
@@ -30,7 +31,7 @@ class SearchSM(StateMachine):
             transitions={
                 SQUARE_SEARCH: "SEARCH_NAVIGATION",
                 MANEQUIM_FOUND: SUCCEED,
-                ABORT:          ABORT,
+                ABORT: ABORT,
             },
         )
 
@@ -39,7 +40,10 @@ class SearchSM(StateMachine):
             SearchNavigation(),
             outcomes=[SUCCEED, ABORT, MANEQUIM_FOUND],
             transitions={
+                SUCCEED: SUCCEED,
                 MANEQUIM_FOUND: SUCCEED,
-                ABORT:          ABORT,
+                ABORT: ABORT,
             },
         )
+
+        self.set_start_state("INIT_POSITION")

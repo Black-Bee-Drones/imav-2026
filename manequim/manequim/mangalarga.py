@@ -31,11 +31,11 @@ class ManequimSM(StateMachine):
             'TAKEOFF',
             Takeoff(),
             transitions={
-                SUCCEED: 'RETURN_TO_LAUNCH',
+                SUCCEED: 'SEARCH',
                 ABORT: 'END'
             }
         )
-        
+
         self.add_state(
             'SEARCH',
             SearchSM(),
@@ -74,6 +74,7 @@ class ManequimSM(StateMachine):
 
 
 def mangalarga() -> None:
+    mangalarga_sm = None
 
     try:
         rclpy.init()
@@ -86,14 +87,11 @@ def mangalarga() -> None:
 
         mangalarga_sm = ManequimSM()
 
-        # Initialize a fresh Blackboard specifically for the mangalarga sequence
         mangalarga_blackboard = Blackboard()
-
-        # Keep the viewer alive, even though the object is never called
         _ = YasminViewerPub(mangalarga_sm, 'MANGALARGA_FSM')
 
         outcome = mangalarga_sm(blackboard=mangalarga_blackboard)
-        print (f"Mangalarga finished with status: {outcome}")
+        print(f"Mangalarga finished with status: {outcome}")
 
     except KeyboardInterrupt:
         print('Stopping by keyboard interrupt...')
@@ -105,7 +103,6 @@ def mangalarga() -> None:
         print_exc()
 
     finally:
-
         if nectar.is_initialized():
             nectar.shutdown()
 

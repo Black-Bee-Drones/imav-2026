@@ -19,9 +19,7 @@ from nectar.control import (
     MavlinkConfig,
     PoseSource,
     PIDController,
-    RTLMethod,
     SITL_GAZEBO_CONFIG,
-    PIDController,
 )
 from nectar.vision import ImageHandler, ROSConfig, OpenCVConfig
 from nectar.ai import Detector, DetectionResult
@@ -89,18 +87,18 @@ class Initialize(State):
         try:
             yasmin.YASMIN_LOG_INFO("Initializing PID Controller...")
             pid_cx = PIDController(
-                kp=getattr(config, 'X_KP', 1.0),
-                ki=getattr(config, 'X_KI', 0.0),
-                kd=getattr(config, 'X_KD', 0.0),
-                output_limits=getattr(config, 'XY_OUTPUT_LIM', 1.0),
-                integral_limits=getattr(config, 'XY_INTEGRAL_LIM', 1.0),
+                kp=config.X_KP,
+                ki=config.X_KI,
+                kd=config.X_KD,
+                output_limits=config.XY_OUTPUT_LIM,
+                integral_limits=config.XY_INTEGRAL_LIM,
             )
             pid_cy = PIDController(
-                kp=getattr(config, 'Y_KP', 1.0),
-                ki=getattr(config, 'Y_KI', 0.0),
-                kd=getattr(config, 'Y_KD', 0.0),
-                output_limits=getattr(config, 'XY_OUTPUT_LIM', 1.0),
-                integral_limits=getattr(config, 'XY_INTEGRAL_LIM', 1.0),
+                kp=config.Y_KP,
+                ki=config.Y_KI,
+                kd=config.Y_KD,
+                output_limits=config.XY_OUTPUT_LIM,
+                integral_limits=config.XY_INTEGRAL_LIM,
             )
             blackboard["pid_cx"] = pid_cx
             blackboard["pid_cy"] = pid_cy

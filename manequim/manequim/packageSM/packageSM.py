@@ -1,48 +1,65 @@
 from yasmin import StateMachine
 from yasmin_ros.basic_outcomes import SUCCEED, ABORT
 
+from .states import (
+    AlignState,
+    DescendState,
+    ReestablishState,
+    DropState,
+)
+from .constants import (
+    LOST_PERSON,
+    ALIGNMENT_FAILED,
+    DROP_RETRY,
+)
+
+
 class PackageSM(StateMachine):
-    def __init__(self, node: YasminNode):
-        super().__init__(outcomes=[SUCCEED, ABORT])
+    def __init__(self):
+        super().__init__(outcomes=[SUCCEED, ABORT, LOST_PERSON, ALIGNMENT_FAILED, DROP_RETRY])
 
         self.add_state(
             "ALIGN",
-            ALIGN(),
-            outcomes=[SUCCEED, ABORT, ALIGNED, READY],
+            AlignState(),
+            outcomes=[SUCCEED, ABORT, LOST_PERSON, ALIGNMENT_FAILED],
             transitions={
-                ALIGNED: "DESCEND",
-                READY: "DROP",
-                LOST: "REESTABLISH",
-                ABORT:   ABORT,
+                SUCCEED: "DESCEND",
+                LOST_PERSON: "REESTABLISH",
+                ALIGNMENT_FAILED: ABORT,
+                ABORT: "REESTABLISH",
             },
         )
 
         self.add_state(
             "DESCEND",
-            DESCEND(),
+            DescendState(),
             outcomes=[SUCCEED, ABORT],
             transitions={
-                SUCCEED: "ALIGN",
-                ABORT:   ABORT,
+                SUCCEED: "DROP",
+                ABORT: "REESTABLISH",
             },
         )
 
         self.add_state(
             "REESTABLISH",
-            REESTABLISH(),
-            outcomes=[SUCCEED, ABORT],
+            ReestablishState(),
+            outcomes=[SUCCEED, ABORT, LOST_PERSON],
             transitions={
                 SUCCEED: "ALIGN",
-                ABORT:   ABORT,
+                LOST_PERSON: ABORT,
+                ABORT: ABORT,
             },
         )
 
         self.add_state(
             "DROP",
-            DROP(),
-            outcomes=[SUCCEED, ABORT],
+            DropState(),
+            outcomes=[SUCCEED, ABORT, DROP_RETRY],
             transitions={
                 SUCCEED: SUCCEED,
-                ABORT:   ABORT,
+                DROP_RETRY: "DROP",
+                ABORT: "REESTABLISH",
             },
         )
+
+        self.set_start_state("ALIGN")

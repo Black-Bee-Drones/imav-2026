@@ -4,6 +4,7 @@ from yasmin_ros.basic_outcomes import SUCCEED, ABORT
 
 from nectar.control import MavrosDrone, MavlinkDrone
 
+
 class Land(State):
     def __init__(self):
         super().__init__(outcomes=[SUCCEED, ABORT])
@@ -20,9 +21,12 @@ class Land(State):
 
             drone.land()
             drone.delay(2)
-            
-            yasmin.YASMIN_LOG_INFO("LANDING completed.")
 
+            if "camera" in blackboard:
+                camera = blackboard["camera"]
+                camera.close()
+
+            yasmin.YASMIN_LOG_INFO("LANDING completed.")
             return SUCCEED
 
         except Exception as e:
