@@ -19,9 +19,19 @@ class PackageSM(StateMachine):
         super().__init__(outcomes=[SUCCEED, ABORT, LOST_PERSON, ALIGNMENT_FAILED, DROP_RETRY])
 
         self.add_state(
+            "DESCEND",
+            DescendState(),
+            transitions={
+                "ALIGN": "ALIGN",
+                SUCCEED: "DROP",
+                ABORT: "REESTABLISH",
+                ALIGNMENT_FAILED: ABORT,
+            },
+        )
+
+        self.add_state(
             "ALIGN",
             AlignState(),
-            outcomes=[SUCCEED, ABORT, LOST_PERSON, ALIGNMENT_FAILED],
             transitions={
                 SUCCEED: "DESCEND",
                 LOST_PERSON: "REESTABLISH",
@@ -31,19 +41,8 @@ class PackageSM(StateMachine):
         )
 
         self.add_state(
-            "DESCEND",
-            DescendState(),
-            outcomes=[SUCCEED, ABORT],
-            transitions={
-                SUCCEED: "DROP",
-                ABORT: "REESTABLISH",
-            },
-        )
-
-        self.add_state(
             "REESTABLISH",
             ReestablishState(),
-            outcomes=[SUCCEED, ABORT, LOST_PERSON],
             transitions={
                 SUCCEED: "ALIGN",
                 LOST_PERSON: ABORT,
@@ -54,7 +53,6 @@ class PackageSM(StateMachine):
         self.add_state(
             "DROP",
             DropState(),
-            outcomes=[SUCCEED, ABORT, DROP_RETRY],
             transitions={
                 SUCCEED: SUCCEED,
                 DROP_RETRY: "DROP",
@@ -62,4 +60,4 @@ class PackageSM(StateMachine):
             },
         )
 
-        self.set_start_state("ALIGN")
+        self.set_start_state("DESCEND")

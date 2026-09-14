@@ -40,7 +40,7 @@ SERVO_OPEN_PWM: int = 1400
 SERVO_CLOSED_PWM: int = 1900
 DROP_MAX_RETRIES: int = 3
 RETRY_DELAY: float = 1.0
-DROP_HEIGHT: float = 0.65
+DROP_HEIGHT: float = 0.5
 
 # ── Package PID gains ─────────────────────────────────────────────────────────
 X_KP: float = 0.123
@@ -51,7 +51,7 @@ Y_KP: float = 0.123
 Y_KI: float = 0.0
 Y_KD: float = 0.02
 
-XY_OUTPUT_LIM: float = 1.0
+XY_OUTPUT_LIM: float = 0.5
 XY_INTEGRAL_LIM: float = 1.0
 
 CAMERA_SOURCE = "opencv"

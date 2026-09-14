@@ -5,7 +5,6 @@ from yasmin import State, Blackboard
 from yasmin_ros.basic_outcomes import SUCCEED, ABORT
 
 from .constants import *
-import manequim.core.constants as config
 
 from nectar.control import (
     MavrosDrone,
@@ -42,6 +41,7 @@ class AlignState(State):
         
         photo_fail = 0
         lost_count = 0
+        aligned_counter = 0
 
         try:
             while True:
@@ -83,10 +83,15 @@ class AlignState(State):
                 vx = pid_cx.update(error_x_m)
                 vy = pid_cy.update(error_y_m)
                 
-                break
-            
-            while True:
+                if vx == 0.0 and vy == 0.0:
+                    aligned_counter += 1
+                    if aligned_counter >= ALIGNED_THRESHOLD:
+                        yasmin.YASMIN_LOG_INFO("Package successfully aligned over target.")
+                        return SUCCEED
+                else:
+                    aligned_counter = 0
                 
+                drone.move_velocity(x=vx, y=vy, z=0.0, frame=MoveReference.BODY, duration=1.0)
 
         except Exception as e:
             yasmin.YASMIN_LOG_ERROR(f"Package alignment failed: {e}")
@@ -96,9 +101,10 @@ class AlignState(State):
         angle_rad = math.radians(fov_degrees) / 2
         ratio = (math.tan(angle_rad) * altitude) / (frame_px // 2)
         return delta_pixel * ratio
+    
 class DescendState(State):
     def __init__(self):
-        super().__init__(outcomes=[SUCCEED, ABORT, DROP_READY])
+        super().__init__(outcomes=[SUCCEED, ABORT, "ALIGN", ALIGNMENT_FAILED])
 
     def execute(self, blackboard: Blackboard):
         if "drone" not in blackboard:
@@ -106,12 +112,29 @@ class DescendState(State):
             return ABORT
 
         drone: MavrosDrone | MavlinkDrone = blackboard["drone"]
+        phase = blackboard.get("descend_phase", "approach")
 
         try:
-            yasmin.YASMIN_LOG_INFO(f"Descending to package drop height {config.DROP_HEIGHT}m...")
-            drone.move_to(x=0.0, y=0.0, z=config.DROP_HEIGHT, frame=MoveReference.BODY)
-            yasmin.YASMIN_LOG_INFO("Descent complete. Ready to drop.")
-            return DROP_READY
+            if phase == "approach":
+                altitude = drone.get_altitude()
+                if altitude is not None and altitude <= DROP_HEIGHT + 0.2:
+                    yasmin.YASMIN_LOG_INFO("Already near drop height. Skipping approach descent.")
+                else:
+                    approach_altitude = max(DROP_HEIGHT + 0.5, 1.0)
+                    yasmin.YASMIN_LOG_INFO(
+                        f"Descending to approach altitude {approach_altitude}m before alignment..."
+                    )
+                    drone.move_to(x=0.0, y=0.0, z=approach_altitude, frame=MoveReference.BODY)
+
+                blackboard["descend_phase"] = "final"
+                yasmin.YASMIN_LOG_INFO("Initial descent complete. Ready to align.")
+                return "ALIGN"
+
+            yasmin.YASMIN_LOG_INFO(f"Descending to drop altitude {DROP_HEIGHT}m...")
+            drone.move_to(x=0.0, y=0.0, z=DROP_HEIGHT, frame=MoveReference.BODY)
+            blackboard["descend_phase"] = "approach"
+            yasmin.YASMIN_LOG_INFO("Final descent complete. Ready to drop.")
+            return SUCCEED
 
         except Exception as e:
             yasmin.YASMIN_LOG_ERROR(f"Package descent failed: {e}")
@@ -131,24 +154,32 @@ class ReestablishState(State):
             yasmin.YASMIN_LOG_ERROR("Camera not available for re-establishing package alignment.")
             return LOST_PERSON
 
+        yasmin.YASMIN_LOG_INFO("Re-establishing package alignment.")
+        drone: MavrosDrone | MavlinkDrone = blackboard["drone"]
+        camera: ImageHandler = blackboard["camera"]
+
         try:
-            yasmin.YASMIN_LOG_INFO("Re-establishing package alignment.")
-            drone: MavrosDrone | MavlinkDrone = blackboard["drone"]
-            camera: ImageHandler = blackboard["camera"]
+            current_altitude = drone.get_altitude()
+            target_altitude = REESTABILISH_ALTITUDE_INCREMENT
 
-            result = camera.take_photo()
-            if result is None:
-                yasmin.YASMIN_LOG_WARN("Re-establish failed: camera could not acquire a frame.")
-                return LOST_PERSON
+            if current_altitude is None or current_altitude < target_altitude:
+                yasmin.YASMIN_LOG_INFO(f"Rising to {target_altitude}m to re-acquire target.")
+                drone.move_to(x=0.0, y=0.0, z=target_altitude, frame=MoveReference.BODY)
 
-            detections = result.filter_by_class(DETECTOR_CLASS)
-            if not detections:
-                yasmin.YASMIN_LOG_WARN("Target still not found during re-establish.")
-                return LOST_PERSON
+            search_steps = [1.0, -1.0, 1.4, -1.4]
+            for step in search_steps:
+                yasmin.YASMIN_LOG_INFO(f"Re-establish search step: move x={step:.2f}m.")
+                drone.move_to(x=step, y=0.0, z=target_altitude, frame=MoveReference.BODY)
 
-            drone.move_to(x=0.0, y=0.0, z=config.DROP_HEIGHT, frame=MoveReference.BODY)
-            yasmin.YASMIN_LOG_INFO("Re-establish complete. Returning to alignment.")
-            return SUCCEED
+                result = camera.take_photo()
+                if result is not None:
+                    detections = result.filter_by_class(DETECTOR_CLASS)
+                    if detections:
+                        yasmin.YASMIN_LOG_INFO("Target found during re-establish search.")
+                        return SUCCEED
+
+            yasmin.YASMIN_LOG_WARN("Target still not found during re-establish search.")
+            return LOST_PERSON
 
         except Exception as e:
             yasmin.YASMIN_LOG_ERROR(f"Re-establish failed: {e}")
@@ -166,19 +197,22 @@ class DropState(State):
             return ABORT
 
         try:
-            yasmin.YASMIN_LOG_INFO(f"Dropping package at {config.DROP_HEIGHT}m...")
-            drone.move_to(z=config.DROP_HEIGHT, frame=MoveReference.BODY)
+            altitude = drone.get_altitude()
+            if altitude is None:
+                yasmin.YASMIN_LOG_ERROR("Unable to retrieve drone altitude for drop.")
+                return ABORT
+            yasmin.YASMIN_LOG_INFO(f"Dropping package at {altitude}m...")
             drone.move_velocity(x=0.0, y=0.0, z=0.0, frame=MoveReference.BODY, duration=1.0)
 
-            retries = config.DROP_MAX_RETRIES
+            retries = DROP_MAX_RETRIES
             for attempt in range(retries):
                 yasmin.YASMIN_LOG_INFO(f"Attempting to drop the package (Attempt {attempt + 1}/{retries})...")
-                if drone.do_servo(aux_out=config.SERVO_CHANNEL, value=config.SERVO_OPEN_PWM):
+                if drone.do_servo(aux_out=SERVO_CHANNEL, value=SERVO_OPEN_PWM):
                     yasmin.YASMIN_LOG_INFO("Package dropped successfully.")
                     return SUCCEED
 
                 yasmin.YASMIN_LOG_WARN("Package drop failed. Retrying...")
-                drone.delay(config.RETRY_DELAY)
+                drone.delay(RETRY_DELAY)
 
             yasmin.YASMIN_LOG_ERROR("Failed to drop the package after all attempts.")
             return DROP_RETRY

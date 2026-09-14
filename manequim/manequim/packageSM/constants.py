@@ -16,8 +16,12 @@ Y_KP: float = 0.123                   # Proportional gain for Y axis
 Y_KI: float = 0.0                     # Integral gain for Y axis
 Y_KD: float = 0.02                    # Derivative gain for Y axis
 
+ALIGNED_THRESHOLD: int = 5             # Number of consecutive aligned detections before considering the package aligned
+
 PHOTO_FAIL_THRESHOLD: int = 5              # Number of consecutive photo failures before aborting
 LOST_THRESHOLD: int = 5                     # Number of consecutive lost detections before aborting
+
+REESTABILISH_ALTITUDE_INCREMENT: float = 1.5  # Altitude increment for re-establishing search [m]
 
 # Package FSM outcomes
 LOST_PERSON = "LOST_PERSON"

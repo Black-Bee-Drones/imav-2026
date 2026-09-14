@@ -17,7 +17,6 @@ class SearchSM(StateMachine):
         self.add_state(
             "INIT_POSITION",
             InitPosition(),
-            outcomes=[SUCCEED, ABORT],
             transitions={
                 SUCCEED: "ASCEND",
                 ABORT: ABORT,
@@ -27,7 +26,6 @@ class SearchSM(StateMachine):
         self.add_state(
             "ASCEND",
             Ascend(),
-            outcomes=[SUCCEED, ABORT, SQUARE_SEARCH, MANEQUIM_FOUND],
             transitions={
                 SQUARE_SEARCH: "SEARCH_NAVIGATION",
                 MANEQUIM_FOUND: SUCCEED,
@@ -38,7 +36,6 @@ class SearchSM(StateMachine):
         self.add_state(
             "SEARCH_NAVIGATION",
             SearchNavigation(),
-            outcomes=[SUCCEED, ABORT, MANEQUIM_FOUND],
             transitions={
                 SUCCEED: SUCCEED,
                 MANEQUIM_FOUND: SUCCEED,
