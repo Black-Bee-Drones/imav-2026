@@ -29,7 +29,7 @@ CONNECTION_STRING = "/dev/ttyAMA1"
 DRONE_TYPE = "mavlink"
 
 # ── Detector ─────────────────────────────────────────────────────────────────
-DETECTOR_MODEL_SOURCE          = "yolo26n.pt"
+DETECTOR_MODEL_SOURCE          = "yolov8n.pt"
 DETECTOR_CONFIDENCE_THRESHOLD  = 0.5
 
 DETECTOR_CLASS: str = "manequim"
