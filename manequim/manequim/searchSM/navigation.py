@@ -76,12 +76,17 @@ class Ascend(State):
 
             detections = result.filter_by_class(DETECTOR_CLASS)
 
-            if detections:
-                yasmin.YASMIN_LOG_INFO("Manequim detectado do alto!")
-                return "FOUND_MANEQUIM"
-            else:
-                yasmin.YASMIN_LOG_INFO("Nothing detected, going to squared spiral state")
-                return "SQUARE_SEARCH"
+            if not detections:
+                yasmin.YASMIN_LOG_INFO("Manequim not detected in Ascend State")
+                return SQUARE_SEARCH
+
+            best_conf = max(detections, key=lambda d: d.confidence)
+
+            if best_conf.confidence < DETECTED_CONFIDENCE_THRESHOLD:
+                yasmin.YASMIN_LOG_INFO("Manequim not detected with enough confidence in Ascend State")
+                return SQUARE_SEARCH
+
+            return MANEQUIM_FOUND
 
         except Exception as e:
             yasmin.YASMIN_LOG_ERROR(f"Ascend failed: {e}")
@@ -146,12 +151,6 @@ class SearchNavigation(State):
             return ABORT
         camera: ImageHandler = blackboard["camera"]
 
-        if "pid_cx" not in blackboard:
-            yasmin.YASMIN_LOG_ERROR("X PID Controller not available.")
-            return ABORT
-        if "pid_cy" not in blackboard:
-            yasmin.YASMIN_LOG_ERROR("Y PID Controller not available.")
-            return ABORT
         try:
             yasmin.YASMIN_LOG_INFO(
                 f"Descending to search altitude {SEARCH_ALTITUDE}m..."
