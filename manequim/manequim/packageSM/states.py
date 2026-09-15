@@ -83,13 +83,9 @@ class AlignState(State):
                 vx = pid_cx.update(error_x_m)
                 vy = pid_cy.update(error_y_m)
                 
-                if vx == 0.0 and vy == 0.0:
-                    aligned_counter += 1
-                    if aligned_counter >= ALIGNED_THRESHOLD:
-                        yasmin.YASMIN_LOG_INFO("Package successfully aligned over target.")
-                        return SUCCEED
-                else:
-                    aligned_counter = 0
+                break
+            
+            
                 
                 drone.move_velocity(x=vx, y=vy, z=0.0, frame=MoveReference.BODY, duration=1.0)
 
