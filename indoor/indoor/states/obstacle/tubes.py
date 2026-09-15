@@ -12,10 +12,10 @@ from nectar.vision import DepthCam
 
 from ...config import Config
 
-_MOVE_PRECISION = 0.12
+_MOVE_PRECISION = 0.10
 _CREEP_VX = 0.12
 _ROI_Y = (0.25, 0.75)
-_ROI_X = (0.30, 0.70)
+_ROI_X = (0.40, 0.70)
 _DEPTH_MIN = 0.15
 _DEPTH_MAX = 5.0
 _CYAN = (255, 255, 0)
@@ -104,6 +104,7 @@ class Tubes(State):
         depth_cam = blackboard.get("depth_cam")
         handler = blackboard.get("image_handler_north")
         save_jpg = blackboard.get("save_jpg")
+
         if depth_cam is None and handler is not None:
             if isinstance(getattr(handler, "camera", None), DepthCam):
                 depth_cam = handler.camera
@@ -114,7 +115,7 @@ class Tubes(State):
 
         points = [
             (0.0, 0.0, alt),
-            (0.0, config.obstacle_tubes_y_avoid, 0.0),
+            (0.0, -config.obstacle_tubes_y_avoid, alt),
             (config.obstacle_tubes_x_avoid, 0.0, 0.0),
             (0.0, -config.obstacle_tubes_y_avoid, 0.0),
         ]
@@ -129,7 +130,7 @@ class Tubes(State):
             if self.check_timeout():
                 drone.move_velocity()
                 return False
-            if self.node.get_clock().now() - start > Duration(seconds=8.0):
+            if self.node.get_clock().now() - start > Duration(seconds=60.0):
                 yasmin.YASMIN_LOG_WARN("Tubes: depth creep time cap, stop.")
                 drone.move_velocity()
                 return True

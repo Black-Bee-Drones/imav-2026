@@ -46,7 +46,7 @@ class Config:
     model_box_conf: float = 0.5
 
     model_lines_source: str = "bars2.pt"
-    model_lines_conf: float = 0.60
+    model_lines_conf: float = 0.70
     model_lines_red_class_name: str = "red"
     model_lines_blue_class_name: str = "blue"
 
@@ -98,7 +98,7 @@ class Config:
     obstacle_xy_ki: float = 0.0
     obstacle_alt_kp: float = 0.4
 
-    obstacle_start_x: float = -0.78
+    obstacle_start_x: float = -0.50
     obstacle_start_y: float = -2.5
 
     obstacle_gate_first_skip: bool = False
@@ -146,7 +146,7 @@ class Config:
     obstacle_bar_center_tolerance: float = 30.0
     obstacle_bar_acquire_timeout: float = 30.0
     obstacle_bar_find_vx: float = 0.15
-    obstacle_bar_pass_x: float = 1.8
+    obstacle_bar_pass_x: float = 2.0
     obstacle_bar_approach_x: float = 1.0
     obstacle_bar_approach_y: float = -0.5
     obstacle_bar_gap: float = 1.0
@@ -157,9 +157,9 @@ class Config:
     obstacle_tubes_alt: float = 1.2
     obstacle_tubes_offset: float = 1.5
     obstacle_tubes_end_offset: float = 0.5
-    obstacle_tubes_standoff: float = 0.7
-    obstacle_tubes_x_avoid: float = 1.5
-    obstacle_tubes_y_avoid: float = 1.0
+    obstacle_tubes_standoff: float = 0.40
+    obstacle_tubes_x_avoid: float = 1.2
+    obstacle_tubes_y_avoid: float = 1.5
 
     inspect_skip: bool = False
     inspect_timeout: int = 300

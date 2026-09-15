@@ -20,7 +20,7 @@ from ...config import Config
 
 _JPEG_QUALITY = 80
 _XY_LIMIT = 0.18
-_CENTER_FRAMES = 8
+_CENTER_FRAMES = 5
 _EDGE_PX = 16
 _MOVE_PRECISION = 0.12
 

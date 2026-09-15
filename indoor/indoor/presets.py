@@ -109,6 +109,25 @@ class PRECISIONLAND(Config):
     precise_skip: bool = False
     precise_fixed: bool = True
 
+@dataclass
+class VVV(Config):
+    obstacle_skip: bool = False
+    inspect_skip: bool = False
+    droping_skip: bool = True
+    rtl: bool = False
+    precise_skip: bool = False
+    precise_fixed: bool = True
+
+@dataclass
+class SAMUEL(Config):
+    obstacle_skip: bool = False
+    obstacle_bar_center_skip: bool = True
+    inspect_skip: bool = False
+    droping_skip: bool = True
+    rtl: bool = False
+    precise_skip: bool = False
+    precise_fixed: bool = True
+
 
 PRESETS: dict[str, Type[Config]] = {
     "CLEITINHO": CLEITINHO,
@@ -121,6 +140,8 @@ PRESETS: dict[str, Type[Config]] = {
     "COMPLETE_MISSION1": COMPLETE_MISSION1,
     "TESTUAUUAU": TESTUAUUAU,
     "PRECISIONLAND": PRECISIONLAND,
+    "VVV": VVV,
+    "SAMUEL": SAMUEL
 }
 
 
