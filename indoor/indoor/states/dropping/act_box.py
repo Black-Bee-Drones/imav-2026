@@ -3,9 +3,13 @@ from yasmin import State, Blackboard
 from yasmin_ros.yasmin_node import YasminNode
 from yasmin_ros.basic_outcomes import SUCCEED, FAIL, CANCEL
 
+import traceback
+
 from nectar.control import MavlinkDrone, MavrosDrone
 
 from indoor.config import Config
+
+import Jetson.GPIO as GPIO
 
 def do_gripper(drone, config: Config) -> bool:
     pwm = config.dropping_servo_open_pwm
@@ -21,24 +25,41 @@ def do_gripper(drone, config: Config) -> bool:
     yasmin.YASMIN_LOG_ERROR("Failed to do servo.")
     return False
 
-class Drop(State):
-    def __init__(self):
+def blink_led(drone, config: Config) -> bool:
+    try:
+        gpio = config.dropping_led_gpio
+        for _ in range(3):
+            GPIO.output(gpio, GPIO.HIGH)
+            drone.delay(0.5)
+            GPIO.output(gpio, GPIO.LOW)
+            drone.delay(0.5)
+        return True
+    except Exception as e:
+        yasmin.YASMIN_LOG_ERROR(f'Error while blink_led function: {e}')
+        traceback.print_exc()
+        return False
+
+
+class ActBoxes(State):
+    def __init__(self, action: str):
         super().__init__(outcomes=[SUCCEED, FAIL])
+        self.action = action
 
     def execute(self, blackboard: Blackboard):
         drone: MavlinkDrone | MavrosDrone = blackboard.get('drone')
         config: Config = blackboard.get('config')
+        action = do_gripper if self.action == 'drop' else blink_led
 
         try:
             #drone.move_to(z=-0.2)
             drone.move_velocity(0.0, 0.0, 0.0)
-            if not do_gripper(drone, config):
+            if not action(drone, config):
                 return FAIL
         except KeyboardInterrupt:
             yasmin.YASMIN_LOG_WARN("Execution interrupted by user.")
             return FAIL
         except Exception as e:
-            yasmin.YASMIN_LOG_ERROR(f"Gripper failed: {e}")
+            yasmin.YASMIN_LOG_ERROR(f"{'Gripper' if self.action == 'drop' else 'Led'} failed: {e}")
             return FAIL
 
         yasmin.YASMIN_LOG_INFO("Completed successfully.")

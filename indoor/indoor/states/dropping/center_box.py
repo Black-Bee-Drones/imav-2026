@@ -1,6 +1,5 @@
 from rclpy.time import Time, Duration
 
-import numpy as np
 import math
 
 import yasmin
@@ -19,9 +18,10 @@ Point2D = tuple[float, float]       # (x, y)
 Pose2D = tuple[float, float, float] # (x, y, yaw)
 
 class CenterBox(State):
-    def __init__(self):
+    def __init__(self, action: str):
         super().__init__(outcomes=[SUCCEED, FAIL, TIMEOUT])
         self.node = YasminNode.get_instance()
+        self.action = action.lower()
 
     def execute(self, blackboard: Blackboard):
         drone: MavlinkDrone | MavrosDrone = blackboard.get('drone')
@@ -30,7 +30,10 @@ class CenterBox(State):
         camera_down: ImageHandler = blackboard.get('image_handler_down')
         camera_down.image_processing_callback = blackboard.get('callback_box')
 
-        target_x, target_y = blackboard["target_coords"]
+        if self.action == 'drop':
+            target_x, target_y = blackboard.get("box_cone_pos")
+        else:
+            target_x, target_y = blackboard.get("box_led_pos")
 
         pid_cx: PIDController = PIDController(
             kp=config.dropping_box_kp,

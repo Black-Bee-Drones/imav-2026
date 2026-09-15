@@ -1,18 +1,16 @@
 from yasmin import StateMachine
-from yasmin_ros.basic_outcomes import SUCCEED, TIMEOUT, FAIL, CANCEL, ABORT
+from yasmin_ros.basic_outcomes import SUCCEED, TIMEOUT, FAIL, CANCEL
 
 from indoor.states import (
     GoToBox,
     MapBoxes,
     CenterBox,
-    Reacquire,
-    Drop,
+    ActBoxes,
 )
 
-# TODO: Review state machine flow
 class DroppingSM(StateMachine):
     def __init__(self):
-        super().__init__(outcomes=[SUCCEED, CANCEL, ABORT, TIMEOUT])
+        super().__init__(outcomes=[SUCCEED, CANCEL])
         """
         Dropping on hot spot state machine.
         """
@@ -31,24 +29,26 @@ class DroppingSM(StateMachine):
 
         self.add_state(
             'CENTER_DROP_BOX',
-            CenterBox(),
-            transitions={SUCCEED: 'DROP', FAIL: 'REACQUIRE', TIMEOUT: CANCEL},
-            remappings={"target_coords": "box_cone_pos"}
+            CenterBox('drop'),
+            transitions={SUCCEED: 'DROP', FAIL: CANCEL, TIMEOUT: CANCEL},
         )
 
         self.add_state(
             'DROP',
-            Drop(),
-            transitions={SUCCEED: "CENTER_LED_BOX" , CANCEL: CANCEL},
+            ActBoxes('drop'),
+            transitions={SUCCEED: "CENTER_LED_BOX" , FAIL: CANCEL},
         )
-        
+
         self.add_state(
             'CENTER_LED_BOX',
-            CenterBox(),
-            transitions={SUCCEED: SUCCEED, FAIL: 'REACQUIRE', TIMEOUT: CANCEL},
-            remappings={"target_coords": "box_led_pos"}
+            CenterBox('led'),
+            transitions={SUCCEED: 'BLINK_LED', FAIL: CANCEL, TIMEOUT: CANCEL},
         )
-        
-        # adicionar state de piscar led
+
+        self.add_state(
+            'BLINK_LED',
+            ActBoxes('led'),
+            transitions={SUCCEED: SUCCEED, FAIL: CANCEL, TIMEOUT: CANCEL}
+        )
 
         self.set_start_state('GO_TO_BOX')

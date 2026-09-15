@@ -201,6 +201,9 @@ class Config:
     dropping_servo_action_delay: float = 2.0
     dropping_servo_retry_delay: float = 0.5
     dropping_servo_retries: int = 5
+    # Led configs
+    dropping_led_gpio: int = 2
+    # State initial coordinates (takeoff reference)
     dropping_start_x: float = 11.0
     dropping_start_y: float = -2.5
 
