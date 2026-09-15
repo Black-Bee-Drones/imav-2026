@@ -2,7 +2,7 @@ from math import radians
 
 
 # ── Simulation ───────────────────────────────────────────────────────────────
-SIM_MODE = False
+SIM_MODE = True
 
 
 # ── Flight Configuration ─────────────────────────────────────────────────────
@@ -26,7 +26,7 @@ IMAGE_SOURCE = SIM_IMAGE_SOURCE if SIM_MODE else REAL_IMAGE_SOURCE
 
 # ── Drone Configuration ─────────────────────────────────────────────────────
 CONNECTION_STRING = "/dev/ttyAMA1"
-DRONE_TYPE = "mavlink"
+DRONE_TYPE = "mavlink" if not SIM_MODE else "mavlink"
 
 # ── Detector ─────────────────────────────────────────────────────────────────
 DETECTOR_MODEL_SOURCE          = "yolov8n.pt"

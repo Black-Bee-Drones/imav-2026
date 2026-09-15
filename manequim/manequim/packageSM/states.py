@@ -124,14 +124,14 @@ class DescendState(State):
                     yasmin.YASMIN_LOG_INFO(
                         f"Descending to approach altitude {approach_altitude}m before alignment..."
                     )
-                    drone.move_to(x=0.0, y=0.0, z=approach_altitude, frame=MoveReference.BODY)
+                    drone.move_to(x=0.0, y=0.0, z=approach_altitude, reference=MoveReference.BODY)
 
                 blackboard["descend_phase"] = "final"
                 yasmin.YASMIN_LOG_INFO("Initial descent complete. Ready to align.")
                 return "ALIGN"
 
             yasmin.YASMIN_LOG_INFO(f"Descending to drop altitude {DROP_HEIGHT}m...")
-            drone.move_to(x=0.0, y=0.0, z=DROP_HEIGHT, frame=MoveReference.BODY)
+            drone.move_to(x=0.0, y=0.0, z=DROP_HEIGHT, reference=MoveReference.BODY)
             blackboard["descend_phase"] = "approach"
             yasmin.YASMIN_LOG_INFO("Final descent complete. Ready to drop.")
             return SUCCEED
@@ -164,12 +164,12 @@ class ReestablishState(State):
 
             if current_altitude is None or current_altitude < target_altitude:
                 yasmin.YASMIN_LOG_INFO(f"Rising to {target_altitude}m to re-acquire target.")
-                drone.move_to(x=0.0, y=0.0, z=target_altitude, frame=MoveReference.BODY)
+                drone.move_to(x=0.0, y=0.0, z=target_altitude, reference=MoveReference.BODY)
 
             search_steps = [1.0, -1.0, 1.4, -1.4]
             for step in search_steps:
                 yasmin.YASMIN_LOG_INFO(f"Re-establish search step: move x={step:.2f}m.")
-                drone.move_to(x=step, y=0.0, z=target_altitude, frame=MoveReference.BODY)
+                drone.move_to(x=step, y=0.0, z=target_altitude, reference=MoveReference.BODY)
 
                 result = camera.take_photo()
                 if result is not None:
@@ -202,7 +202,7 @@ class DropState(State):
                 yasmin.YASMIN_LOG_ERROR("Unable to retrieve drone altitude for drop.")
                 return ABORT
             yasmin.YASMIN_LOG_INFO(f"Dropping package at {altitude}m...")
-            drone.move_velocity(x=0.0, y=0.0, z=0.0, frame=MoveReference.BODY, duration=1.0)
+            drone.move_velocity(x=0.0, y=0.0, z=0.0, reference=MoveReference.BODY, duration=1.0)
 
             retries = DROP_MAX_RETRIES
             for attempt in range(retries):

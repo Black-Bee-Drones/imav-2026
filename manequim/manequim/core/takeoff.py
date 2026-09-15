@@ -20,6 +20,7 @@ class Takeoff(State):
         try:
             YASMIN_LOG_INFO(f"Taking off to {TAKEOFF_HEIGHT}m...")
             ok = self.drone.takeoff(altitude=TAKEOFF_HEIGHT, max_retries=5, adjust_altitude=False)
+            self.drone.delay(3.0)
             if altitude is not None:
                 ok = self.drone.move_to(x=0.0,y=0.0,z=(2.0 - altitude))
 

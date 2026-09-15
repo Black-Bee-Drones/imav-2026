@@ -16,10 +16,10 @@ from nectar.control import (
     MavrosDrone,
     MavlinkDrone,
     MavrosConfig,
-    MavlinkConfig,
     PoseSource,
     PIDController,
     SITL_GAZEBO_CONFIG,
+    MAVLINK_SITL_CONFIG
 )
 from nectar.vision import ImageHandler, ROSConfig, OpenCVConfig
 from nectar.ai import Detector, DetectionResult
@@ -50,25 +50,25 @@ class Initialize(State):
 
         # Drone
         try:
-            yasmin.YASMIN_LOG_INFO('Initializing Drone...')
+            yasmin.YASMIN_LOG_INFO('Initializing Drone Da Silva...')
             if config.DRONE_TYPE == 'mavros':
                 drone_config = MavrosConfig(
                     pose_source=PoseSource.GPS,
                     connection_string=config.CONNECTION_STRING,
-                    arm_timeout=15.0
                 )
 
             elif config.DRONE_TYPE == 'mavlink':
                 drone_config = MavlinkConfig(
                     pose_source=PoseSource.GPS,
                     connection_string=config.CONNECTION_STRING,
-                    arm_timeout=15.0,
+                    heartbeat_timeout=15.0
                 )
             else:
                 yasmin.YASMIN_LOG_ERROR('Invalid drone_type.')
                 return ABORT
+            yasmin.YASMIN_LOG_INFO(f'Creating Drone("{config.DRONE_TYPE}")...')
             if config.SIM_MODE:
-                drone = DroneFactory.create("mavros", SITL_GAZEBO_CONFIG)
+                drone = DroneFactory.create(config.DRONE_TYPE, MAVLINK_SITL_CONFIG)
             else:
                 drone = DroneFactory.create(config.DRONE_TYPE, drone_config)
 
@@ -160,7 +160,7 @@ class Initialize(State):
             camera.open()
 
             yasmin.YASMIN_LOG_INFO('Take testing photo...')
-            frame_test = camera.take_photo()
+            frame_test = camera.take_photo(timeout_sec=3.0)
             if frame_test is None:
                 yasmin.YASMIN_LOG_ERROR("Failed to get frame from camera.")
                 return ABORT

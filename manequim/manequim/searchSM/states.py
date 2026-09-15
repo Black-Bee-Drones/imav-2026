@@ -25,6 +25,10 @@ class InitPosition(State):
         self.drone = blackboard["drone"]
 
         try:
+            if config.SIM_MODE:
+                yasmin.YASMIN_LOG_INFO("Simulation mode: skipping move to initial position.")
+                return SUCCEED
+            
             if LATITUDE is None or LONGITUDE is None:
                 yasmin.YASMIN_LOG_ERROR("Initial GPS coordinates not configured.")
                 return ABORT
@@ -56,7 +60,7 @@ class Ascend(State):
 
         try:
             yasmin.YASMIN_LOG_INFO(f"Ascending to {ASCEND_HEIGHT}m for initial scan...")
-            self.drone.move_to(x=0.0, y=0.0, z=(ASCEND_HEIGHT - config.TAKEOFF_HEIGHT), frame=MoveReference.BODY)
+            self.drone.move_to(x=0.0, y=0.0, z=(ASCEND_HEIGHT - config.TAKEOFF_HEIGHT), reference=MoveReference.BODY)
 
             result: DetectionResult = camera.take_photo()
             if result is None:
@@ -132,7 +136,7 @@ class SearchNavigation(State):
 
         try:
             yasmin.YASMIN_LOG_INFO(f"Descending to search altitude {SEARCH_ALTITUDE}m...")
-            drone.move_to(x=0.0, y=0.0, z=SEARCH_ALTITUDE, frame=MoveReference.TAKEOFF)
+            drone.move_to(x=0.0, y=0.0, z=SEARCH_ALTITUDE, reference=MoveReference.TAKEOFF)
 
             total = len(self._waypoints)
             prev_x, prev_y = 0.0, 0.0
@@ -143,7 +147,7 @@ class SearchNavigation(State):
                 yasmin.YASMIN_LOG_INFO(
                     f"[{i + 1}/{total}] Moving to ({wx:.1f}, {wy:.1f}) @ {SEARCH_ALTITUDE}m | yaw={yaw:.1f}°"
                 )
-                drone.move_to(x=wx, y=wy, z=SEARCH_ALTITUDE, yaw=yaw, frame=MoveReference.TAKEOFF)
+                drone.move_to(x=wx, y=wy, z=SEARCH_ALTITUDE, yaw=yaw, reference=MoveReference.TAKEOFF)
                 prev_x, prev_y = wx, wy
 
                 result: DetectionResult = camera.take_photo()
@@ -154,7 +158,7 @@ class SearchNavigation(State):
                         yasmin.YASMIN_LOG_INFO(
                             f"Manequim detected at ({best.x:.1f}, {best.y:.1f}) with confidence {best.confidence:.2f}"
                         )
-                        drone.move_velocity(x=0.0, y=0.0, z=0.0, frame=MoveReference.BODY, duration=1.0)
+                        drone.move_velocity(x=0.0, y=0.0, z=0.0, reference=MoveReference.BODY, duration=1.0)
                         return MANEQUIM_FOUND
 
             yasmin.YASMIN_LOG_INFO("Square search complete — manequim not found.")
