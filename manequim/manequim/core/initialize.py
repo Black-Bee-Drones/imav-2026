@@ -50,7 +50,7 @@ class Initialize(State):
 
         # Drone
         try:
-            yasmin.YASMIN_LOG_INFO('Initializing Drone Da Silva...')
+            yasmin.YASMIN_LOG_INFO('Initializing Drone...')
             if config.DRONE_TYPE == 'mavros':
                 drone_config = MavrosConfig(
                     pose_source=PoseSource.GPS,
