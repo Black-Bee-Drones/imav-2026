@@ -9,7 +9,6 @@ SIM_MODE = False
 RTL_ALTITUDE   = 2.0   # Return-to-launch altitude (meters)
 TAKEOFF_HEIGHT = 2.0   # Default take-off height   (meters)
 MAX_ALTITUDE_REFERENCE_LOSS = 10 # Total of tries drone can take to verify altitude source
-PWM_VALUE_CLOSE = 1000
 
 
 # ── Image Handler ────────────────────────────────────────────────────────────
@@ -36,8 +35,8 @@ DETECTOR_CLASS: str = "person"
 
 # ── Package delivery configuration ───────────────────────────────────────────
 SERVO_CHANNEL: int = 2
-SERVO_OPEN_PWM: int = 1400
-SERVO_CLOSED_PWM: int = 1900
+SERVO_OPEN_PWM: int = 1600
+SERVO_CLOSED_PWM: int = 2200
 DROP_MAX_RETRIES: int = 3
 RETRY_DELAY: float = 1.0
 DROP_HEIGHT: float = 0.5
