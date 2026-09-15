@@ -116,7 +116,7 @@ class DescendState(State):
                 if altitude is not None and altitude <= DROP_HEIGHT + 0.2:
                     yasmin.YASMIN_LOG_INFO("Already near drop height. Skipping approach descent.")
                 else:
-                    approach_altitude = max(DROP_HEIGHT + 0.5, 1.0)
+                    approach_altitude = max(DROP_HEIGHT + 0.25, 1.0)
                     yasmin.YASMIN_LOG_INFO(
                         f"Descending to approach altitude {approach_altitude}m before alignment..."
                     )

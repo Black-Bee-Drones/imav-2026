@@ -60,7 +60,7 @@ class Ascend(State):
 
         try:
             yasmin.YASMIN_LOG_INFO(f"Ascending to {ASCEND_HEIGHT}m for initial scan...")
-            self.drone.move_to(x=0.0, y=0.0, z=(ASCEND_HEIGHT - config.TAKEOFF_HEIGHT), reference=MoveReference.BODY)
+            self.drone.move_to(x=0.0, y=0.0, z=10.0, reference=MoveReference.WORLD)
 
             result: DetectionResult = camera.take_photo()
             if result is None:
@@ -136,7 +136,7 @@ class SearchNavigation(State):
 
         try:
             yasmin.YASMIN_LOG_INFO(f"Descending to search altitude {SEARCH_ALTITUDE}m...")
-            drone.move_to(x=0.0, y=0.0, z=SEARCH_ALTITUDE, reference=MoveReference.TAKEOFF)
+            drone.move_to(x=0.0, y=0.0, z=SEARCH_ALTITUDE, reference=MoveReference.WORLD)
 
             total = len(self._waypoints)
             prev_x, prev_y = 0.0, 0.0
@@ -147,7 +147,7 @@ class SearchNavigation(State):
                 yasmin.YASMIN_LOG_INFO(
                     f"[{i + 1}/{total}] Moving to ({wx:.1f}, {wy:.1f}) @ {SEARCH_ALTITUDE}m | yaw={yaw:.1f}°"
                 )
-                drone.move_to(x=wx, y=wy, z=SEARCH_ALTITUDE, yaw=yaw, reference=MoveReference.TAKEOFF)
+                drone.move_to(x=wx, y=wy, z=0.0, yaw=yaw, reference=MoveReference.BODY)
                 prev_x, prev_y = wx, wy
 
                 result: DetectionResult = camera.take_photo()
