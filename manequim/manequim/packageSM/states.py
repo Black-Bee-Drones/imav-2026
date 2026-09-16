@@ -48,13 +48,14 @@ class AlignState(State):
                 yasmin.YASMIN_LOG_INFO("Aligning package over target...")
                 lost_count += 1
                 
-                result: DetectionResult = camera.take_photo()
-                if result is None:
-                    photo_fail += 1
-                    if photo_fail >= PHOTO_FAIL_THRESHOLD:
-                        yasmin.YASMIN_LOG_ERROR("Camera failed repeatedly while aligning package.")
-                        return ALIGNMENT_FAILED
-                    return LOST_PERSON
+                for _ in range(3):
+                    result: DetectionResult = camera.take_photo()
+                    if result is None:
+                        photo_fail += 1
+                        if photo_fail >= PHOTO_FAIL_THRESHOLD:
+                            yasmin.YASMIN_LOG_ERROR("Camera failed repeatedly while aligning package.")
+                            return ALIGNMENT_FAILED
+                        return LOST_PERSON
 
                 detections = result.filter_by_class(DETECTOR_CLASS)
                 if not detections:
@@ -82,10 +83,6 @@ class AlignState(State):
                 
                 vx = pid_cx.update(error_x_m)
                 vy = pid_cy.update(error_y_m)
-                
-                break
-            
-            
                 
                 drone.move_velocity(x=vx, y=vy, z=0.0, frame=MoveReference.BODY, duration=1.0)
 
@@ -165,14 +162,15 @@ class ReestablishState(State):
             search_steps = [1.0, -1.0, 1.4, -1.4]
             for step in search_steps:
                 yasmin.YASMIN_LOG_INFO(f"Re-establish search step: move x={step:.2f}m.")
-                drone.move_to(x=step, y=0.0, z=target_altitude, reference=MoveReference.BODY)
+                drone.move_to(x=step, y=0.0, z=0.0, reference=MoveReference.BODY)
 
-                result = camera.take_photo()
-                if result is not None:
-                    detections = result.filter_by_class(DETECTOR_CLASS)
-                    if detections:
-                        yasmin.YASMIN_LOG_INFO("Target found during re-establish search.")
-                        return SUCCEED
+                for _ in range(3):
+                    result = camera.take_photo(timeout_sec=3.0)
+                    if result is not None:
+                        detections = result.filter_by_class(DETECTOR_CLASS)
+                        if detections:
+                            yasmin.YASMIN_LOG_INFO("Target found during re-establish search.")
+                            return SUCCEED
 
             yasmin.YASMIN_LOG_WARN("Target still not found during re-establish search.")
             return LOST_PERSON
