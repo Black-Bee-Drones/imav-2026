@@ -34,6 +34,8 @@ def get_camera_index(camera_name: str) -> int:
         print(f"Warning: Camera '{camera_name}' not found.")
         return -1
 
+    print(f"{camera_name} at idx: {output}")
+
     return int(output)
 
 def main() -> None:

@@ -3,7 +3,8 @@ from dataclasses import dataclass, field, replace
 from math import radians
 from pathlib import Path
 from typing import Optional, cast
-from indoor import get_camera_index
+
+from indoor.camera_index import get_camera_index
 
 from ament_index_python.packages import get_package_share_directory
 
@@ -45,7 +46,7 @@ class Config:
     model_box_source: str = "package.pt"
     model_box_conf: float = 0.5
 
-    model_lines_source: str = "bars2.pt"
+    model_lines_source: str = "o_melhor.pt"
     model_lines_conf: float = 0.70
     model_lines_red_class_name: str = "red"
     model_lines_blue_class_name: str = "blue"
@@ -71,7 +72,7 @@ class Config:
     camera_south_source: str = "opencv"
     camera_south_topic: str = "/south_camera"
     camera_south_is_compressed: bool = True
-    camera_south_id: int = get_camera_index('C920')
+    camera_south_id: int = get_camera_index('C920 ')
     camera_south_offset_z: float = 0.09
     camera_south_offset_y: float = 0.0
     camera_south_hfov: float = radians(70.42)
@@ -81,7 +82,7 @@ class Config:
     camera_down_source: str = "opencv"
     camera_down_topic: str = "/down_camera"
     camera_down_is_compressed: bool = True
-    camera_down_id: int = get_camera_index('Arducam')
+    camera_down_id: int = get_camera_index('C920e ')
     camera_down_offset_x: float = 0.11
     camera_down_offset_y: float = 0.0
     camera_down_hfov: float = radians(86)
