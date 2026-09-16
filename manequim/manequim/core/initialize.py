@@ -160,7 +160,7 @@ class Initialize(State):
             camera.open()
 
             yasmin.YASMIN_LOG_INFO('Take testing photo...')
-            frame_test = camera.take_photo(timeout_sec=3.0)
+            frame_test = camera.take_photo(timeout_sec=6.0)
             if frame_test is None:
                 yasmin.YASMIN_LOG_ERROR("Failed to get frame from camera.")
                 return ABORT

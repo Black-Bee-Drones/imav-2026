@@ -24,7 +24,7 @@ setup(
     },
     entry_points={
         'console_scripts': [
-            'mangalarga = manequim.mangalarga:mangalarga',
+            'mangalarga = manequim.mangalarga:main',
         ],
     },
 )

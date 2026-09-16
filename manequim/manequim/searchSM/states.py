@@ -9,6 +9,7 @@ from yasmin import Blackboard, State
 from yasmin_ros.basic_outcomes import ABORT, SUCCEED
 
 from .constants import *
+from . import constants
 import manequim.core.constants as config
 
 from nectar.control import (
@@ -36,7 +37,8 @@ def save_photo(result: DetectionResult, state_name: str) -> None:
     if not cv2.imwrite(str(image_path), result.image):
         yasmin.YASMIN_LOG_WARN(f'Failed to save captured image to {image_path}')
 
-    if result.annotated_image is not None and not cv2.imwrite(str(annotated_path), result.annotated_image):
+    annotated_image = getattr(result, 'annotated_image', None)
+    if annotated_image is not None and not cv2.imwrite(str(annotated_path), annotated_image):
         yasmin.YASMIN_LOG_WARN(f'Failed to save annotated image to {annotated_path}')
 
 
@@ -53,12 +55,12 @@ class InitPosition(State):
                 yasmin.YASMIN_LOG_INFO("Simulation mode: skipping move to initial position.")
                 return SUCCEED
             
-            if LATITUDE is None or LONGITUDE is None:
+            if constants.LATITUDE is None or constants.LONGITUDE is None:
                 yasmin.YASMIN_LOG_ERROR("Initial GPS coordinates not configured.")
                 return SUCCEED
 
             yasmin.YASMIN_LOG_INFO("Moving to initial position...")
-            self.drone.move_to_gps(latitude=LATITUDE, longitude=LONGITUDE, precision=0.5)
+            self.drone.move_to_gps(latitude=constants.LATITUDE, longitude=constants.LONGITUDE, precision=0.5)
             return SUCCEED
         except Exception as e:
             yasmin.YASMIN_LOG_ERROR(f"Move to initial position failed: {e}")
@@ -90,7 +92,7 @@ class Ascend(State):
                 return ABORT
             self.drone.move_to(x=0.0, y=0.0, z=(ASCEND_HEIGHT - altitude), reference=MoveReference.BODY)
 
-            result: DetectionResult = camera.take_photo()
+            result: DetectionResult = camera.take_photo(timeout_sec=3.0)
             if result is None:
                 yasmin.YASMIN_LOG_ERROR("Image not captured.")
                 return ABORT
@@ -167,45 +169,66 @@ class SearchNavigation(State):
             if altitude is None:
                 yasmin.YASMIN_LOG_ERROR("Unable to get current altitude.")
                 return ABORT
-            drone.move_to(x=0.0, y=0.0, z=(SEARCH_ALTITUDE - altitude), reference=MoveReference.BODY)
+            drone.move_to(
+                x=0.0,
+                y=0.0,
+                z=(SEARCH_ALTITUDE - altitude),
+                reference=MoveReference.BODY,
+            )
 
             total = len(self._waypoints)
             prev_x, prev_y = 0.0, 0.0
+            current_yaw = 0.0
 
             for i, (wx, wy) in enumerate(self._waypoints):
-                yaw = math.degrees(math.atan2(wy - prev_y, wx - prev_x))
+                map_dx = wx - prev_x
+                map_dy = wy - prev_y
+                target_yaw = math.degrees(math.atan2(map_dy, map_dx))
+                yaw_delta = (target_yaw - current_yaw + 180.0) % 360.0 - 180.0
+
+                yaw_rad = math.radians(current_yaw)
+                body_x = map_dx * math.cos(yaw_rad) + map_dy * math.sin(yaw_rad)
+                body_y = -map_dx * math.sin(yaw_rad) + map_dy * math.cos(yaw_rad)
 
                 yasmin.YASMIN_LOG_INFO(
-                    f"[{i + 1}/{total}] Moving to ({wx:.1f}, {wy:.1f}) @ {SEARCH_ALTITUDE}m | yaw={yaw:.1f}°"
+                    f"[{i + 1}/{total}] Moving to ({wx:.1f}, {wy:.1f}) @ "
+                    f"{SEARCH_ALTITUDE}m | yaw={target_yaw:.1f}°"
                 )
                 drone.move_to(
-                    x=wx - prev_x,
-                    y=wy - prev_y,
+                    x=body_x,
+                    y=body_y,
                     z=0.0,
-                    yaw=0.0,
+                    yaw=yaw_delta,
                     reference=MoveReference.BODY,
                 )
-                drone.move_to(x=0.0, y=0.0, z=0.0, yaw=yaw, reference=MoveReference.BODY)
+                current_yaw = target_yaw
                 prev_x, prev_y = wx, wy
 
-                result: DetectionResult = camera.take_photo()
-                if result:
-                    save_photo(result, "search")
-                    detections = result.filter_by_class(config.DETECTOR_CLASS)
-                    best = max(detections, key=lambda d: d.confidence) if detections else None
-                    if best and best.confidence >= config.DETECTOR_CONFIDENCE_THRESHOLD:
-                        yasmin.YASMIN_LOG_INFO(
-                            f"Manequim detected at ({best.x:.1f}, {best.y:.1f}) with confidence {best.confidence:.2f}"
-                        )
-                        drone.move_velocity(x=0.0, y=0.0, z=0.0, reference=MoveReference.BODY, duration=1.0)
-                        return MANEQUIM_FOUND
-                else:
-                    yasmin.YASMIN_LOG_WARN("Image not captured during search.")
+                for _ in range(3):
+                    result: DetectionResult = camera.take_photo(timeout_sec=3.0)
+                    if result:
+                        save_photo(result, "search")
+                        detections = result.filter_by_class(config.DETECTOR_CLASS)
+                        best = max(detections, key=lambda d: d.confidence) if detections else None
+                        if best and best.confidence >= config.DETECTOR_CONFIDENCE_THRESHOLD:
+                            yasmin.YASMIN_LOG_INFO(
+                                f"Manequim detected at ({best.x:.1f}, {best.y:.1f}) "
+                                f"with confidence {best.confidence:.2f}"
+                            )
+                            drone.move_velocity(
+                                x=0.0,
+                                y=0.0,
+                                z=0.0,
+                                reference=MoveReference.BODY,
+                                duration=1.0,
+                            )
+                            return MANEQUIM_FOUND
+                    else:
+                        yasmin.YASMIN_LOG_WARN("Image not captured during search.")
 
-            yasmin.YASMIN_LOG_INFO("Square search complete — manequim not found.")
+            yasmin.YASMIN_LOG_INFO("Square search complete - manequim not found.")
             return SUCCEED
 
         except Exception as e:
             yasmin.YASMIN_LOG_ERROR(f"SearchNavigation failed: {e}")
             return ABORT
-

@@ -2,7 +2,7 @@ from math import radians
 
 
 # ── Simulation ───────────────────────────────────────────────────────────────
-SIM_MODE = False
+SIM_MODE = True
 
 
 # ── Flight Configuration ─────────────────────────────────────────────────────

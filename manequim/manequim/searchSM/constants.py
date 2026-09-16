@@ -30,7 +30,7 @@ def build_parser() -> argparse.ArgumentParser:
 
 def parse_args(args=None):
     parser = build_parser()
-    parsed = parser.parse_args(args)
+    parsed, _ = parser.parse_known_args(args)
 
     if parsed.latitude is None or parsed.longitude is None:
         raise ValueError("Latitude and longitude are required before starting the search.")

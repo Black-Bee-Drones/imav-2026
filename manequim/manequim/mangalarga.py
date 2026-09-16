@@ -13,6 +13,7 @@ from yasmin_viewer import YasminViewerPub
 from .core import Initialize, Takeoff, ReturnToLaunch, End
 from .searchSM import SearchSM
 from .packageSM import PackageSM
+from .searchSM.constants import configure_coordinates, parse_args
 
 class ManequimSM(StateMachine):
     def __init__(self) -> None:
@@ -73,11 +74,14 @@ class ManequimSM(StateMachine):
         self.set_start_state('INITIALIZE')
 
 
-def mangalarga() -> None:
+def main(args=None) -> None:
     mangalarga_sm = None
 
     try:
-        rclpy.init()
+        parsed_args = parse_args(args)
+        configure_coordinates(parsed_args.latitude, parsed_args.longitude)
+
+        rclpy.init(args=args)
         yasmin_set_ros_loggers()
 
         executor = YasminNode.get_instance()._executor
@@ -112,4 +116,4 @@ def mangalarga() -> None:
         return
 
 if __name__ == "__main__":
-    mangalarga()
+    main()
