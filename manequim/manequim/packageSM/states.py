@@ -108,7 +108,7 @@ class DescendState(State):
             return ABORT
 
         drone: MavrosDrone | MavlinkDrone = blackboard["drone"]
-        phase = blackboard.get("descend_phase", "approach")
+        phase = blackboard["descend_phase"] if "descend_phase" in blackboard else "approach"
 
         try:
             if phase == "approach":

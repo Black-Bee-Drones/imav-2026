@@ -48,8 +48,8 @@ def parse_args(args=None):
 
 
 # ── Search Navigation ─────────────────────────────────────────────────────────
-ASCEND_HEIGHT   = 10.0  # altitude de varredura inicial (m)
-SEARCH_ALTITUDE = 7.0   # altitude do espiral quadrado de busca (m)
+ASCEND_HEIGHT   = 7.0  # altitude de varredura inicial (m)
+SEARCH_ALTITUDE = 5.0   # altitude do espiral quadrado de busca (m)
 SEARCH_RADIUS   = 25.0  # raio máximo da área de busca (m)
 
 # ── YASMIN OUTCOMES ───────────────────────────────────────────────────────────

@@ -1,5 +1,8 @@
-from yasmin import State, Blackboard, YASMIN_LOG_INFO
+import yasmin
+from yasmin import State, Blackboard
 from yasmin_ros.basic_outcomes import SUCCEED, ABORT
+
+from nectar.control import MavrosDrone, MavlinkDrone
 
 
 class End(State):
@@ -7,6 +10,25 @@ class End(State):
         super().__init__(outcomes=[SUCCEED, ABORT])
 
     def execute(self, blackboard: Blackboard):
-        _ = blackboard
-        YASMIN_LOG_INFO("Manequim mission finished.")
-        return SUCCEED
+        if "drone" not in blackboard:
+            yasmin.YASMIN_LOG_ERROR("Drone not available...")
+            return ABORT
+
+        drone: MavlinkDrone = blackboard["drone"]
+
+        try:
+            yasmin.YASMIN_LOG_INFO("LANDING...")
+
+            drone.land()
+            drone.delay(2)
+
+            if "camera" in blackboard:
+                camera = blackboard["camera"]
+                camera.close()
+
+            yasmin.YASMIN_LOG_INFO("LANDING completed.")
+            return SUCCEED
+
+        except Exception as e:
+            yasmin.YASMIN_LOG_ERROR(f"LANDING Failed: {e}")
+            return ABORT

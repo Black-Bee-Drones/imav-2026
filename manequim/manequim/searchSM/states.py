@@ -1,19 +1,43 @@
+from datetime import datetime
 import math
+from pathlib import Path
+
+import cv2
 
 import yasmin
-from yasmin import State, Blackboard
-from yasmin_ros.basic_outcomes import SUCCEED, ABORT
+from yasmin import Blackboard, State
+from yasmin_ros.basic_outcomes import ABORT, SUCCEED
 
 from .constants import *
 import manequim.core.constants as config
 
 from nectar.control import (
-    MavrosDrone,
     MavlinkDrone,
+    MavrosDrone,
     MoveReference,
 )
-from nectar.vision import ImageHandler
 from nectar.ai import DetectionResult
+from nectar.vision import ImageHandler
+
+
+IMAGES_PATH = Path(__file__).resolve().parents[1] / 'images'
+
+
+def save_photo(result: DetectionResult, state_name: str) -> None:
+    if result.image is None:
+        yasmin.YASMIN_LOG_WARN('Captured result has no image to save.')
+        return
+
+    IMAGES_PATH.mkdir(parents=True, exist_ok=True)
+    timestamp = datetime.now().strftime('%Y-%m-%d_%H-%M-%S-%f')
+    image_path = IMAGES_PATH / f'{state_name.lower()}-{timestamp}.png'
+    annotated_path = IMAGES_PATH / f'{state_name.lower()}-{timestamp}-annotated.png'
+
+    if not cv2.imwrite(str(image_path), result.image):
+        yasmin.YASMIN_LOG_WARN(f'Failed to save captured image to {image_path}')
+
+    if result.annotated_image is not None and not cv2.imwrite(str(annotated_path), result.annotated_image):
+        yasmin.YASMIN_LOG_WARN(f'Failed to save annotated image to {annotated_path}')
 
 
 class InitPosition(State):
@@ -31,7 +55,7 @@ class InitPosition(State):
             
             if LATITUDE is None or LONGITUDE is None:
                 yasmin.YASMIN_LOG_ERROR("Initial GPS coordinates not configured.")
-                return ABORT
+                return SUCCEED
 
             yasmin.YASMIN_LOG_INFO("Moving to initial position...")
             self.drone.move_to_gps(latitude=LATITUDE, longitude=LONGITUDE, precision=0.5)
@@ -60,12 +84,17 @@ class Ascend(State):
 
         try:
             yasmin.YASMIN_LOG_INFO(f"Ascending to {ASCEND_HEIGHT}m for initial scan...")
-            self.drone.move_to(x=0.0, y=0.0, z=10.0, reference=MoveReference.WORLD)
+            altitude = self.drone.get_altitude()
+            if altitude is None:
+                yasmin.YASMIN_LOG_ERROR("Unable to get current altitude.")
+                return ABORT
+            self.drone.move_to(x=0.0, y=0.0, z=(ASCEND_HEIGHT - altitude), reference=MoveReference.BODY)
 
             result: DetectionResult = camera.take_photo()
             if result is None:
                 yasmin.YASMIN_LOG_ERROR("Image not captured.")
                 return ABORT
+            save_photo(result, "ascend")
 
             detections = result.filter_by_class(config.DETECTOR_CLASS)
             if not detections:
@@ -136,7 +165,11 @@ class SearchNavigation(State):
 
         try:
             yasmin.YASMIN_LOG_INFO(f"Descending to search altitude {SEARCH_ALTITUDE}m...")
-            drone.move_to(x=0.0, y=0.0, z=SEARCH_ALTITUDE, reference=MoveReference.WORLD)
+            altitude = drone.get_altitude()
+            if altitude is None:
+                yasmin.YASMIN_LOG_ERROR("Unable to get current altitude.")
+                return ABORT
+            drone.move_to(x=0.0, y=0.0, z=(SEARCH_ALTITUDE - altitude), reference=MoveReference.BODY)
 
             total = len(self._waypoints)
             prev_x, prev_y = 0.0, 0.0
@@ -147,11 +180,13 @@ class SearchNavigation(State):
                 yasmin.YASMIN_LOG_INFO(
                     f"[{i + 1}/{total}] Moving to ({wx:.1f}, {wy:.1f}) @ {SEARCH_ALTITUDE}m | yaw={yaw:.1f}°"
                 )
-                drone.move_to(x=wx, y=wy, z=0.0, yaw=yaw, reference=MoveReference.BODY)
+                drone.move_to(x=wx, y=wy, z=0.0, yaw=0.0, reference=MoveReference.BODY)
+                drone.move_to(x=0.0, y=0.0, z=0.0, yaw=yaw, reference=MoveReference.BODY)
                 prev_x, prev_y = wx, wy
 
                 result: DetectionResult = camera.take_photo()
                 if result:
+                    save_photo(result, "search")
                     detections = result.filter_by_class(config.DETECTOR_CLASS)
                     best = max(detections, key=lambda d: d.confidence) if detections else None
                     if best and best.confidence >= config.DETECTOR_CONFIDENCE_THRESHOLD:
@@ -160,6 +195,8 @@ class SearchNavigation(State):
                         )
                         drone.move_velocity(x=0.0, y=0.0, z=0.0, reference=MoveReference.BODY, duration=1.0)
                         return MANEQUIM_FOUND
+                else:
+                    yasmin.YASMIN_LOG_WARN("Image not captured during search.")
 
             yasmin.YASMIN_LOG_INFO("Square search complete — manequim not found.")
             return SUCCEED
