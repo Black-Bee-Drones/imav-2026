@@ -1,5 +1,5 @@
 from indoor import Config
-from indoor.states import pixel_to_takeoff_frame, map_and_choose_box
+from indoor.states import map_and_choose_box
 
 from yasmin import Blackboard, State, YASMIN_LOG_INFO
 from yasmin_ros.yasmin_node import YasminNode

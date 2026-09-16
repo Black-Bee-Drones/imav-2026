@@ -9,7 +9,30 @@ from nectar.control import MavlinkDrone, MavrosDrone
 
 from indoor.config import Config
 
-import Jetson.GPIO as GPIO
+import requests
+
+def led(
+        *,
+        on:bool=True,
+        ip:str='wled.local',
+        brightness:int=255,
+        r:int=0,
+        g:int=0,
+        b:int=0,
+        w:int=0
+    ):
+
+    requests.post(
+        f'http://{ip}/json/state',
+        json={
+            'on': on,
+            'seg': [{
+                'fx': 0,
+                'bri': brightness,
+                'col': [[r, g, b, w]],
+            }]
+        }
+    )
 
 def do_gripper(drone, config: Config) -> bool:
     pwm = config.dropping_servo_open_pwm
@@ -27,13 +50,14 @@ def do_gripper(drone, config: Config) -> bool:
 
 def blink_led(drone, config: Config) -> bool:
     try:
-        gpio = config.dropping_led_gpio
-        for _ in range(3):
-            GPIO.output(gpio, GPIO.HIGH)
+        for i in range(3):
+            led(r=255)
             drone.delay(0.5)
-            GPIO.output(gpio, GPIO.LOW)
-            drone.delay(0.5)
+            led(r=0)
+            if i != 2:
+                drone.delay(0.5)
         return True
+
     except Exception as e:
         yasmin.YASMIN_LOG_ERROR(f'Error while blink_led function: {e}')
         traceback.print_exc()

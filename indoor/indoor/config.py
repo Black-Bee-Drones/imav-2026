@@ -42,7 +42,7 @@ class Config:
     model_baby_sample_count: int = 15
 
     model_box_source: str = "package.pt"
-    model_box_conf: float = 0.5
+    model_box_conf: float = 0.3
 
     model_lines_source: str = "lines.pt"
     model_lines_conf: float = 0.25
