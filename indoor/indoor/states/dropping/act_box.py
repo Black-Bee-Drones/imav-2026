@@ -51,9 +51,9 @@ def do_gripper(drone, config: Config) -> bool:
 def blink_led(drone, config: Config) -> bool:
     try:
         for i in range(3):
-            led(r=255)
+            led(r=255, brightness=255)
             drone.delay(0.5)
-            led(r=0)
+            led(r=0, brightness=0)
             if i != 2:
                 drone.delay(0.5)
         return True
