@@ -1,6 +1,5 @@
 from .core import (
     Initialize,
-    Land,
     ReturnToLaunch,
     Takeoff,
     End,
@@ -8,7 +7,6 @@ from .core import (
 
 __all__ = [
     "Initialize",
-    "Land",
     "ReturnToLaunch",
     "Takeoff",
     "End",

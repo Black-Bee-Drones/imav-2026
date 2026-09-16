@@ -149,8 +149,6 @@ class SearchNavigation(State):
             if legs_done % 2 == 0:
                 leg_len += 1
 
-        return waypoints
-
     def execute(self, blackboard: Blackboard):
         if "drone" not in blackboard:
             yasmin.YASMIN_LOG_ERROR("Drone Type (MavrosDrone or MavlinkDrone) Not Found")
@@ -180,7 +178,13 @@ class SearchNavigation(State):
                 yasmin.YASMIN_LOG_INFO(
                     f"[{i + 1}/{total}] Moving to ({wx:.1f}, {wy:.1f}) @ {SEARCH_ALTITUDE}m | yaw={yaw:.1f}°"
                 )
-                drone.move_to(x=wx, y=wy, z=0.0, yaw=0.0, reference=MoveReference.BODY)
+                drone.move_to(
+                    x=wx - prev_x,
+                    y=wy - prev_y,
+                    z=0.0,
+                    yaw=0.0,
+                    reference=MoveReference.BODY,
+                )
                 drone.move_to(x=0.0, y=0.0, z=0.0, yaw=yaw, reference=MoveReference.BODY)
                 prev_x, prev_y = wx, wy
 
