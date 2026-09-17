@@ -22,8 +22,7 @@ class PackageSM(StateMachine):
             "DESCEND",
             DescendState(),
             transitions={
-                "ALIGN": "ALIGN",
-                SUCCEED: "DROP",
+                SUCCEED: "ALIGN",
                 ABORT: "REESTABLISH",
                 ALIGNMENT_FAILED: ABORT,
             },
@@ -33,7 +32,8 @@ class PackageSM(StateMachine):
             "ALIGN",
             AlignState(),
             transitions={
-                SUCCEED: "DESCEND",
+                SUCCEED: "DROP",
+                "DESCEND": "DESCEND",
                 LOST_PERSON: "REESTABLISH",
                 ALIGNMENT_FAILED: ABORT,
                 ABORT: "REESTABLISH",

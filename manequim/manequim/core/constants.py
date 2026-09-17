@@ -1,4 +1,6 @@
+import os
 from math import radians
+from pathlib import Path
 
 
 # ── Simulation ───────────────────────────────────────────────────────────────
@@ -28,10 +30,16 @@ CONNECTION_STRING = "/dev/ttyAMA1"
 DRONE_TYPE = "mavlink" if not SIM_MODE else "mavlink"
 
 # ── Detector ─────────────────────────────────────────────────────────────────
-DETECTOR_MODEL_SOURCE          = "yolo26n.pt"
+if SIM_MODE:
+    DETECTOR_MODEL_SOURCE = os.environ.get(
+        "MANEQUIM_DETECTOR_MODEL",
+        str(Path.home() / "ros2_ws" / "yolo26n.pt"),
+    )
+else:
+    DETECTOR_MODEL_SOURCE = "yolo26n.pt"
 DETECTOR_CONFIDENCE_THRESHOLD  = 0.5
 
-DETECTOR_CLASS: str = "person"
+DETECTOR_CLASS: list[str] = ["person", "kite"] if SIM_MODE else ["person"]
 
 # ── Package delivery configuration ───────────────────────────────────────────
 SERVO_CHANNEL: int = 2
@@ -39,7 +47,7 @@ SERVO_OPEN_PWM: int = 1600
 SERVO_CLOSED_PWM: int = 2200
 DROP_MAX_RETRIES: int = 3
 RETRY_DELAY: float = 1.0
-DROP_HEIGHT: float = 0.5
+DROP_HEIGHT: float = 0.55
 
 # ── Package PID gains ─────────────────────────────────────────────────────────
 X_KP: float = 0.123
@@ -50,8 +58,9 @@ Y_KP: float = 0.123
 Y_KI: float = 0.0
 Y_KD: float = 0.02
 
-XY_OUTPUT_LIM: float = 0.5
-XY_INTEGRAL_LIM: float = 1.0
+XY_OUTPUT_LIM: tuple[float, float] = (-0.5, 0.5)
+XY_INTEGRAL_LIM: tuple[float, float] = (-1.0, 1.0)
+XY_OUTPUT_DEADBAND: float = 0.05
 
 CAMERA_SOURCE = "opencv"
 CAMERA_MODEL = "C920"  # Opções disponíveis: "C920" ou "IMX"

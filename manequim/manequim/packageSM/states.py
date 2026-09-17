@@ -19,7 +19,7 @@ from manequim.core.constants import *
 
 class AlignState(State):
     def __init__(self):
-        super().__init__(outcomes=[SUCCEED, ABORT, LOST_PERSON, ALIGNMENT_FAILED])
+        super().__init__(outcomes=[SUCCEED, ABORT, "DESCEND", LOST_PERSON, ALIGNMENT_FAILED])
 
     def execute(self, blackboard: Blackboard):
         if "drone" not in blackboard:
@@ -70,11 +70,23 @@ class AlignState(State):
                 if best.confidence < 0.5:
                     yasmin.YASMIN_LOG_WARN("Target confidence below threshold during alignment.")
                     return LOST_PERSON
+
+                try:
+                    bounding_box = tuple(float(value) for value in best.xyxy)
+                except (TypeError, ValueError):
+                    yasmin.YASMIN_LOG_WARN("Target detection has an invalid bounding box.")
+                    return LOST_PERSON
+
+                if len(bounding_box) != 4:
+                    yasmin.YASMIN_LOG_WARN("Target detection bounding box must have four values.")
+                    return LOST_PERSON
+
+                x1, y1, x2, y2 = bounding_box
+                target_x = (x1 + x2) / 2.0
+                target_y = (y1 + y2) / 2.0
                 
-                target_x, target_y = best.center
-                
-                error_x_px = target_x - (camera.width // 2)
-                error_y_px = target_y - (camera.height // 2)
+                error_x_px = target_x - (IMAGE_WIDTH // 2)
+                error_y_px = target_y - (IMAGE_HEIGHT // 2)
 
                 altitude = drone.get_altitude()
                 
@@ -84,15 +96,25 @@ class AlignState(State):
                 vx = pid_cx.update(error_x_m)
                 vy = pid_cy.update(error_y_m)
                 
-                drone.move_velocity(x=vx, y=vy, z=0.0, frame=MoveReference.BODY, duration=1.0)
+                if (vx == 0) and (vy == 0):
+                    if(math.isclose(a=altitude, b=DROP_HEIGHT, abs_tol=0.2)):
+                        return SUCCEED
+                    return "DESCEND"
+                
+                drone.move_velocity(
+                    vx=vy,
+                    vy=vx,
+                    vz=0.0,
+                    reference=MoveReference.BODY,
+                    duration=1.0,
+                )
 
         except Exception as e:
             yasmin.YASMIN_LOG_ERROR(f"Package alignment failed: {e}")
             return ALIGNMENT_FAILED
         
-    def ppm(self, delta_pixel: int, altitude: float, fov_degrees: float, frame_px: int) -> float:
-        angle_rad = math.radians(fov_degrees) / 2
-        ratio = (math.tan(angle_rad) * altitude) / (frame_px // 2)
+    def ppm(self, delta_pixel: float, altitude: float, fov: float, frame_px: int) -> float:
+        ratio = (math.tan(fov) * altitude) / (frame_px // 2)
         return delta_pixel * ratio
     
 class DescendState(State):
@@ -105,28 +127,20 @@ class DescendState(State):
             return ABORT
 
         drone: MavrosDrone | MavlinkDrone = blackboard["drone"]
-        phase = blackboard["descend_phase"] if "descend_phase" in blackboard else "approach"
 
         try:
-            if phase == "approach":
-                altitude = drone.get_altitude()
-                if altitude is not None and altitude <= DROP_HEIGHT + 0.2:
-                    yasmin.YASMIN_LOG_INFO("Already near drop height. Skipping approach descent.")
-                else:
-                    approach_altitude = max(DROP_HEIGHT + 0.25, 1.0)
-                    yasmin.YASMIN_LOG_INFO(
-                        f"Descending to approach altitude {approach_altitude}m before alignment..."
-                    )
-                    drone.move_to(x=0.0, y=0.0, z=approach_altitude, reference=MoveReference.BODY)
+            altitude = drone.get_altitude()
+            
+            if (altitude <= DROP_HEIGHT):
+                yasmin.YASMIN_LOG_WARN("Drone below drop altitude {altitude}m ascending.")
+                drone.move_to(x=0.0, y=0.0, z=(DROP_HEIGHT - altitude), precision=0.1, reference=MoveReference.BODY)
+                return SUCCEED
+            
+            step = 0.5 if (altitude - DROP_HEIGHT) > 0.5 else (altitude - DROP_HEIGHT)
+            
+            yasmin.YASMIN_LOG_INFO(f"Drone currently at {altitude}m, descending {step} meters")
+            drone.move_to(x=0.0, y=0.0, z=-step, precision=0.1, reference=MoveReference.BODY)
 
-                blackboard["descend_phase"] = "final"
-                yasmin.YASMIN_LOG_INFO("Initial descent complete. Ready to align.")
-                return "ALIGN"
-
-            yasmin.YASMIN_LOG_INFO(f"Descending to drop altitude {DROP_HEIGHT}m...")
-            drone.move_to(x=0.0, y=0.0, z=DROP_HEIGHT, reference=MoveReference.BODY)
-            blackboard["descend_phase"] = "approach"
-            yasmin.YASMIN_LOG_INFO("Final descent complete. Ready to drop.")
             return SUCCEED
 
         except Exception as e:
@@ -196,12 +210,18 @@ class DropState(State):
                 yasmin.YASMIN_LOG_ERROR("Unable to retrieve drone altitude for drop.")
                 return ABORT
             yasmin.YASMIN_LOG_INFO(f"Dropping package at {altitude}m...")
-            drone.move_velocity(x=0.0, y=0.0, z=0.0, reference=MoveReference.BODY, duration=1.0)
+            drone.move_velocity(
+                vx=0.0,
+                vy=0.0,
+                vz=0.0,
+                reference=MoveReference.BODY,
+                duration=1.0,
+            )
 
             retries = DROP_MAX_RETRIES
             for attempt in range(retries):
                 yasmin.YASMIN_LOG_INFO(f"Attempting to drop the package (Attempt {attempt + 1}/{retries})...")
-                if drone.do_servo(aux_out=SERVO_CHANNEL, value=SERVO_OPEN_PWM):
+                if drone.do_servo(aux_out=SERVO_CHANNEL, pwm_value=SERVO_OPEN_PWM):
                     yasmin.YASMIN_LOG_INFO("Package dropped successfully.")
                     return SUCCEED
 

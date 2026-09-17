@@ -32,8 +32,11 @@ def parse_args(args=None):
     parser = build_parser()
     parsed, _ = parser.parse_known_args(args)
 
-    if parsed.latitude is None or parsed.longitude is None:
-        raise ValueError("Latitude and longitude are required before starting the search.")
+    if (parsed.latitude is None) != (parsed.longitude is None):
+        raise ValueError("Latitude and longitude must be provided together.")
+
+    if parsed.latitude is None and parsed.longitude is None:
+        return parsed
 
     parsed.latitude = float(parsed.latitude)
     parsed.longitude = float(parsed.longitude)

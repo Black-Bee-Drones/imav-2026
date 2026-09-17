@@ -3,7 +3,7 @@ from yasmin_ros.basic_outcomes import SUCCEED, ABORT
 
 from nectar.control import MavrosDrone, MavlinkDrone, RTLMethod
 
-from manequim.core.constants import RTL_ALTITUDE
+from manequim.core.constants import *
 
 class ReturnToLaunch(State):
     def __init__(self):
@@ -16,6 +16,9 @@ class ReturnToLaunch(State):
         self.drone = blackboard["drone"]
 
         try:
+            
+            if self.drone.do_servo(aux_out=SERVO_CHANNEL, pwm_value=SERVO_OPEN_PWM):
+                YASMIN_LOG_INFO("Package dropped successfully.")
 
             YASMIN_LOG_INFO(f"Returning to launch at {RTL_ALTITUDE}m...")
             self.drone.rtl(

@@ -31,12 +31,9 @@ def save_photo(result: DetectionResult, state_name: str) -> None:
 
     IMAGES_PATH.mkdir(parents=True, exist_ok=True)
     timestamp = datetime.now().strftime('%Y-%m-%d_%H-%M-%S-%f')
-    image_path = IMAGES_PATH / f'{state_name.lower()}-{timestamp}.png'
+    
     annotated_path = IMAGES_PATH / f'{state_name.lower()}-{timestamp}-annotated.png'
-
-    if not cv2.imwrite(str(image_path), result.image):
-        yasmin.YASMIN_LOG_WARN(f'Failed to save captured image to {image_path}')
-
+    
     annotated_image = getattr(result, 'annotated_image', None)
     if annotated_image is not None and not cv2.imwrite(str(annotated_path), annotated_image):
         yasmin.YASMIN_LOG_WARN(f'Failed to save annotated image to {annotated_path}')
@@ -92,11 +89,17 @@ class Ascend(State):
                 return ABORT
             self.drone.move_to(x=0.0, y=0.0, z=(ASCEND_HEIGHT - altitude), reference=MoveReference.BODY)
 
-            result: DetectionResult = camera.take_photo(timeout_sec=3.0)
-            if result is None:
-                yasmin.YASMIN_LOG_ERROR("Image not captured.")
-                return ABORT
-            save_photo(result, "ascend")
+            for _ in range(3):
+                result: DetectionResult = camera.take_photo(timeout_sec=3.0)
+                if result:
+                    save_photo(result, "ascend")
+                    detections = result.filter_by_class(config.DETECTOR_CLASS)
+                    best = max(detections, key=lambda d: d.confidence) if detections else None
+                    if best and best.confidence >= config.DETECTOR_CONFIDENCE_THRESHOLD:
+                        yasmin.YASMIN_LOG_INFO(
+                            f"Manequim detected at bounding box {best.xyxy} "
+                            f"with confidence {best.confidence:.2f}"
+                        )
 
             detections = result.filter_by_class(config.DETECTOR_CLASS)
             if not detections:
@@ -212,13 +215,13 @@ class SearchNavigation(State):
                         best = max(detections, key=lambda d: d.confidence) if detections else None
                         if best and best.confidence >= config.DETECTOR_CONFIDENCE_THRESHOLD:
                             yasmin.YASMIN_LOG_INFO(
-                                f"Manequim detected at ({best.x:.1f}, {best.y:.1f}) "
+                                f"Manequim detected at bounding box {best.xyxy} "
                                 f"with confidence {best.confidence:.2f}"
                             )
                             drone.move_velocity(
-                                x=0.0,
-                                y=0.0,
-                                z=0.0,
+                                vx=0.0,
+                                vy=0.0,
+                                vz=0.0,
                                 reference=MoveReference.BODY,
                                 duration=1.0,
                             )

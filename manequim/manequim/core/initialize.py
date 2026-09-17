@@ -92,6 +92,7 @@ class Initialize(State):
                 kd=config.X_KD,
                 output_limits=config.XY_OUTPUT_LIM,
                 integral_limits=config.XY_INTEGRAL_LIM,
+                output_deadband=config.XY_OUTPUT_DEADBAND,
             )
             pid_cy = PIDController(
                 kp=config.Y_KP,
@@ -99,6 +100,7 @@ class Initialize(State):
                 kd=config.Y_KD,
                 output_limits=config.XY_OUTPUT_LIM,
                 integral_limits=config.XY_INTEGRAL_LIM,
+                output_deadband=config.XY_OUTPUT_DEADBAND,
             )
             blackboard["pid_cx"] = pid_cx
             blackboard["pid_cy"] = pid_cy
@@ -115,8 +117,21 @@ class Initialize(State):
         # Detector - mannequin
         try:
             yasmin.YASMIN_LOG_INFO('Initializing Detector(mannequin)...')
+            detector_source = config.DETECTOR_MODEL_SOURCE
+            detector_options = {}
+            if config.SIM_MODE:
+                model_path = pathlib.Path(detector_source).expanduser()
+                if not model_path.is_file():
+                    raise FileNotFoundError(
+                        f'Detector model not found: {model_path}. '
+                        'Set MANEQUIM_DETECTOR_MODEL to a local .pt file.'
+                    )
+                detector_source = str(model_path)
+                detector_options['device'] = 'cpu'
+
             self.detector_mannequin = Detector(
-                model_source=config.DETECTOR_MODEL_SOURCE,
+                model_source=detector_source,
+                **detector_options,
                 confidence_threshold=config.DETECTOR_CONFIDENCE_THRESHOLD,
             )
 

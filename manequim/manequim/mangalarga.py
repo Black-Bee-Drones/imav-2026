@@ -79,7 +79,8 @@ def main(args=None) -> None:
 
     try:
         parsed_args = parse_args(args)
-        configure_coordinates(parsed_args.latitude, parsed_args.longitude)
+        if parsed_args.latitude is not None and parsed_args.longitude is not None:
+            configure_coordinates(parsed_args.latitude, parsed_args.longitude)
 
         rclpy.init(args=args)
         yasmin_set_ros_loggers()
