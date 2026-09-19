@@ -140,6 +140,8 @@ class Initialize(State):
 
             blackboard['detector_mannequin'] = self.detector_mannequin
             yasmin.YASMIN_LOG_INFO('Successful start Detector(mannequin)!')
+            
+            blackboard['manequim_detections'] = 0
 
         except KeyboardInterrupt:
             yasmin.YASMIN_LOG_WARN('Execution interrupted by user.')

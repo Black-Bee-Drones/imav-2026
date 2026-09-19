@@ -47,7 +47,7 @@ SERVO_OPEN_PWM: int = 1600
 SERVO_CLOSED_PWM: int = 2200
 DROP_MAX_RETRIES: int = 3
 RETRY_DELAY: float = 1.0
-DROP_HEIGHT: float = 0.55
+DROP_HEIGHT: float = 2.0
 
 # ── Package PID gains ─────────────────────────────────────────────────────────
 X_KP: float = 0.123

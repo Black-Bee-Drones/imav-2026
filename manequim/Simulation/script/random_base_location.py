@@ -17,12 +17,7 @@ MAPPING_CONFIG = Path(
     HOME / "ros2_ws/src/black-bee-challenge-2026/mapping/mapping/config.yml"
 )
 
-X_MAX = 14 / 2
-X_MIN = -X_MAX
-
-Y_MAX = 14 / 2
-Y_MIN = -Y_MAX
-
+DRONE_RADIUS = 25 # meters
 BASE_RADIOUS = 2 # meters
 
 MIN_DISTANCE = 9 # meters
@@ -71,16 +66,11 @@ def generate_positions(number):
     positions = []
 
     while len(positions) < number:
+        angle = random.uniform(0, 2 * math.pi)
+        radius = math.sqrt(random.uniform(0, 1)) * (DRONE_RADIUS - BASE_RADIOUS)
 
-        x = random.uniform(
-            X_MIN + BASE_RADIOUS,
-            X_MAX - BASE_RADIOUS
-        )
-
-        y = random.uniform(
-            Y_MIN + BASE_RADIOUS,
-            Y_MAX - BASE_RADIOUS
-        )
+        x = radius * math.cos(angle)
+        y = radius * math.sin(angle)
 
         if valid_position(x, y, positions):
 

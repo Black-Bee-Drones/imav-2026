@@ -89,6 +89,7 @@ class Ascend(State):
                 return ABORT
             self.drone.move_to(x=0.0, y=0.0, z=(ASCEND_HEIGHT - altitude), reference=MoveReference.BODY)
 
+            manequim_detected = False
             for _ in range(3):
                 result: DetectionResult = camera.take_photo(timeout_sec=3.0)
                 if result:
@@ -100,6 +101,16 @@ class Ascend(State):
                             f"Manequim detected at bounding box {best.xyxy} "
                             f"with confidence {best.confidence:.2f}"
                         )
+                        manequim_detected = True
+
+            if manequim_detected:
+                detections_count = blackboard["manequim_detections"] + 1
+                blackboard["manequim_detections"] = detections_count
+                if detections_count >= constants.MANEQUIM_NUMBER:
+                    return MANEQUIM_FOUND
+
+            if result is None:
+                return SQUARE_SEARCH
 
             detections = result.filter_by_class(config.DETECTOR_CLASS)
             if not detections:
@@ -111,7 +122,7 @@ class Ascend(State):
                 yasmin.YASMIN_LOG_INFO("Manequim not detected with enough confidence in Ascend State")
                 return SQUARE_SEARCH
 
-            return MANEQUIM_FOUND
+            return SQUARE_SEARCH
 
         except Exception as e:
             yasmin.YASMIN_LOG_ERROR(f"Ascend failed: {e}")
@@ -207,6 +218,7 @@ class SearchNavigation(State):
                 current_yaw = target_yaw
                 prev_x, prev_y = wx, wy
 
+                manequim_detected = False
                 for _ in range(3):
                     result: DetectionResult = camera.take_photo(timeout_sec=3.0)
                     if result:
@@ -218,16 +230,22 @@ class SearchNavigation(State):
                                 f"Manequim detected at bounding box {best.xyxy} "
                                 f"with confidence {best.confidence:.2f}"
                             )
-                            drone.move_velocity(
-                                vx=0.0,
-                                vy=0.0,
-                                vz=0.0,
-                                reference=MoveReference.BODY,
-                                duration=1.0,
-                            )
-                            return MANEQUIM_FOUND
+                            manequim_detected = True
                     else:
                         yasmin.YASMIN_LOG_WARN("Image not captured during search.")
+
+                if manequim_detected:
+                    detections_count = blackboard["manequim_detections"] + 1
+                    blackboard["manequim_detections"] = detections_count
+                    if detections_count >= constants.MANEQUIM_NUMBER:
+                        drone.move_velocity(
+                            vx=0.0,
+                            vy=0.0,
+                            vz=0.0,
+                            reference=MoveReference.BODY,
+                            duration=1.0,
+                        )
+                        return MANEQUIM_FOUND
 
             yasmin.YASMIN_LOG_INFO("Square search complete - manequim not found.")
             return SUCCEED

@@ -173,10 +173,10 @@ class ReestablishState(State):
                 yasmin.YASMIN_LOG_INFO(f"Rising to {target_altitude}m to re-acquire target.")
                 drone.move_to(x=0.0, y=0.0, z=target_altitude, reference=MoveReference.BODY)
 
-            search_steps = [1.0, -1.0, 1.4, -1.4]
-            for step in search_steps:
-                yasmin.YASMIN_LOG_INFO(f"Re-establish search step: move x={step:.2f}m.")
-                drone.move_to(x=step, y=0.0, z=0.0, reference=MoveReference.BODY)
+            search_steps = [(1.4,0.0), (-1.4,0.0), (0.0,1.0), (0.0,1.0)]
+            for stepx, stepy in search_steps:
+                yasmin.YASMIN_LOG_INFO(f"Re-establish search step: move x={stepx:.2f} and y={stepy:.2f}m.")
+                drone.move_to(x=stepx, y=stepy, z=0.0, reference=MoveReference.BODY)
 
                 for _ in range(3):
                     result = camera.take_photo(timeout_sec=3.0)
@@ -185,7 +185,9 @@ class ReestablishState(State):
                         if detections:
                             yasmin.YASMIN_LOG_INFO("Target found during re-establish search.")
                             return SUCCEED
-
+                        
+                drone.move_to(x=-stepx, y=-stepy, z=0.0, reference=MoveReference.BODY)
+                
             yasmin.YASMIN_LOG_WARN("Target still not found during re-establish search.")
             return LOST_PERSON
 
