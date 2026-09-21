@@ -184,7 +184,7 @@ class Initialize(State):
         try:
             yasmin.YASMIN_LOG_INFO('Initializing landing Aruco...')
             self.land_aruco = Aruco(
-                marker_dict=4, # MUDA ESSA POHA CHANGE NN ESQUECE 
+                marker_dict=config.aruco_marker_dict,
                 tag_size=config.land_aruco_size,
             )
             blackboard.set('land_aruco', self.land_aruco)

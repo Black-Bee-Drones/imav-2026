@@ -53,7 +53,7 @@ class Config:
 
     aruco_marker_dict: int = 5
     land_aruco_size: float = 0.8
-    inspect_aruco_size: float = 0.3 # MUDA ESSA POHSA NN ESQUECE ESSA CARALHA CHANGE
+    inspect_aruco_size: float = 0.8 
     color_calibration_path: Optional[str] = None
 
     # North: RealSense D435i RGB (Intel 69.4° x 42.5° x 77° ±3°)
@@ -99,8 +99,8 @@ class Config:
     obstacle_xy_ki: float = 0.0
     obstacle_alt_kp: float = 0.4
 
-    obstacle_start_x: float = -0.50
-    obstacle_start_y: float = -2.5
+    obstacle_start_x: float = -0.80
+    obstacle_start_y: float = -2.2
 
     obstacle_gate_first_skip: bool = False
     obstacle_gate_second_skip: bool = False
@@ -147,7 +147,7 @@ class Config:
     obstacle_bar_center_tolerance: float = 30.0
     obstacle_bar_acquire_timeout: float = 30.0
     obstacle_bar_find_vx: float = 0.15
-    obstacle_bar_pass_x: float = 2.0
+    obstacle_bar_pass_x: float = 3.0
     obstacle_bar_approach_x: float = 1.0
     obstacle_bar_approach_y: float = -0.5
     obstacle_bar_gap: float = 1.0
@@ -164,9 +164,9 @@ class Config:
 
     inspect_skip: bool = False
     inspect_timeout: int = 300
-    inspect_start_x: float = 8.0
+    inspect_start_x: float = 10.0
     inspect_start_y: float = 0.0
-    inspect_start_z: float = 1.30 # MUDA NAO ESQUECE DE MUDAR POHA CHANGE CHANGE
+    inspect_start_z: float = 1.80
     inspect_descent_speed: float = -0.2
     inspect_back_speed: float = -0.5
     inspect_babies_count: Optional[int] = None
@@ -185,7 +185,7 @@ class Config:
     precise_timeout: int = 300
     precise_fixed: bool = True
     precise_fixed_x: float = 0.0
-    precise_fixed_y: float = -5.0
+    precise_fixed_y: float = -4.4
     precise_mobile_x: float = 0.0
     precise_mobile_y: float = -2.0
     center_threshold_xy: float = 0.18

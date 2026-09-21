@@ -129,6 +129,58 @@ class SAMUEL(Config):
     precise_skip: bool = False
     precise_fixed: bool = True
 
+@dataclass
+class M1P(Config):
+    obstacle_skip: bool = False
+    obstacle_bar_center_skip: bool = False
+    inspect_skip: bool = True
+    droping_skip: bool = True
+    rtl: bool = False
+    precise_skip: bool = False
+    precise_fixed: bool = True
+
+@dataclass
+class M2P(Config):
+    obstacle_skip: bool = True
+    obstacle_bar_center_skip: bool = False
+    inspect_skip: bool = False
+    droping_skip: bool = True
+    rtl: bool = False
+    precise_skip: bool = False
+    precise_fixed: bool = True
+    
+@dataclass
+class M1PSKIPBAR(Config):
+    obstacle_skip: bool = False
+    obstacle_bar_center_skip: bool = True
+    inspect_skip: bool = True
+    droping_skip: bool = True
+    rtl: bool = False
+    precise_skip: bool = False
+    precise_fixed: bool = True
+
+@dataclass
+class M1PSKIPGATE(Config):
+    obstacle_skip: bool = False
+    obstacle_bar_center_skip: bool = True
+    obstacle_gate_first_skip: bool = True
+    obstacle_gate_second_skip: bool = True
+    inspect_skip: bool = True
+    droping_skip: bool = True
+    rtl: bool = False
+    precise_skip: bool = False
+    precise_fixed: bool = True
+
+@dataclass
+class FULL(Config):
+    obstacle_skip: bool = False
+    obstacle_bar_center_skip: bool = False
+    inspect_skip: bool = False
+    droping_skip: bool = True
+    rtl: bool = False
+    precise_skip: bool = False
+    precise_fixed: bool = True
+
 
 PRESETS: dict[str, Type[Config]] = {
     "CLEITINHO": CLEITINHO,
@@ -142,7 +194,12 @@ PRESETS: dict[str, Type[Config]] = {
     "TESTUAUUAU": TESTUAUUAU,
     "PRECISIONLAND": PRECISIONLAND,
     "VVV": VVV,
-    "SAMUEL": SAMUEL
+    "SAMUEL": SAMUEL,
+    "M1P": M1P,
+    "M2P": M2P,
+    "M1PSKIPBAR": M1PSKIPBAR,
+    "M1PSKIPGATE": M1PSKIPGATE,
+    "FULL": FULL,
 }
 
 
