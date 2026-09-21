@@ -12,7 +12,7 @@ from nectar.ai import DetectionResult
 from ...config import Config
 
 _SWEEP_SEC_BASE = 4.0
-_SWEEP_VX = -0.12
+_SWEEP_VX = 0.12
 _SWEEP_VY = 0.12
 _CONFIRM = 5
 
@@ -47,7 +47,7 @@ class ReacquireWindow(State):
 
 
         if self.position == "room":
-            sweeps = ((_SWEEP_VX, "backward", _SWEEP_SEC_BASE),
+            sweeps = ((_SWEEP_VX, "backward", 2 * _SWEEP_SEC_BASE),
                       (_SWEEP_VY, "right", _SWEEP_SEC_BASE),
                       (-_SWEEP_VY, "left", 2 * _SWEEP_SEC_BASE))
         else:

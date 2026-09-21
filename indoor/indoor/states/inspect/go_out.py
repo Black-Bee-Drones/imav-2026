@@ -8,7 +8,30 @@ from yasmin_ros.basic_outcomes import SUCCEED, TIMEOUT
 from nectar.control import MavlinkDrone, MoveReference
 
 from ...config import Config
+import requests
 
+def led(
+        *,
+        on:bool=True,
+        ip:str='wled.local',
+        brightness:int=255,
+        r:int=0,
+        g:int=0,
+        b:int=0,
+        w:int=0
+    ):
+
+    requests.post(
+        f'http://{ip}/json/state',
+        json={
+            'on': on,
+            'seg': [{
+                'fx': 0,
+                'bri': brightness,
+                'col': [[r, g, b, w]],
+            }]
+        }
+    )
 
 class GoOut(State):
     def __init__(self):
@@ -50,6 +73,9 @@ class GoOut(State):
 
         if self.check_timeout():
             return TIMEOUT
+
+        yasmin.YASMIN_LOG_INFO("Turning off LED...")
+        led(on=False)
 
         return SUCCEED
 

@@ -44,7 +44,6 @@ class GoToLandingBase(State):
 
         points = [
             (None, None, safe_alt),
-            (None, base_y, safe_alt),
             (base_x, base_y, safe_alt),
         ]
 

@@ -63,7 +63,7 @@ class TESTUAU(Config):
 class TESTBABIES(Config):
     obstacle_skip: bool = True
     droping_skip: bool = True
-    precise_skip: bool = True
+    precise_skip: bool = False
     rtl: bool = False
 
 
@@ -112,6 +112,7 @@ class PRECISIONLAND(Config):
 @dataclass
 class VVV(Config):
     obstacle_skip: bool = False
+    obstacle_bar_center_skip: bool = True
     inspect_skip: bool = False
     droping_skip: bool = True
     rtl: bool = False

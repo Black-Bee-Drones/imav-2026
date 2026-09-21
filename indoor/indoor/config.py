@@ -73,8 +73,8 @@ class Config:
     camera_south_topic: str = "/south_camera"
     camera_south_is_compressed: bool = True
     camera_south_id: int = get_camera_index('C920 ')
-    camera_south_offset_z: float = 0.09
-    camera_south_offset_y: float = 0.0
+    camera_south_offset_z: float = 0.13
+    camera_south_offset_y: float = 0.03
     camera_south_hfov: float = radians(70.42)
     camera_south_vfov: float = radians(43.3)
 
@@ -158,25 +158,26 @@ class Config:
     obstacle_tubes_alt: float = 1.2
     obstacle_tubes_offset: float = 1.5
     obstacle_tubes_end_offset: float = 0.5
-    obstacle_tubes_standoff: float = 0.40
-    obstacle_tubes_x_avoid: float = 1.2
-    obstacle_tubes_y_avoid: float = 1.5
+    obstacle_tubes_standoff: float = 0.60
+    obstacle_tubes_x_avoid: float = 1.0
+    obstacle_tubes_y_avoid: float = 1.2
 
     inspect_skip: bool = False
     inspect_timeout: int = 300
     inspect_start_x: float = 8.0
     inspect_start_y: float = 0.0
-    inspect_start_z: float = 1.20 # MUDA NAO ESQUECE DE MUDAR POHA CHANGE CHANGE
+    inspect_start_z: float = 1.30 # MUDA NAO ESQUECE DE MUDAR POHA CHANGE CHANGE
     inspect_descent_speed: float = -0.2
     inspect_back_speed: float = -0.5
     inspect_babies_count: Optional[int] = None
     inspect_go_out_x: float = 1.5
-    inspect_gate_creep_vx: float = 0.085
+    inspect_gate_creep_vx: float = 0.055
     inspect_gate_standoff: float = 0.550
     inspect_gate_bbox_frac: float = 0.75
     inspect_gate_frame_expand: float = 0.27
     inspect_gate_commit_extra: float = 1.38
     inspect_gate_alignment_alt: float | None = None
+    inspect_gate_aligned_threshold: int = 20
 
     droping_skip: bool = False
 

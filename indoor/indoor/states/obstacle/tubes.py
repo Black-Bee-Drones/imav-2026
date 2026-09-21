@@ -15,7 +15,7 @@ from ...config import Config
 _MOVE_PRECISION = 0.10
 _CREEP_VX = 0.12
 _ROI_Y = (0.25, 0.75)
-_ROI_X = (0.40, 0.70)
+_ROI_X = (0.30, 0.70)
 _DEPTH_MIN = 0.15
 _DEPTH_MAX = 5.0
 _CYAN = (255, 255, 0)
@@ -109,15 +109,22 @@ class Tubes(State):
             if isinstance(getattr(handler, "camera", None), DepthCam):
                 depth_cam = handler.camera
 
-        if depth_cam is not None:
-            if not self._creep_to_standoff(drone, depth_cam, standoff, save_jpg):
-                return TIMEOUT
+        # if depth_cam is not None:
+        #     if not self._creep_to_standoff(drone, depth_cam, standoff, save_jpg):
+        #         return TIMEOUT
+
+        yasmin.YASMIN_LOG_INFO(f"Correcting altitude to: {alt}")
+        drone.move_to(
+            x=None,
+            y=None,
+            z=alt,
+            reference=MoveReference.TAKEOFF
+        )
 
         points = [
-            (0.0, 0.0, alt),
-            (0.0, -config.obstacle_tubes_y_avoid, alt),
+            (0.0, config.obstacle_tubes_y_avoid, 0.0),
             (config.obstacle_tubes_x_avoid, 0.0, 0.0),
-            (0.0, -config.obstacle_tubes_y_avoid, 0.0),
+            (0.0, -config.obstacle_tubes_y_avoid + 0.30, 0.0),
         ]
         return self._fly_points(drone, points)
 

@@ -123,6 +123,8 @@ class Window(State):
         lost_tolerance = config.obstacle_gate_lost_tolerance
         aligned_tolerance_m = config.obstacle_gate_aligned_tolerance_m
         aligned_threshold = config.obstacle_gate_aligned_threshold
+        if self.position == 'room':
+            aligned_threshold = config.inspect_gate_aligned_threshold
         aim_down_m = config.obstacle_gate_center_z_down_m
         class_name = config.model_gate_class_name
         gate_limits = (config.obstacle_gate_output_min, config.obstacle_gate_output_max)
@@ -303,14 +305,19 @@ class Window(State):
             save_jpg("gate_annotated", "annotated", frame)
 
             if phase == "align":
+
+                output_x = 0
+                if self.position == 'room' and clipped:
+                    output_x = 0.20
+
                 yasmin.YASMIN_LOG_INFO(
                     f"Gate {self.position} align ({aligned}/{aligned_threshold}) "
                     f"| error y={error_y:.0f}px {err_y_m:+.3f}m "
                     f"z={error_z:.0f}px {err_z_m:+.3f}m "
                     f"| Zb={fmt_z(z_box)} Zd={fmt_z(z_depth)} Z={fmt_z(z_smooth)} "
-                    f"| vel y={output_y:.2f} z={output_z:.2f} m/s"
+                    f"| vel x={output_x} y={output_y:.2f} z={output_z:.2f} m/s"
                 )
-                drone.move_velocity(vy=output_y, vz=output_z)
+                drone.move_velocity(vx=output_x, vy=output_y, vz=output_z)
                 if aligned >= aligned_threshold:
                     if config.obstacle_gate_align_only:
                         continue

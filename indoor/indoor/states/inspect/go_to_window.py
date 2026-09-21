@@ -12,7 +12,30 @@ from nectar.control.pid import PIDController
 from nectar.vision import ImageHandler
 
 from ...config import Config
+import requests
 
+def led(
+        *,
+        on:bool=True,
+        ip:str='wled.local',
+        brightness:int=255,
+        r:int=0,
+        g:int=0,
+        b:int=0,
+        w:int=0
+    ):
+
+    requests.post(
+        f'http://{ip}/json/state',
+        json={
+            'on': on,
+            'seg': [{
+                'fx': 0,
+                'bri': brightness,
+                'col': [[r, g, b, w]],
+            }]
+        }
+    )
 
 class GoToWindow(State):
     """
@@ -91,6 +114,9 @@ class GoToWindow(State):
         safe_alt: float = config.safe_alt
         self.inspect_z: float = config.inspect_start_z
 
+        yasmin.YASMIN_LOG_INFO(f"Requesting LED...")
+        led(w=255)
+
         # --- 1. Go to the window approach point at a safe altitude ---
         yasmin.YASMIN_LOG_INFO(
             f'Fly to x={start_x}; y={start_y}; z={safe_alt}...')
@@ -117,8 +143,8 @@ class GoToWindow(State):
 
         yasmin.YASMIN_LOG_INFO('Yawing 180 degrees...')
         drone.move_to(
-            x=start_x,
-            y=start_y,
+            x=None,
+            y=None,
             z=self.inspect_z,
             yaw=180,
             reference=MoveReference.TAKEOFF,
