@@ -1,97 +1,169 @@
 from rclpy.time import Time, Duration
 
+import math
+
 import yasmin
-from yasmin import State, Blackboard
+from yasmin import State, Blackboard, YASMIN_LOG_INFO
 from yasmin_ros.yasmin_node import YasminNode
 from yasmin_ros.basic_outcomes import SUCCEED, FAIL, TIMEOUT
 
-from nectar.control import MavlinkDrone, PIDController
-from nectar.vision import ImageHandler
+from nectar.control import MavlinkDrone, MavrosDrone, PIDController, MoveReference, NavigationMethod, AltitudeSource
+from nectar.vision import ImageHandler, ImageCalculus
+from nectar.ai import DetectionResult
+from indoor.states import pixel_to_takeoff_frame
 
 from ...config import Config
 
+Point2D = tuple[float, float]       # (x, y)
+Pose2D = tuple[float, float, float] # (x, y, yaw)
 
 class CenterBox(State):
-    def __init__(self):
+    def __init__(self, action: str):
         super().__init__(outcomes=[SUCCEED, FAIL, TIMEOUT])
-
         self.node = YasminNode.get_instance()
+        self.action = action.lower()
 
     def execute(self, blackboard: Blackboard):
-        drone: MavlinkDrone = blackboard.get('drone')
+        drone: MavlinkDrone | MavrosDrone = blackboard.get('drone')
         config: Config = blackboard.get('config')
 
-        pid_x: PIDController = blackboard.get('pid_x')
-        pid_y: PIDController = blackboard.get('pid_y')
+        camera_down: ImageHandler = blackboard.get('image_handler_down')
+        camera_down.image_processing_callback = blackboard.get('callback_box')
 
-        image_handler_down: ImageHandler = blackboard.get('image_handler_down')
-        image_handler_down.image_processing_callback = blackboard.get(
-            'callback_box')
+        if self.action == 'drop':
+            target_x, target_y = blackboard.get("box_cone_pos")
+        else:
+            target_x, target_y = blackboard.get("box_led_pos")
 
-        self.start_time: Time = blackboard.get('start_time')
-        self.start_state = self.node.get_clock().now()
+        pid_cx: PIDController = PIDController(
+            kp=config.dropping_box_kp,
+            kd=config.dropping_box_kd,
+            ki=config.dropping_box_ki,
+            setpoint=0.0,
+            output_limits=config.dropping_box_limits,
+            output_deadband=config.dropping_box_deadband
+        )
 
-        pid_x.reset()
-        pid_y.reset()
+        pid_cy: PIDController = PIDController(
+            kp=config.dropping_box_kp,
+            kd=config.dropping_box_kd,
+            ki=config.dropping_box_ki,
+            setpoint=0.0,
+            output_limits=config.dropping_box_limits,
+            output_deadband=config.dropping_box_deadband,
+        )
 
-        yasmin.YASMIN_LOG_INFO('Start.')
-        if self.check_timeout(config):
-            yasmin.YASMIN_LOG_ERROR('Timeout.')
-            return TIMEOUT
+        pid_cz: PIDController = PIDController(
+            kp=config.dropping_box_kp_z,
+            kd=0.0,
+            ki=0.0,
+            setpoint=0.0,
+            output_limits=config.dropping_box_limits_z,
+        )
 
+        self.mission_start_time: Time = blackboard.get('start_time')
+        self.state_start_time = self.node.get_clock().now()
+
+        yasmin.YASMIN_LOG_INFO(
+            f"Navigating to box approx position ({target_x:.2f}, {target_y:.2f})"
+        )
+        drone.move_to(
+            x=target_x,
+            y=target_y,
+            z=config.safe_alt,
+            yaw=0,
+            reference=MoveReference.TAKEOFF,
+            precision=0.12,
+        )
+
+        # ---------- FASE 2: Centralização fina via visão (pinhole model) ----------
+        pid_cx.reset()
+        pid_cy.reset()
+        pid_cx.set_setpoint(0.0)
+        pid_cy.set_setpoint(0.0)
+        pid_cz.set_setpoint(0.0)
+
+        width, height = config.camera_down_frame
         lost = 0
+        aligned_frames = 0
+
         while True:
-            now = self.node.get_clock().now()
-
-            result = image_handler_down.take_photo()
-
-            if result:
-                lost = 0
-
-                h, w = result.image.shape[:2]
-
-                center = result[0].center
-
-                error_x = (center[1] - (w / 2))
-                error_y = (center[0] - (h / 2))
-
-                if (error_x**2 + error_y**2) <= config.center_threshold**2 and drone.get_altitude() < config.land_altitude:
-                    yasmin.YASMIN_LOG_INFO('Completed successfully!!!')
-                    drone.move_velocity()
-                    return SUCCEED
-
-                output_x = pid_x.update(error_x)
-                output_y = pid_y.update(error_y)
-
-                yasmin.YASMIN_LOG_INFO(
-                    f'Centering: error_x={error_x:.0f}; error_y={error_y:.0f}; output_x={output_x:.1f}; output_y={output_y:.1f}.')
-                drone.move_velocity(
-                    vx=output_x,
-                    vy=output_y,
-                    vz=config.land_speed if (
-                        (error_x**2 + error_y**2) <= 4*config.center_threshold**2) else 0,
-                    vyaw=0,
-                )
-            else:
-                yasmin.YASMIN_LOG_ERROR(
-                    f'Lost detection ({lost}/{config.lost_tolerance}).')
-                lost += 1
-
-                if config.lost_tolerance <= lost:
-                    yasmin.YASMIN_LOG_ERROR('Lost detection exceeded.')
-                    drone.move_velocity()
-                    return FAIL
-
-            if self.check_timeout(config):
-                yasmin.YASMIN_LOG_ERROR('Timeout.')
-                drone.move_velocity()
+            if self.timeout(config):
+                yasmin.YASMIN_LOG_ERROR("Centering timed out.")
                 return TIMEOUT
 
-            self.node.get_clock().sleep_until(now + Duration(seconds=1/30))
+            result = camera_down.take_photo()
+            if result is None:
+                yasmin.YASMIN_LOG_WARN("Failed to get frame from camera, skipping cycle")
+                continue
 
-    def check_timeout(self, config):
+            detections = result.filter_by_class([config.model_dropping_box_name])
+
+            if not detections:
+                lost += 1
+                aligned_frames = 0
+                yasmin.YASMIN_LOG_WARN(f"Not detected ({lost}/{config.dropping_lost_tolerance}) Holding position...")
+                drone.move_velocity(0.0, 0.0, 0.0)
+
+                if lost >= config.dropping_lost_tolerance:
+                    yasmin.YASMIN_LOG_WARN("Detection lost. Increasing altitude to restart search...")
+                    altitude = drone.get_altitude(AltitudeSource.LIDAR)
+                    if altitude is not None and altitude < config.max_alt:
+                        drone.move_to(z=0.2)
+                    else:
+                        yasmin.YASMIN_LOG_WARN("Detection lost. Max altitude reached, decreasing 30 cm...")
+                        drone.move_to(z=-0.3)
+                    pid_cx.reset()
+                    pid_cy.reset()
+                    pid_cz.reset()
+                    yasmin.YASMIN_LOG_INFO("Restarting box detection")
+                    lost = 0
+                    aligned_frames = 0
+                continue
+
+            lost = 0
+            best_det = max(detections, key=lambda d: d.confidence)
+            target_x, target_y = best_det.center
+
+            error_x_px = target_x - width // 2
+            error_y_px = target_y - height // 2
+            altitude = drone.get_altitude(AltitudeSource.LIDAR)
+
+            if altitude is not None:
+                error_x = self.ppm(error_x_px, altitude, config.camera_down_hfov, width)
+                error_y = self.ppm(error_y_px, altitude, config.camera_down_vfov, height) + config.dropping_cone_offset
+                error_z = altitude - config.dropping_center_drop_altitude
+
+            # funil: pixel libera o Z (mais frouxo em altitude alta), metro decide o alinhamento final
+            px_aligned = max(abs(error_x_px), abs(error_y_px)) <= config.dropping_centralize_tolerance
+            aligned = max(abs(error_x), abs(error_y)) <= config.dropping_center_drop_tolerance
+
+            vx = pid_cy.update(error_y)
+            vy = pid_cx.update(error_x)
+            vz = pid_cz.update(error_z) if px_aligned else 0.0
+
+            if aligned:
+                aligned_frames += 1
+                yasmin.YASMIN_LOG_INFO(f"Box aligned ({aligned_frames}/{config.dropping_required_frames})")
+            else:
+                aligned_frames = 0
+
+            drone.move_velocity(vx, vy, vz)
+
+            if abs(error_z) <= config.dropping_center_drop_altitude_tolerance and aligned_frames >= config.dropping_required_frames:
+                drone.move_velocity(0.0, 0.0, 0.0)
+                yasmin.YASMIN_LOG_INFO(f"Centering confirmed with {aligned_frames} consecutive aligned frames. Stopping drone before drop.")
+                return SUCCEED
+
+
+    def ppm(self, delta_pixel: int, altitude: float, fov_degrees: float, frame_px: int) -> float:
+        angle_rad = math.radians(fov_degrees) / 2
+        ratio = (math.tan(angle_rad) * altitude) / (frame_px // 2)
+        return delta_pixel * ratio
+
+    def timeout(self, config) -> bool:
         now = self.node.get_clock().now()
-
-        return now - self.start_time > Duration(seconds=config.timeout) or \
-            now - \
-            self.start_state > Duration(seconds=config.timeout_per_state)
+        if self.mission_start_time is not None and hasattr(config, "mission_timeout"):
+            if now - self.mission_start_time > Duration(seconds=config.mission_timeout):
+                return True
+        return now - self.state_start_time > Duration(seconds=config.dropping_center_timeout)

@@ -5,7 +5,6 @@ from pathlib import Path
 from typing import Optional, cast
 
 from indoor.camera_index import get_camera_index
-
 from ament_index_python.packages import get_package_share_directory
 
 
@@ -44,7 +43,7 @@ class Config:
     model_baby_sample_count: int = 15
 
     model_box_source: str = "package.pt"
-    model_box_conf: float = 0.5
+    model_box_conf: float = 0.3
 
     model_lines_source: str = "o_melhor.pt"
     model_lines_conf: float = 0.70
@@ -54,6 +53,11 @@ class Config:
     aruco_marker_dict: int = 5
     land_aruco_size: float = 0.62
     inspect_aruco_size: float = 0.62
+
+    model_dropping_box_source: str = "box.pt"
+    model_dropping_box_name: str = "caixas-imav"
+    model_dropping_box_conf: float = 0.25
+
     color_calibration_path: Optional[str] = None
 
     # North: RealSense D435i RGB (Intel 69.4° x 42.5° x 77° ±3°)
@@ -87,6 +91,7 @@ class Config:
     camera_down_offset_y: float = 0.0
     camera_down_hfov: float = radians(86)
     camera_down_vfov: float = radians(47)
+    camera_down_frame: tuple[int, int] = 640, 640
 
     takeoff_alt: float = 1.4
     skip_takeoff: bool = False
@@ -180,6 +185,34 @@ class Config:
     inspect_gate_aligned_threshold: int = 20
 
     droping_skip: bool = False
+    dropping_timeout: int = 300
+    dropping_center_timeout: int = 240
+    dropping_lost_tolerance: int = 15
+    dropping_centralize_tolerance: int = 100    #pixels
+    dropping_center_drop_altitude: float = 1.5  #meters
+    dropping_center_drop_tolerance: float = 0.15
+    dropping_center_drop_altitude_tolerance: float = 0.10
+    dropping_cone_offset: float = -0.20
+    dropping_required_frames: int = 5
+    # Same PID for x and y axis
+    dropping_box_kp: float = 0.123
+    dropping_box_kd: float = 0.0002
+    dropping_box_ki: float = 0.0
+    dropping_box_limits: tuple = (-0.41, 0.41)
+    dropping_box_kp_z: float = 0.18
+    dropping_box_limits_z: tuple = (-0.15, 0.1)
+    dropping_box_deadband: float = 0.0
+    # Servo configs
+    dropping_servo_channel: int = 2
+    dropping_servo_open_pwm: int = 1800
+    dropping_servo_action_delay: float = 2.0
+    dropping_servo_retry_delay: float = 0.5
+    dropping_servo_retries: int = 5
+    # Led configs
+    dropping_led_gpio: int = 2
+    # State initial coordinates (takeoff reference)
+    dropping_start_x: float = 11.0
+    dropping_start_y: float = -2.5
 
     precise_skip: bool = False
     precise_timeout: int = 300

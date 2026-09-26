@@ -29,8 +29,11 @@ from .inspect import (
 
 from .dropping import (
     GoToBox,
+    MapBoxes,
     CenterBox,
-    Drop,
+    ActBoxes,
+    pixel_to_takeoff_frame,
+    map_and_choose_box,
 )
 
 __all__ = [

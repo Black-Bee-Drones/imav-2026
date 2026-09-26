@@ -5,7 +5,7 @@ from yasmin import State, Blackboard
 from yasmin_ros.yasmin_node import YasminNode
 from yasmin_ros.basic_outcomes import CANCEL, SUCCEED, TIMEOUT
 
-from nectar.control import MavlinkDrone, MoveReference
+from nectar.control import MavlinkDrone, MavrosDrone, MoveReference
 
 from ...config import Config
 
@@ -17,7 +17,7 @@ class GoToBox(State):
         self.node = YasminNode.get_instance()
 
     def execute(self, blackboard: Blackboard):
-        drone: MavlinkDrone = blackboard.get('drone')
+        drone: MavlinkDrone | MavrosDrone = blackboard.get('drone')
         config: Config = blackboard.get('config')
         if config.droping_skip:
             return CANCEL
@@ -34,7 +34,7 @@ class GoToBox(State):
         drone.move_to(
             x=None,
             y=None,
-            z=config.safe_altitude,
+            z=config.safe_alt,
             yaw=0,
             reference=MoveReference.TAKEOFF,
         )
@@ -43,11 +43,11 @@ class GoToBox(State):
             yasmin.YASMIN_LOG_ERROR('Timeout.')
             return TIMEOUT
 
-        yasmin.YASMIN_LOG_INFO(f'fly to y={config.box_y}...')
+        yasmin.YASMIN_LOG_INFO(f'Flying to y={config.dropping_start_y}...')
         drone.move_to(
             x=None,
-            y=config.box_y,
-            z=config.safe_altitude,
+            y=config.dropping_start_y,
+            z=config.safe_alt,
             yaw=0,
             reference=MoveReference.TAKEOFF,
         )
@@ -56,11 +56,11 @@ class GoToBox(State):
             yasmin.YASMIN_LOG_ERROR('Timeout.')
             return TIMEOUT
 
-        yasmin.YASMIN_LOG_INFO(f'fly to x={config.box_x}...')
+        yasmin.YASMIN_LOG_INFO(f'flying to x={config.dropping_start_x}...')
         drone.move_to(
-            x=config.box_x,
-            y=config.box_y,
-            z=config.safe_altitude,
+            x=config.dropping_start_x,
+            y=config.dropping_start_y,
+            z=config.safe_alt,
             yaw=0,
             reference=MoveReference.TAKEOFF,
         )
