@@ -14,11 +14,13 @@ Software de missão ROS 2 para as competições indoor e outdoor do IMAV 2026. E
   <img src="assets/overview/blackbee-imav.jpeg" alt="BlackBee Drones UNIFEI team at IMAV 2026"/>
 </div>
 
+## Documentação
 
-| Idioma / Language | Link |
-| --- | --- |
-| 🇧🇷 Português | [README.md](README.md) |
-| 🇺🇸 English | [README-EN.md](README-EN.md) |
+| Seção | 🇧🇷 PT | 🇺🇸 EN |
+| --- | --- | --- |
+| Overview | [README.md](README.md) | [README-EN.md](README-EN.md) |
+| Indoor | [indoor/README.md](indoor/README.md) | [indoor/README-EN.md](indoor/README-EN.md) |
+| Outdoor | [manequim/README.md](manequim/README.md) | [manequim/README-EN.md](manequim/README-EN.md) |
 
 
 ## Regras da Competição

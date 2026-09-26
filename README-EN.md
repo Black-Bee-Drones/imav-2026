@@ -13,6 +13,15 @@ ROS 2 mission software for the IMAV 2026 indoor and outdoor competitions. This r
   <img src="assets/overview/blackbee-imav.jpeg" alt="BlackBee Drones UNIFEI team at IMAV 2026"/>
 </div>
 
+## Documentation
+
+| Section | 🇧🇷 PT | 🇺🇸 EN |
+| --- | --- | --- |
+| Overview | [README.md](README.md) | [README-EN.md](README-EN.md) |
+| Indoor | [indoor/README.md](indoor/README.md) | [indoor/README-EN.md](indoor/README-EN.md) |
+| Outdoor | [manequim/README.md](manequim/README.md) | [manequim/README-EN.md](manequim/README-EN.md) |
+
+
 ## Competition Rules
 
 The official reference included with this repository is [Rulebook_IMAV2026_v5.pdf](Rulebook_IMAV2026_v5.pdf). Read it before testing or flying: it defines the competition field, task procedures, scoring, and safety requirements. The software is an implementation aid, not a substitute for the rules or the required safety checks.
