@@ -49,9 +49,6 @@ Camera model, servo channel/PWM values, drone connection string, and detector se
 | Mission orchestration | [Yasmin](https://github.com/uleroboticsgroup/yasmin) hierarchical state machines, published live via `YasminViewerPub` under the `MANGALARGA_FSM` topic |
 | Object detection | [Ultralytics YOLO](https://docs.ultralytics.com/) (`yolo26n.pt`), detecting `person` (and `kite` as a simulated-mannequin stand-in class in SITL) |
 
-> **Note:** unlike the indoor package, `manequim` has no `check_timeout()`-style safety net anywhere in its states. Recovery loops (`AlignState`, `DropState`) rely entirely on internal attempt/retry counters — there is currently no global per-state or per-mission wall-clock timeout. Worth keeping in mind for field ops.
-
----
 
 ## Software Architecture
 
@@ -169,15 +166,11 @@ flowchart LR
     linkStyle 5,6 stroke:#cf222e,stroke-width:2px
 ```
 
-> **Note:** `SearchSM.set_start_state("ASCEND")` makes **`Ascend` the actual entry point** — `InitPosition` is registered in the state machine (with a working `SUCCEED`/`ABORT` transition table) but nothing currently transitions into it, so it never runs. Worth confirming whether it's a leftover from an earlier GPS-approach design or should be wired back in as the real starting state.
-
 ### Walkthrough
 
 1. **`InitPosition`** *(currently unreachable — see note above)* is designed to fly to a configured GPS coordinate (`LATITUDE`/`LONGITUDE`, settable via `--latitude`/`--longitude` on the CLI) before the search begins. In `SIM_MODE`, or when no coordinates are configured, it's a no-op that returns `SUCCEED` immediately without erroring.
 2. **`Ascend`** — the real mission entry point. Climbs to `ASCEND_HEIGHT`, takes up to 3 photos, and checks each for a confident `person`/`kite`-class detection. Every confirmed sighting increments a persistent `blackboard['manequim_detections']` counter; once it reaches `MANEQUIM_NUMBER` confirmations, `Ascend` reports `MANEQUIM_FOUND` immediately — the spiral search never even runs. Otherwise it proceeds to `SQUARE_SEARCH`.
 3. **`SearchNavigation`** first descends to `SEARCH_ALTITUDE`, then builds an outward square spiral of waypoints (`_build_square_spiral`) sized against `SEARCH_RADIUS` and a step derived from the camera's horizontal FOV at that altitude (with a small overlap margin baked in so consecutive photos don't miss ground between them). It flies the spiral leg by leg — converting each map-frame waypoint into body-frame motion using the vehicle's running yaw, so the nose points down every new leg — repeating `Ascend`'s confirmation-counting logic at each stop. Reaching `MANEQUIM_NUMBER` confirmations at any waypoint halts the vehicle and returns `MANEQUIM_FOUND`; completing the whole spiral without confirmation returns plain `SUCCEED`.
-
-> **Note:** `SearchSM` maps both `SUCCEED` (spiral exhausted, nothing confirmed) and `MANEQUIM_FOUND` (target confirmed) to the **same outcome** at the top level. `ManequimSM` therefore always proceeds into the Package mission next, with no built-in way to distinguish "target found" from "search radius used up." If the drop logic should behave differently in each case, that distinction needs to be threaded through explicitly (e.g. via the blackboard).
 
 ### Key config (`searchSM/constants.py`)
 
@@ -221,7 +214,6 @@ flowchart LR
 1. **`DescendState`** reads current altitude: if already at or below `DROP_HEIGHT`, it climbs back up to exactly `DROP_HEIGHT` and reports `SUCCEED`; otherwise it steps down by up to 0.5 m at a time (capped so it never overshoots past `DROP_HEIGHT` in one step) and also reports `SUCCEED`. `ALIGN` and `DESCEND` alternate this way, gradually converging on the drop altitude while re-checking alignment each time.
    > Its `__init__` declares an `ALIGNMENT_FAILED` outcome and the state machine wires a transition for it (`ALIGNMENT_FAILED → ABORT`), but the current `execute()` only ever returns `SUCCEED`/`ABORT` — that transition is currently dead code.
 2. **`AlignState`** loops continuously: samples the camera, filters detections to `DETECTOR_CLASS`, and PID-corrects (`pid_cx`/`pid_cy`) toward the highest-confidence detection's pixel center, converting pixel error to a metric offset via `ppm()` (pixels-per-meter, using current altitude and camera FOV). Once both PID outputs settle to exactly zero (within their deadband), it checks whether altitude is already within 0.2 m of `DROP_HEIGHT`: if so, returns `SUCCEED` (ready to drop); if not, returns `"DESCEND"` to have `DescendState` take another altitude step first. Losing the target for `LOST_THRESHOLD` iterations (or the confidence dropping below 0.5) returns `LOST_PERSON`; repeated camera read failures beyond `PHOTO_FAIL_THRESHOLD` return `ALIGNMENT_FAILED` (a hard stop, unlike the recoverable `LOST_PERSON`).
-   > Two details worth double-checking: the velocity command swaps axes (`vx=pid_cy`'s output, `vy=pid_cx`'s output) — verify that's the intended body/camera-frame mapping and not a naming slip — and the loop has no timeout, so a PID that never settles both axes to *exactly* zero simultaneously could in principle run indefinitely.
 3. **`ReestablishState`** first climbs to `REESTABILISH_ALTITUDE_INCREMENT` if below it, then flies a small fixed 4-leg box pattern (right, back-left, forward, forward again) around the current position, sampling for the target after each leg. Finding it at any leg returns `SUCCEED` immediately (staying at that leg's position, ready to resume `AlignState`); a leg that finds nothing is undone (the drone backs up to its prior position) before trying the next. Exhausting all four legs without success returns `LOST_PERSON`, which the state machine maps straight to `ABORT` — the package mission gives up entirely and the flight proceeds to `RETURN_TO_LAUNCH`.
 4. **`DropState`** stops in place, then attempts to open the payload servo up to `DROP_MAX_RETRIES` times with `RETRY_DELAY` between attempts. The first successful servo command returns `SUCCEED` (package mission complete). Exhausting all retries returns `DROP_RETRY`, which the state machine routes straight back into `DROP` itself for another full batch of `DROP_MAX_RETRIES` attempts — with no outer cap, this can in principle retry forever if the servo never responds (see the no-timeout note above).
 
@@ -259,8 +251,6 @@ Unlike the indoor package, `manequim` currently has **no preset system or intera
 | [`core/constants.py`](manequim/core/constants.py) | Shared/global: `SIM_MODE`, drone connection (`CONNECTION_STRING`, `DRONE_TYPE`), camera model & geometry, YOLO detector source/confidence/classes, servo channel/PWM, alignment PID gains, `TAKEOFF_HEIGHT`, `RTL_ALTITUDE` |
 | [`searchSM/constants.py`](manequim/searchSM/constants.py) | Search-only: `ASCEND_HEIGHT`, `SEARCH_ALTITUDE`, `SEARCH_RADIUS`, `MANEQUIM_NUMBER`, optional `LATITUDE`/`LONGITUDE`, plus `parse_args()`/`configure_coordinates()` for the CLI |
 | [`packageSM/constants.py`](manequim/packageSM/constants.py) | Package-only: `LOST_THRESHOLD`, `PHOTO_FAIL_THRESHOLD`, `REESTABILISH_ALTITUDE_INCREMENT` |
-
-> **Note:** `core/constants.py` currently defines `DRONE_TYPE = "mavlink" if not SIM_MODE else "mavlink"` — both branches of that ternary resolve to `"mavlink"`, so it's effectively hardcoded. Worth confirming whether `mavros` support (which `Initialize` does otherwise handle) is meant to be reachable through this constant.
 
 The only supported CLI overrides today are the initial GPS coordinates:
 

@@ -49,10 +49,6 @@ O modelo da câmera, os valores de canal/PWM do servo, a string de conexão do d
 | Orquestração da missão | Máquinas de estados hierárquicas do [Yasmin](https://github.com/uleroboticsgroup/yasmin), publicadas ao vivo por `YasminViewerPub` no tópico `MANGALARGA_FSM` |
 | Detecção de objetos | [Ultralytics YOLO](https://docs.ultralytics.com/) (`yolo26n.pt`), detectando `person` e `kite` como classe substituta de manequim simulado no SITL |
 
-> **Nota:** ao contrário do pacote indoor, o `manequim` não possui uma proteção no estilo `check_timeout()` em seus estados. Os loops de recuperação (`AlignState`, `DropState`) dependem inteiramente de contadores internos de tentativas; atualmente não há timeout global de tempo real por estado ou por missão. Considere isso nas operações em campo.
-
----
-
 ## Arquitetura de software
 
 ```mermaid
@@ -127,22 +123,22 @@ flowchart LR
     A[INITIALIZE] -->|sucesso| B[TAKEOFF]
     B -->|sucesso| C[SEARCH]
     C -->|sucesso| D[PACKAGE]
-    C -->|aborto| E[RETURN_TO_LAUNCH]
-    D -->|sucesso ou aborto| E
+    C -->|abort| E[RETURN_TO_LAUNCH]
+    D -->|sucesso ou abort| E
     E -->|sucesso| F[END]
-    A -->|aborto| F
-    B -->|aborto| F
+    A -->|abort| F
+    B -->|abort| F
     F -->|sucesso| G((Missão concluída))
-    F -->|aborto| H((Missão ABORTADA))
+    F -->|abort| H((Missão ABORTADA))
 
     linkStyle 0,1,2,3,5,7 stroke:#238636,stroke-width:2px
     linkStyle 4,6 stroke:#b78103,stroke-width:2px
     linkStyle 8 stroke:#cf222e,stroke-width:2px
 ```
 
-🟢 Sucesso/progresso normal · 🟡 o resultado direciona para Return-to-Launch · 🔴 aborto crítico encerra a execução
+🟢 Sucesso/progresso normal · 🟡 o resultado direciona para Return-to-Launch · 🔴 abort crítico encerra a execução
 
-**Ponto-chave:** tanto `SEARCH` quanto `PACKAGE` direcionam para `RETURN_TO_LAUNCH` em qualquer resultado — sucesso ou aborto. Assim, mesmo que o manequim não seja encontrado ou o pacote não possa ser lançado, a aeronave ainda retorna e pousa. Apenas falhas em `INITIALIZE` ou `TAKEOFF` pulam diretamente para `END`, sem um voo de retorno, pois o veículo presumivelmente ainda não saiu de uma condição segura de lançamento.
+**Ponto-chave:** tanto `SEARCH` quanto `PACKAGE` direcionam para `RETURN_TO_LAUNCH` em qualquer resultado — sucesso ou abort. Assim, mesmo que o manequim não seja encontrado ou o pacote não possa ser lançado, a aeronave ainda retorna e pousa. Apenas falhas em `INITIALIZE` ou `TAKEOFF` pulam diretamente para `END`, sem um voo de retorno, pois o veículo presumivelmente ainda não saiu de uma condição segura de lançamento.
 
 <p align="center">
   <img src="../assets/outdoor/map.png" alt="Visão geral da área de missão outdoor" width="700">
@@ -169,15 +165,11 @@ flowchart LR
     linkStyle 5,6 stroke:#cf222e,stroke-width:2px
 ```
 
-> **Nota:** `SearchSM.set_start_state("ASCEND")` torna `Ascend` o verdadeiro ponto de entrada. `InitPosition` está registrado na máquina de estados, com transições `SUCCEED`/`ABORT`, mas nada direciona a execução para ele; portanto, atualmente não é executado. Confirme se é um vestígio de um design antigo de aproximação via GPS ou se deveria voltar a ser o estado inicial.
-
 ### Passo a passo
 
 1. **`InitPosition`** *(atualmente inacessível; veja a nota acima)* foi projetado para voar até uma coordenada GPS configurada (`LATITUDE`/`LONGITUDE`, definível via `--latitude`/`--longitude`). Em `SIM_MODE`, ou sem coordenadas configuradas, não faz nada e retorna `SUCCEED`.
 2. **`Ascend`** é o ponto de entrada real da missão. Sobe até `ASCEND_HEIGHT`, tira até três fotos e verifica detecções confiáveis da classe `person`/`kite`. Cada avistamento confirmado incrementa o contador persistente `blackboard['manequim_detections']`. Ao atingir `MANEQUIM_NUMBER` confirmações, retorna `MANEQUIM_FOUND` sem iniciar a busca em espiral; caso contrário, segue para `SQUARE_SEARCH`.
 3. **`SearchNavigation`** desce até `SEARCH_ALTITUDE` e constrói uma espiral quadrada para fora (`_build_square_spiral`), dimensionada por `SEARCH_RADIUS`. O passo deriva do FOV horizontal da câmera nessa altitude e inclui uma pequena sobreposição para evitar lacunas entre fotos consecutivas. A aeronave percorre cada perna, convertendo waypoints do referencial do mapa para movimentos no referencial do corpo usando o yaw atual. Em cada parada, repete a lógica de confirmação do `Ascend`. Atingir `MANEQUIM_NUMBER` interrompe a busca e retorna `MANEQUIM_FOUND`; completar a espiral sem confirmação retorna `SUCCEED`.
-
-> **Nota:** `SearchSM` mapeia `SUCCEED` (espiral concluída sem confirmação) e `MANEQUIM_FOUND` (alvo confirmado) para o mesmo resultado de nível superior. Assim, `ManequimSM` sempre segue para a missão Package e não distingue nativamente “alvo encontrado” de “área de busca esgotada”. Se a entrega precisar depender dessa distinção, ela deve ser transmitida explicitamente, por exemplo, pelo blackboard.
 
 ### Configurações principais (`searchSM/constants.py`)
 
@@ -220,8 +212,6 @@ flowchart LR
 
 1. **`DescendState`** consulta a altitude atual. Se já estiver na ou abaixo de `DROP_HEIGHT`, sobe até essa altura; caso contrário, desce em etapas de até 0,5 m sem ultrapassá-la. Em ambos os casos retorna `SUCCEED`. `ALIGN` e `DESCEND` alternam para convergir gradualmente à altitude de lançamento enquanto verificam o alinhamento. A máquina declara uma saída `ALIGNMENT_FAILED` e uma transição para `ABORT`, mas o `execute()` atual só retorna `SUCCEED`/`ABORT`; essa transição está inativa.
 2. **`AlignState`** captura imagens, filtra detecções pela classe `DETECTOR_CLASS` e usa PID (`pid_cx`/`pid_cy`) para corrigir a posição em direção ao centro da detecção de maior confiança. Converte o erro em pixels para deslocamento métrico por `ppm()`, usando altitude e FOV da câmera. Quando as saídas PID ficam em zero dentro da zona morta, verifica se a altitude está a até 0,2 m de `DROP_HEIGHT`: se estiver, retorna `SUCCEED`; caso contrário, retorna `DESCEND`. Perder o alvo por `LOST_THRESHOLD` iterações (ou confiança abaixo de 0,5) retorna `LOST_PERSON`; falhas de leitura da câmera acima de `PHOTO_FAIL_THRESHOLD` retornam `ALIGNMENT_FAILED`.
-
-   > Vale confirmar dois detalhes: o comando de velocidade troca os eixos (`vx` recebe a saída de `pid_cy`, `vy` a de `pid_cx`), o que deve corresponder ao mapeamento entre os referenciais do corpo e da câmera. Além disso, o loop não possui timeout; um PID que nunca estabilize simultaneamente os eixos pode executá-lo indefinidamente.
 3. **`ReestablishState`** sobe até `REESTABILISH_ALTITUDE_INCREMENT`, se necessário, e percorre um padrão fixo de quatro pernas ao redor da posição atual (direita, traseira-esquerda, frente, frente novamente), procurando o alvo após cada perna. Ao encontrá-lo, retorna `SUCCEED` e retoma `AlignState`. Se não encontrar, desfaz a perna antes de tentar a próxima. Exaurir as quatro pernas retorna `LOST_PERSON`, mapeado para `ABORT`; o voo então segue para `RETURN_TO_LAUNCH`.
 4. **`DropState`** para a aeronave e tenta abrir o servo até `DROP_MAX_RETRIES` vezes, aguardando `RETRY_DELAY` entre tentativas. Um comando bem-sucedido retorna `SUCCEED`. Esgotar as tentativas retorna `DROP_RETRY`, que a máquina direciona de volta a `DROP` para outro lote completo. Sem limite externo, as tentativas podem continuar indefinidamente se o servo não responder.
 
@@ -246,8 +236,6 @@ Há dois mecanismos independentes de salvamento de imagens, com gatilhos e desti
 - **`Initialize.detector_mannequin_callback`** ([`core/initialize.py`](manequim/core/initialize.py)) é acionado automaticamente em cada frame processado pelo pipeline da câmera. Salva o frame bruto e o frame anotado pelo YOLO em uma pasta por execução, com timestamp: `~/ros2_ws/imav-2026/manequim/mannequin-<timestamp>/images/{mannequin,mannequin_annotated}/`.
 - **`save_photo()`** ([`packageSM/states.py`](manequim/packageSM/states.py)) é chamado explicitamente por `Ascend`/`SearchNavigation` após cada tentativa de detecção. Salva apenas o frame anotado em uma pasta `images/` plana na raiz do pacote, com nomes como `ascend-...` e `search-...`.
 
-> Os mecanismos diferem no gatilho (callback automático ou chamada explícita) e na organização dos arquivos (pastas aninhadas por execução ou diretório plano). Unificá-los em uma ferramenta compartilhada facilitaria localizar e limpar capturas antigas.
-
 ---
 
 ## Configuração
@@ -259,8 +247,6 @@ Diferentemente do pacote indoor, `manequim` não possui sistema de presets nem a
 | [`core/constants.py`](manequim/core/constants.py) | Compartilhado/global: `SIM_MODE`, conexão do drone (`CONNECTION_STRING`, `DRONE_TYPE`), modelo/geometria da câmera, origem/confiança/classes do YOLO, canal/PWM do servo, ganhos PID, `TAKEOFF_HEIGHT`, `RTL_ALTITUDE` |
 | [`searchSM/constants.py`](manequim/searchSM/constants.py) | Busca: `ASCEND_HEIGHT`, `SEARCH_ALTITUDE`, `SEARCH_RADIUS`, `MANEQUIM_NUMBER`, `LATITUDE`/`LONGITUDE`, `parse_args()` e `configure_coordinates()` |
 | [`packageSM/constants.py`](manequim/packageSM/constants.py) | Pacote: `LOST_THRESHOLD`, `PHOTO_FAIL_THRESHOLD`, `REESTABILISH_ALTITUDE_INCREMENT` |
-
-> **Nota:** `core/constants.py` define atualmente `DRONE_TYPE = "mavlink" if not SIM_MODE else "mavlink"`. Os dois ramos resultam em `"mavlink"`, portanto o valor está efetivamente fixo. Confirme se o suporte a `mavros`, que `Initialize` também implementa, deveria ser selecionável por essa constante.
 
 As únicas substituições de configuração suportadas pela CLI são as coordenadas GPS iniciais:
 
