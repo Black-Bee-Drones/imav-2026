@@ -10,7 +10,7 @@ from indoor.states import (
 
 class DroppingSM(StateMachine):
     def __init__(self):
-        super().__init__(outcomes=[SUCCEED, CANCEL])
+        super().__init__(outcomes=[SUCCEED, CANCEL, TIMEOUT, FAIL])
         """
         Dropping on hot spot state machine.
         """
@@ -48,7 +48,7 @@ class DroppingSM(StateMachine):
         self.add_state(
             'BLINK_LED',
             ActBoxes('led'),
-            transitions={SUCCEED: SUCCEED, FAIL: CANCEL, TIMEOUT: CANCEL}
+            transitions={SUCCEED: SUCCEED, FAIL: CANCEL}
         )
 
         self.set_start_state('GO_TO_BOX')

@@ -1,7 +1,7 @@
 import yasmin
 from yasmin import State, Blackboard
 from yasmin_ros.yasmin_node import YasminNode
-from yasmin_ros.basic_outcomes import SUCCEED, FAIL, CANCEL
+from yasmin_ros.basic_outcomes import SUCCEED, FAIL, CANCEL, TIMEOUT
 
 import traceback
 
@@ -66,7 +66,7 @@ def blink_led(drone, config: Config) -> bool:
 
 class ActBoxes(State):
     def __init__(self, action: str):
-        super().__init__(outcomes=[SUCCEED, FAIL])
+        super().__init__(outcomes=[SUCCEED, FAIL, TIMEOUT])
         self.action = action
 
     def execute(self, blackboard: Blackboard):

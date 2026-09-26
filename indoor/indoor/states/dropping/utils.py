@@ -1,4 +1,4 @@
-from indoor import Config
+from ...config import Config
 from yasmin import YASMIN_LOG_INFO
 import math
 
