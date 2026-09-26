@@ -31,7 +31,7 @@ class Config:
     drone_type: str = "mavlink"
     drone_connection_string: str = "udp:127.0.0.1:14551"
 
-    model_gate_source: str = "gate-mangalarga.pt"
+    model_gate_source: str = "gategate.pt"
     model_gate_conf: float = 0.5
     model_gate_class_name: str = "blue"
 
@@ -52,8 +52,8 @@ class Config:
     model_lines_blue_class_name: str = "blue"
 
     aruco_marker_dict: int = 5
-    land_aruco_size: float = 0.8
-    inspect_aruco_size: float = 0.8 
+    land_aruco_size: float = 0.62
+    inspect_aruco_size: float = 0.62
     color_calibration_path: Optional[str] = None
 
     # North: RealSense D435i RGB (Intel 69.4° x 42.5° x 77° ±3°)
@@ -147,8 +147,8 @@ class Config:
     obstacle_bar_center_tolerance: float = 30.0
     obstacle_bar_acquire_timeout: float = 30.0
     obstacle_bar_find_vx: float = 0.15
-    obstacle_bar_pass_x: float = 3.0
-    obstacle_bar_approach_x: float = 1.0
+    obstacle_bar_pass_x: float = 2.3
+    obstacle_bar_approach_x: float = 0.75
     obstacle_bar_approach_y: float = -0.5
     obstacle_bar_gap: float = 1.0
     obstacle_bar_roi_w: int = 640
@@ -159,14 +159,14 @@ class Config:
     obstacle_tubes_offset: float = 1.5
     obstacle_tubes_end_offset: float = 0.5
     obstacle_tubes_standoff: float = 0.60
-    obstacle_tubes_x_avoid: float = 1.0
-    obstacle_tubes_y_avoid: float = 1.2
+    obstacle_tubes_x_avoid: float = 1.6
+    obstacle_tubes_y_avoid: float = -0.9
 
     inspect_skip: bool = False
     inspect_timeout: int = 300
-    inspect_start_x: float = 10.0
+    inspect_start_x: float = 8.0
     inspect_start_y: float = 0.0
-    inspect_start_z: float = 1.80
+    inspect_start_z: float = 1.90
     inspect_descent_speed: float = -0.2
     inspect_back_speed: float = -0.5
     inspect_babies_count: Optional[int] = None
