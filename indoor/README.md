@@ -1,92 +1,92 @@
 <p align="center">
 
-| 🇧🇷 [Português](README.md) | 🇺🇸 [English](README-EN.md) |
+| 🇧🇷 [Português](README.pt-BR.md) | 🇺🇸 [English](README.md) |
 |:---:|:---:|
 
 </p>
 
-# IMAV 2026 Indoor
+# IMAV 2026 Indoor 
 
 <p align="center">
-  <img src="../assets/indoor/drone.JPG" alt="Aeronave da Black Bee Drones para a competição indoor">
+  <img src="../assets/indoor/drone.JPG" alt="Black Bee Drones indoor competition aircraft">
 </p>
 
-O pacote **indoor** é o software de voo autônomo para a competição IMAV 2026 Indoor. Ele conduz a aeronave por quatro tarefas sequenciais — **Percurso de Obstáculos → Inspeção da Sala → Entrega de Alvo → Pouso de Precisão** — com o ROS 2 e o Nectar SDK fornecendo as interfaces de veículo/percepção, enquanto o **Yasmin** orquestra cada missão como uma máquina de estados hierárquica.
+The **indoor** mission package is the autonomous flight software for the IMAV 2026 Indoor competition. It flies the aircraft through four sequential tasks — **Obstacle Course → Room Inspection → Target Drop → Precision Landing** — with ROS 2 and the Nectar SDK providing vehicle/perception interfaces and **Yasmin** sequencing every mission as a hierarchical state machine.
 
-## Sumário
+## Table of Contents
 
-1. [Veículo e Stack de Software](#veículo-e-stack-de-software)
-2. [Arquitetura de Software](#arquitetura-de-software)
-3. [Sequência de Missão de Alto Nível](#sequência-de-missão-de-alto-nível)
-4. [Missão: Percurso de Obstáculos](#missão-percurso-de-obstáculos)
-5. [Missão: Inspeção da Sala](#missão-inspeção-da-sala)
-6. [Missão: Entrega de Alvo](#missão-entrega-de-alvo)
-7. [Missão: Pouso de Precisão](#missão-pouso-de-precisão)
-8. [Ferramentas Compartilhadas de Visão e Debug](#ferramentas-compartilhadas-de-visão-e-debug)
-9. [Configuração e Presets](#configuração-e-presets)
-10. [Executando a Missão](#executando-a-missão)
+1. [Vehicle & Software Stack](#vehicle--software-stack)
+2. [Software Architecture](#software-architecture)
+3. [Top-Level Mission Sequence](#top-level-mission-sequence)
+4. [Mission: Obstacle Course](#mission-obstacle-course)
+5. [Mission: Room Inspection](#mission-room-inspection)
+6. [Mission: Target Drop](#mission-target-drop)
+7. [Mission: Precision Landing](#mission-precision-landing)
+8. [Shared Vision & Debug Tooling](#shared-vision--debug-tooling)
+9. [Configuration & Presets](#configuration--presets)
+10. [Running the Mission](#running-the-mission)
 
 ---
 
-## Veículo e Stack de Software
+## Vehicle & Software Stack
 
 ### Hardware
 
-| Componente | Detalhe |
+| Component | Detail |
 |---|---|
-| Controladora de voo | Pixhawk 6C rodando ArduPilot |
-| Computador de bordo | NVIDIA Jetson Orin Nano Super |
-| Câmera frontal (norte) | Intel RealSense D435i, RGB + profundidade, 640×480, ≈69,4°×42,5° de FOV |
-| Câmera traseira (sul) | Logitech C920, 1640×1232, ≈70,4°×43,3° de FOV |
-| Câmera inferior | Arducam IMX662 / C920e, 640×640, ≈86°×47° de FOV |
-| Navegação | NVIDIA Isaac ROS Visual SLAM |
-| Atuadores | Garra de payload acionada por servo, LED de status controlado via WLED |
+| Flight controller | Pixhawk 6C running ArduPilot |
+| Onboard computer | NVIDIA Jetson Orin Nano Super |
+| Front (north) camera | Intel RealSense D435i, RGB + depth, 640×480, ≈69.4°×42.5° FOV |
+| Backward (south) camera | Logitech C920, 1640×1232, ≈70.4°×43.3° FOV |
+| Downward camera | Arducam IMX662 / C920e, 640×640, ≈86°×47° FOV |
+| Navigation | Vision pose (`PoseSource.VISION`). On the aircraft this is usually NVIDIA Isaac ROS Visual SLAM. This package does not launch Isaac. |
+| Actuators | Servo-driven payload gripper, WLED-controlled status LED |
 
-Os tópicos das câmeras, índices de dispositivo, offsets e configurações de processamento ficam em [`indoor/config.py`](indoor/config.py). **Confira esses valores contra a calibração e o launch de câmeras realmente usados antes do voo** — o SITL usa tópicos e sensores diferentes (ver `Config.apply_args`).
+Camera topics, device indexes, offsets, and processing settings live in [`indoor/config.py`](indoor/config.py). **Verify these against the deployed camera launch and calibration before flight** — SITL uses different topics and sensor settings (see `Config.apply_args`). SITL republishes the Gazebo pose onto `/visual_slam/tracking/vo_pose_covariance`; the bring-up is in [simulation/README.md](simulation/README.md). `--sitl` does not start Gazebo.
 
 ### Software
 
-| Camada | Ferramenta |
+| Layer | Tool |
 |---|---|
 | Middleware | [ROS 2](https://docs.ros.org/) |
-| Link de voo | [pymavlink](https://github.com/ardupilot/pymavlink) (ROS ↔ MAVLink/ArduPilot) |
-| API de veículo e visão | [Nectar SDK v1.1.0](https://github.com/Black-Bee-Drones/nectar-sdk/releases/tag/v1.1.0) |
-| Orquestração de missão | Máquinas de estado hierárquicas [Yasmin](https://github.com/uleroboticsgroup/yasmin) |
-| Processamento de imagem / ArUco | [OpenCV](https://opencv.org/) |
-| Detecção de objetos | [Ultralytics YOLO](https://docs.ultralytics.com/) (detectores de gate, barras, caixas e bebê/pessoa) |
-| Localização | [NVIDIA Isaac ROS Visual SLAM](https://github.com/NVIDIA-ISAAC-ROS/isaac_ros_visual_slam) |
+| Flight link | [pymavlink](https://github.com/ardupilot/pymavlink) (ROS ↔ MAVLink/ArduPilot) |
+| Vehicle & vision API | [Nectar SDK v1.1.0](https://github.com/Black-Bee-Drones/nectar-sdk/releases/tag/v1.1.0) |
+| Mission orchestration | [Yasmin](https://github.com/uleroboticsgroup/yasmin) hierarchical state machines |
+| Image processing / ArUco | [OpenCV](https://opencv.org/) |
+| Object detection | [Ultralytics YOLO](https://docs.ultralytics.com/) (gate, bar, box, baby/person detectors) |
+| Localization | `PoseSource.VISION` on `/visual_slam/tracking/vo_pose_covariance`. [Isaac ROS Visual SLAM](https://github.com/NVIDIA-ISAAC-ROS/isaac_ros_visual_slam) is the usual real-vehicle source; this package does not start it. |
 
 ---
 
-## Arquitetura de Software
+## Software Architecture
 
 ```mermaid
 flowchart TB
-    subgraph entry["Ponto de entrada"]
-        M[mangalarga.py<br/>CLI + bootstrap ROS/Nectar]
+    subgraph entry["Entry point"]
+        M[mangalarga.py<br/>CLI + ROS/Nectar bootstrap]
     end
-    subgraph cfg["Configuração"]
-        C[config.py<br/>dataclass Config]
-        P[presets.py<br/>subclasses nomeadas de Config]
-        W[customization.py<br/>assistente interativo]
+    subgraph cfg["Configuration"]
+        C[config.py<br/>Config dataclass]
+        P[presets.py<br/>named Config subclasses]
+        W[customization.py<br/>interactive wizard]
     end
-    subgraph sm["Orquestração de missão"]
+    subgraph sm["Mission orchestration"]
         I[indoor_sm.py<br/>IndoorSM]
         O[missions/obstacle_sm.py]
         N[missions/inspect_sm.py]
         D[missions/dropping_sm.py]
         L[missions/precise_landing_sm.py]
     end
-    subgraph st["Estados"]
-        S1[states/ estados de obstáculo]
-        S2[states/ estados de inspeção]
-        S3[states/ estados de entrega]
-        S4[states/ estados de pouso]
+    subgraph st["States"]
+        S1[states/ obstacle states]
+        S2[states/ inspect states]
+        S3[states/ dropping states]
+        S4[states/ landing states]
     end
-    subgraph util["Utilitários de visão compartilhados"]
-        U1[gate_range.py<br/>fusão de profundidade + overlays]
-        U2[align_overlay.py<br/>HUD de debug do ArUco]
-        U3[dropping/utils.py<br/>projeção pixel→mundo]
+    subgraph util["Shared vision utilities"]
+        U1[gate_range.py<br/>depth fusion + overlays]
+        U2[align_overlay.py<br/>ArUco debug HUD]
+        U3[dropping/utils.py<br/>pixel→world projection]
     end
 
     M --> C
@@ -97,349 +97,304 @@ flowchart TB
     I --> N --> S2 --> U2
     I --> D --> S3 --> U3
     I --> L --> S4 --> U2
-
-    style entry fill:#0d1117,stroke:#58a6ff,color:#c9d1d9
-    style cfg fill:#0d1117,stroke:#d29922,color:#c9d1d9
-    style sm fill:#0d1117,stroke:#238636,color:#c9d1d9
-    style st fill:#0d1117,stroke:#8957e5,color:#c9d1d9
-    style util fill:#0d1117,stroke:#f85149,color:#c9d1d9
 ```
 
-### Estrutura do repositório
+### Repository layout
 
 ```
-indoor/
-├── mangalarga.py          # Executável ROS 2 / ponto de entrada da CLI
-├── config.py              # Dataclass Config (todos os parâmetros ajustáveis)
-├── presets.py              # Subclasses nomeadas de Config (CLEITINHO, FULL, ...)
-├── customization.py       # Assistente interativo "--preset custom"
-├── camera_index.py        # Busca de índice de dispositivo v4l2 pelo nome da câmera
-├── indoor_sm.py           # Máquina de estados de alto nível (Initialize → Land)
-├── gate_range.py          # Fusão de profundidade + desenho de overlay do gate (compartilhado)
-├── align_overlay.py       # HUD de debug de alinhamento ArUco (compartilhado)
-├── gate_depth_check.py    # Ferramenta standalone de ajuste de gate/profundidade (fora da SM de missão)
+indoor/indoor/                 # Python package (ROS package root is indoor/)
+├── mangalarga.py              # ROS 2 executable / CLI entry point
+├── config.py                  # Config dataclass (all tunables)
+├── presets.py                 # Named Config subclasses (CLEITINHO, FULL, ...)
+├── customization.py           # Interactive "--preset custom" wizard
+├── camera_index.py            # v4l2 device index lookup by camera name
+├── indoor_sm.py               # Top-level state machine (Initialize → Land)
+├── gate_range.py              # Depth fusion + gate overlay drawing (shared)
+├── gate_depth_check.py        # Standalone gate/depth tuning tool (not part of the mission SM)
 ├── missions/
-│   ├── obstacle_sm.py     # ObstacleSM
-│   ├── inspect_sm.py      # InspectSM
-│   ├── dropping_sm.py     # DroppingSM
-│   └── precise_landing_sm.py  # PreciseLandingSM
+│   ├── obstacle_sm.py
+│   ├── inspect_sm.py
+│   ├── dropping_sm.py
+│   └── precise_landing_sm.py
 └── states/
-    ├── go_to_obstacles.py, window.py, reacquire_window.py,
-    │   to_bar_corridor.py, find_center_descend_bars.py,
-    │   pass_blue.py, tubes.py                     # Percurso de obstáculos
-    ├── go_to_window.py, count_babies.py, go_out.py # Inspeção da sala
-    ├── go_to_box.py, map_boxes.py, center_box.py,
-    │   act_box.py, utils.py                        # Entrega de alvo
-    └── go_to_landing_base.py, center_fixed.py,
-        center_moving.py, reacquire.py               # Pouso de precisão
+    ├── core/                  # initialize.py, takeoff.py, land.py
+    ├── obstacle/              # go_to_obstacles.py, window.py, reacquire_window.py,
+    │                          # to_bar_corridor.py, find_center_descend_bars.py,
+    │                          # pass_blue.py, tubes.py
+    ├── inspect/               # go_to_window.py, count_babies.py, go_out.py, align_overlay.py
+    ├── dropping/              # go_to_box.py, map_boxes.py, center_box.py, act_box.py, utils.py
+    └── precise_landing/       # go_to_landing_base.py, center_fixed.py, center_moving.py, reacquire.py
 ```
 
 ---
 
-## Sequência de Missão de Alto Nível
+## Top-Level Mission Sequence
 
-A `IndoorSM` ([`indoor_sm.py`](indoor/indoor_sm.py)) encapsula as quatro missões entre um par compartilhado de **Initialize → Takeoff** e **Land**.
+`IndoorSM` ([`indoor_sm.py`](indoor/indoor_sm.py)) wraps the four missions between a shared **Initialize → Takeoff** and **Land** pair.
 
 ```mermaid
 flowchart LR
-    A[Initialize] -->|sucesso| B[Takeoff]
-    B -->|sucesso| C[Percurso de Obstáculos]
-    C -->|sucesso ou cancelado| D[Inspeção da Sala]
-    D -->|sucesso ou cancelado| E[Entrega de Alvo]
-    E -->|sucesso ou cancelado| F[Pouso de Precisão]
-    F -->|sucesso ou cancelado| G[Land]
-    A -->|abortar| X((Missão abortada))
-    B -->|abortar| X
-    G -->|abortar| X
-    G -->|sucesso| Y((🏁 Missão concluída))
-
-    linkStyle 0,1,2,3,4,5,7 stroke:#238636,stroke-width:2px
-    linkStyle 6,8,9 stroke:#cf222e,stroke-width:2px
+    A[Initialize] -->|success| B[Takeoff]
+    B -->|success| C[Obstacle Course]
+    C -->|success or cancel| D[Room Inspection]
+    D -->|success or cancel| E[Target Drop]
+    E -->|success or cancel| F[Precision Landing]
+    F -->|success or cancel| G[Land]
+    A -->|abort| X((Mission abort))
+    B -->|abort| X
+    G -->|abort| X
+    G -->|success| Y((🏁 Mission complete))
 ```
 
-**Ponto-chave:** o resultado `CANCEL` de qualquer sub-máquina de missão é tratado, neste nível, como "seguir em frente" — uma tarefa de obstáculo, sala ou entrega que não pôde ser concluída **não** interrompe o voo geral. Somente falhas em `Initialize`, `Takeoff` ou `Land` (`ABORT`) encerram a execução antecipadamente. É isso que torna seguro usar as flags `*_skip` e o sistema de presets (ver [Configuração e Presets](#configuração-e-presets)) para voos de teste parciais.
+A sub-mission `CANCEL` continues to the next stage. Only `Initialize`, `Takeoff`, and `Land` returning `ABORT` end the run. Skip flags and presets use that same path for partial flights.
 
 <p align="center">
-  <img src="../assets/indoor/indoor-map.png" alt="Visão geral do percurso indoor completo" width="700">
+  <img src="../assets/indoor/indoor-map.png" alt="Full indoor course overview" width="700">
 </p>
 
 ---
 
-## Missão: Percurso de Obstáculos
+## Mission: Obstacle Course
 
-**Estados envolvidos:** `GoToObstacles`, `Window`, `ReacquireWindow`, `ToBarCorridor`, `FindCenterDescendBars`, `PassBlue`, `Tubes`.
+**States involved:** `GoToObstacles`, `Window`, `ReacquireWindow`, `ToBarCorridor`, `FindCenterDescendBars`, `PassBlue`, `Tubes`.
 
 ```mermaid
 flowchart LR
-    A[GO_TO_OBSTACLES] -->|sucesso| B[FIRST_WINDOW]
-    B -->|reaquisição| C[REACQUIRE_FIRST_WINDOW]
-    C -->|marcador encontrado| B
-    C -->|desistir| D[TO_BAR_CORRIDOR]
-    B -->|passou ou skip| D
-    D -->|sucesso| E[FIND_CENTER_DESCEND_BARS]
-    E -->|sucesso| F[PASS_BLUE]
-    F -->|sucesso| G[TUBES]
-    G -->|sucesso| H[SECOND_WINDOW]
-    H -->|reaquisição| I[REACQUIRE_SECOND_WINDOW]
-    I -->|marcador encontrado| H
-    I -->|desistir| J((✅ Obstáculos concluído))
-    H -->|passou ou skip| J
-    A -->|timeout/cancelado| X((⛔ Tarefa cancelada))
+    A[GO_TO_OBSTACLES] -->|success| B[FIRST_WINDOW]
+    B -->|reacquire| C[REACQUIRE_FIRST_WINDOW]
+    C -->|marker found| B
+    C -->|give up| D[TO_BAR_CORRIDOR]
+    B -->|pass or skip| D
+    D -->|success| E[FIND_CENTER_DESCEND_BARS]
+    E -->|success| F[PASS_BLUE]
+    F -->|success| G[TUBES]
+    G -->|success| H[SECOND_WINDOW]
+    H -->|reacquire| I[REACQUIRE_SECOND_WINDOW]
+    I -->|marker found| H
+    I -->|give up| J((✅ Obstacle task complete))
+    H -->|pass or skip| J
+    A -->|timeout/cancel| X((⛔ Task cancelled))
     B -->|timeout| X
-    D -->|timeout/cancelado| X
+    D -->|timeout/cancel| X
     E -->|timeout| X
     F -->|timeout| X
     G -->|timeout| X
     H -->|timeout| X
     I -->|timeout| X
-
-    linkStyle 0,4,5,6,7,8 stroke:#238636,stroke-width:2px
-    linkStyle 1,2,9,10 stroke:#0969da,stroke-width:2px
-    linkStyle 3,11,12 stroke:#b78103,stroke-width:2px
-    linkStyle 13,14,15,16,17,18,19,20 stroke:#cf222e,stroke-width:2px
 ```
 
-🟢 sucesso/progresso normal · 🔵 recuperação/nova tentativa · 🟡 pulado ou seguido normalmente · 🔴 timeout/abort encerra a tarefa
+### Walkthrough
 
-### Passo a passo
-
-1. **`GoToObstacles`** marca o relógio da fase (`obstacle_start_time`) e voa três waypoints até o ponto de entrada do percurso, na altitude de gate. Pode ser cancelado diretamente (`obstacle_skip`) ou reduzido a um no-op se o veículo já tiver decolado em outro lugar (`skip_takeoff`).
-2. **`Window` ("first"/"second")** é a travessia de gate servo-visual: um loop PID de duas fases que **alinha** com o gate detectado (erro em pixel lateral + vertical, com estimativa de distância fundindo bounding-box + câmera de profundidade), depois **avança devagar** mantendo a altitude até estar perto o suficiente para **comprometer-se** com um impulso final em malha aberta. Perder o gate dispara `reacquire`; a flag `skip` (config) sobrevoa sem sequer procurar o gate.
-3. **`ReacquireWindow`** realiza varreduras laterais fixas procurando `_CONFIRM` (5) detecções consecutivas antes de devolver o controle ao `Window`.
-4. **`ToBarCorridor`** sobe até uma altitude do degrau vermelho (1/2/3, selecionado por config) e se move para frente/lateralmente até o vão das barras.
-5. **`FindCenterDescendBars`** procura marcadores de linha vermelha/azul com a câmera inferior, centraliza via PID no ponto médio do vão (estimando a posição da outra linha a partir do vão de barra conhecido, caso apenas uma linha esteja visível) e então desce até a altitude do degrau azul.
-6. **`PassBlue`** — um curto impulso fixo para frente que atravessa a seção de barras já descida.
-7. **`Tubes`** voa um padrão fixo de 3 pernas de desvio lateral para evitar o obstáculo de tubos (existe no código um auxiliar de aproximação por profundidade até um standoff, mas está atualmente comentado).
+1. **`GoToObstacles`** stamps the phase clock (`obstacle_start_time`) and flies three waypoints to the course entry point at gate altitude. Can be cancelled outright (`obstacle_skip`) or short-circuited to a no-op if the vehicle already took off elsewhere (`skip_takeoff`).
+2. **`Window` ("first"/"second")** is the vision-servoed gate crossing: a two-phase PID loop that **aligns** on the detected gate (lateral + vertical pixel error, fused bounding-box + depth-camera range estimate), then **creeps** forward holding altitude until close enough to **commit** through with an open-loop forward burst. Losing the gate triggers `reacquire`; hitting `skip` (config) overflies without ever looking for it.
+3. **`ReacquireWindow`** performs fixed lateral sweep patterns looking for `_CONFIRM` (5) consecutive re-detections before handing control back to `Window`.
+4. **`ToBarCorridor`** climbs to a red-obstacle-step altitude (1/2/3, config-selected) and moves forward/laterally into the bar gap.
+5. **`FindCenterDescendBars`** searches the downward camera for red/blue line markers, PID-centers on the gap midpoint (estimating the other line's position from the known bar gap if only one line is visible), then descends to a blue-obstacle-step altitude.
+6. **`PassBlue`** — a short fixed forward burst clearing the now-descended bar section.
+7. **`Tubes`** flies a fixed 3-leg lateral-dodge pattern to avoid the tube obstacle (a depth-based creep-to-standoff helper exists in the code but is currently commented out).
 
 <p align="center">
-  <img src="../assets/indoor/gate.png" alt="Drone se alinhando em um gate colorido" width="620">
+  <img src="../assets/indoor/gate.png" alt="Drone aligning on a colored gate window" width="620">
 </p>
 
-### Configurações principais (ver [`config.py`](indoor/config.py))
 
-| Grupo | Chaves relevantes |
+### Key config (see [`config.py`](indoor/config.py))
+
+| Group | Notable keys |
 |---|---|
-| Travessia de gate | `obstacle_gate_alt`, `obstacle_gate_standoff`, `obstacle_gate_width`, `obstacle_gate_kp/kd/ki`, `obstacle_gate_lost_tolerance`, `obstacle_gate_align_only` |
-| Corredor de barras | `obstacle_red`, `obstacle_red_step_alt_*`, `obstacle_blue_1`, `obstacle_blue_step_alt_*`, `obstacle_bar_center_skip` |
-| Tubos | `obstacle_tubes_skip`, `obstacle_tubes_x_avoid`, `obstacle_tubes_y_avoid`, `obstacle_tubes_alt` |
-| Flags de skip | `obstacle_skip`, `obstacle_gate_first_skip`, `obstacle_gate_second_skip`, `obstacle_after_first_skip` |
+| Gate crossing | `obstacle_gate_alt`, `obstacle_gate_standoff`, `obstacle_gate_width`, `obstacle_gate_kp/kd/ki`, `obstacle_gate_lost_tolerance`, `obstacle_gate_align_only` |
+| Bar corridor | `obstacle_red`, `obstacle_red_step_alt_*`, `obstacle_blue_1`, `obstacle_blue_step_alt_*`, `obstacle_bar_center_skip` |
+| Tubes | `obstacle_tubes_skip`, `obstacle_tubes_x_avoid`, `obstacle_tubes_y_avoid`, `obstacle_tubes_alt` |
+| Skip switches | `obstacle_skip`, `obstacle_gate_first_skip`, `obstacle_gate_second_skip`, `obstacle_after_first_skip` |
 
 ---
 
-## Missão: Inspeção da Sala
+## Mission: Room Inspection
 
-**Estados envolvidos:** `GoToWindow`, `Window("room")`, `ReacquireWindow("room")`, `CountBabies`, `GoOut`.
+**States involved:** `GoToWindow`, `Window("room")`, `ReacquireWindow("room")`, `CountBabies`, `GoOut`.
 
 ```mermaid
 flowchart LR
-    A[GO_TO_WINDOW] -->|sucesso| B[WINDOW]
-    B -->|reaquisição| C[REACQUIRE]
-    C -->|marcador encontrado| B
-    C -->|cancelado| X((⛔ Inspeção cancelada))
-    B -->|passou ou skip| D[COUNT_BABIES]
-    D -->|sucesso| E[GO_OUT]
-    E -->|sucesso| F((✅ Inspeção concluída))
-    A -->|timeout/cancelado| X
+    A[GO_TO_WINDOW] -->|success| B[WINDOW]
+    B -->|reacquire| C[REACQUIRE]
+    C -->|marker found| B
+    C -->|cancel| X((⛔ Inspection cancelled))
+    B -->|pass or skip| D[COUNT_BABIES]
+    D -->|success| E[GO_OUT]
+    E -->|success| F((✅ Inspection complete))
+    A -->|timeout/cancel| X
     B -->|timeout| X
     E -->|timeout| X
-
-    linkStyle 0,5,6 stroke:#238636,stroke-width:2px
-    linkStyle 1,2 stroke:#0969da,stroke-width:2px
-    linkStyle 3,4 stroke:#b78103,stroke-width:2px
-    linkStyle 7,8,9 stroke:#cf222e,stroke-width:2px
 ```
 
-### Passo a passo
+### Walkthrough
 
-1. **`GoToWindow`** voa até o ponto de aproximação de inspeção, desce enquanto centraliza de forma grosseira em um **marcador ArUco** (não o detector YOLO de gate — um pipeline distinto de pixel/pose), guina 180° e então executa uma segunda passada PID mais fina, corrigindo X/Y/guinada, antes de finalizar.
-2. **`Window("room")`** reutiliza exatamente o mesmo estado de travessia de gate do percurso de obstáculos, apenas apontado para a **câmera sul**, sem fusão com câmera de profundidade, e com parâmetros prefixados `inspect_gate_*`. Ao ter sucesso, registra `inspect_gate_alignment_alt` para o `GoOut` reutilizar depois.
-3. **`CountBabies`** paira e amostra a câmera inferior `model_baby_sample_count` vezes (padrão 15), mesclando detecções sobrepostas de pessoa/urso de pelúcia (union-find por IOU) em uma única contagem por amostra, então escolhe a melhor amostra (opcionalmente restrita a uma contagem esperada conhecida) e salva uma imagem de debug rotulada.
-4. **`GoOut`** voa para frente através da janela pela distância de standoff+comprometimento registrada e desliga a luz de status WLED.
+1. **`GoToWindow`** flies to the inspection approach point, then descends while coarsely centering on an **ArUco marker** (not the YOLO gate detector — a distinct pixel/pose pipeline), yaws 180°, and runs a second, finer PID pass correcting X/Y/yaw before handing off.
+2. **`Window("room")`** reuses the exact same gate-crossing state as the obstacle course, just pointed at the **south camera**, with no depth-camera fusion, and `inspect_gate_*`-prefixed tuning. On success it records `inspect_gate_alignment_alt` for `GoOut` to reuse.
+3. **`CountBabies`** hovers and samples the downward camera `model_baby_sample_count` (default 15) times, merging overlapping person/teddy-bear detections (IOU union-find) into a single count per sample, then picks the best sample (optionally constrained to a known expected count) and saves a labeled debug image.
+4. **`GoOut`** flies forward through the window by the recorded standoff+commit distance and turns off the WLED status light.
 
 <p align="center">
-  <img src="../assets/indoor/babies_20260818_041226.jpg" alt="Amostra de detecção de bebê/pessoa a partir da câmera inferior" width="620">
+  <img src="../assets/indoor/babies_20260818_041226.jpg" alt="Baby/person detection sample from the down camera" width="620">
 </p>
 
-### Configurações principais
+### Key config
 
-| Grupo | Chaves relevantes |
+| Group | Notable keys |
 |---|---|
-| Aproximação | `inspect_start_x/y/z`, `inspect_descent_speed`, `aruco_marker_dict`, `inspect_aruco_size` |
-| Travessia da janela | `inspect_gate_standoff`, `inspect_gate_creep_vx`, `inspect_gate_commit_extra`, `obstacle_gate_room_skip` |
-| Contagem | `model_baby_classes_names`, `model_baby_sample_count`, `model_baby_overlap_iou`, `inspect_babies_count` |
-| Saída | `inspect_gate_alignment_alt` (definido em tempo de execução), auxiliar WLED estilo `dropping_led_gpio` |
+| Approach | `inspect_start_x/y/z`, `inspect_descent_speed`, `aruco_marker_dict`, `inspect_aruco_size` |
+| Window crossing | `inspect_gate_standoff`, `inspect_gate_creep_vx`, `inspect_gate_commit_extra`, `obstacle_gate_room_skip` |
+| Counting | `model_baby_classes_names`, `model_baby_sample_count`, `model_baby_overlap_iou`, `inspect_babies_count` |
+| Exit | `inspect_gate_alignment_alt` (set at runtime), `dropping_led_gpio`-style WLED helper |
 
 ---
 
-## Missão: Entrega de Alvo
+## Mission: Target Drop
 
-**Estados envolvidos:** `GoToBox`, `MapBoxes`, `CenterBox("drop"/"led")`, `ActBoxes("drop"/"led")`.
+**States involved:** `GoToBox`, `MapBoxes`, `CenterBox("drop"/"led")`, `ActBoxes("drop"/"led")`.
 
 ```mermaid
 flowchart LR
-    A[GO_TO_BOX] -->|sucesso| B[MAP_BOXES]
-    B -->|sucesso| C[CENTER_DROP_BOX]
-    C -->|alinhado| D[DROP]
-    D -->|sucesso| E[CENTER_LED_BOX]
-    E -->|alinhado| F[BLINK_LED]
-    F -->|sucesso| G((✅ Entrega concluída))
-    A -->|timeout/cancelado| X((⛔ Tarefa cancelada))
-    B -->|timeout/cancelado| X
-    C -->|perdido / timeout| X
-    D -->|falha| X
-    E -->|perdido / timeout| X
-    F -->|falha| X
-
-    linkStyle 0,1,2,3,4,5 stroke:#238636,stroke-width:2px
-    linkStyle 6,7,8,9,10,11 stroke:#cf222e,stroke-width:2px
+    A[GO_TO_BOX] -->|success| B[MAP_BOXES]
+    B -->|success| C[CENTER_DROP_BOX]
+    C -->|aligned| D[DROP]
+    D -->|success| E[CENTER_LED_BOX]
+    E -->|aligned| F[BLINK_LED]
+    F -->|success| G((✅ Drop task complete))
+    A -->|timeout/cancel| X((⛔ Task cancelled))
+    B -->|timeout/cancel| X
+    C -->|lost / timeout| X
+    D -->|failure| X
+    E -->|lost / timeout| X
+    F -->|failure| X
 ```
 
-### Passo a passo
+### Walkthrough
 
-1. **`GoToBox`** voa um trajeto em malha aberta escalonado (Y depois X) até o ponto de aproximação da área de entrega.
-2. **`MapBoxes`** dá uma única olhada com a câmera inferior, espera **exatamente três** caixas, ordena da esquerda para a direita, e geolocaliza as caixas alvo do LED e do cone/entrega em coordenadas absolutas no referencial de decolagem, usando projeção de câmera pinhole (`pixel_to_takeoff_frame`) combinada com a pose atual do veículo e a altitude do LIDAR.
-3. **`CenterBox`** primeiro voa em malha aberta até a posição mapeada, depois executa uma passada PID fechada sobre redetecções ao vivo para centralizar finamente (com um "funil" de tolerância em pixel/tolerância métrica controlando quando pode descer) até confirmar o alinhamento por vários frames consecutivos.
-4. **`ActBoxes`** comanda o servo de liberação do payload (`do_gripper`, com tentativas) ou pisca o LED de status em vermelho três vezes (`blink_led`), dependendo de qual alvo estava sendo centralizado.
+1. **`GoToBox`** flies a staged Y-then-X open-loop transit to the drop-area approach point.
+2. **`MapBoxes`** takes a single downward glance, expects **exactly three** boxes, sorts them left-to-right, and geolocates the LED-target and Cone/drop-target boxes into absolute takeoff-frame coordinates using pinhole-camera projection (`pixel_to_takeoff_frame`) combined with the vehicle's current pose and LIDAR altitude.
+3. **`CenterBox`** first flies open-loop to the mapped position, then runs a closed PID pass on live re-detections to fine-center (with a pixel-tolerance/metric-tolerance "funnel" gating when it's allowed to descend) before confirming alignment over several consecutive frames.
+4. **`ActBoxes`** either commands the payload-release servo (`do_gripper`, with retries) or blinks the status LED red three times (`blink_led`), depending on which target it was centered over.
 
-### Configurações principais
+### Key config
 
-| Grupo | Chaves relevantes |
+| Group | Notable keys |
 |---|---|
-| Aproximação | `dropping_start_x`, `dropping_start_y` |
-| Mapeamento | `model_dropping_box_source/name/conf`, `camera_down_hfov/vfov`, `camera_down_frame` |
-| Centralização | `dropping_box_kp/kd/ki`, `dropping_centralize_tolerance`, `dropping_center_drop_tolerance`, `dropping_center_drop_altitude`, `dropping_required_frames` |
-| Atuação | `dropping_servo_channel`, `dropping_servo_open_pwm`, `dropping_servo_retries` |
-| Skip | `droping_skip` *(sic — grafia mantida do código)* |
+| Approach | `dropping_start_x`, `dropping_start_y` |
+| Mapping | `model_box_source` (`package.pt`) and `model_box_conf` are what `initialize.py` loads. `center_box.py` filters detections with `model_dropping_box_name`. `model_dropping_box_source` (`box.pt`) and `model_dropping_box_conf` are not read. Camera geometry: `camera_down_hfov/vfov`, `camera_down_frame`. |
+| Centering | `dropping_box_kp/kd/ki`, `dropping_centralize_tolerance`, `dropping_center_drop_tolerance`, `dropping_center_drop_altitude`, `dropping_required_frames` |
+| Actuation | `dropping_servo_channel`, `dropping_servo_open_pwm`, `dropping_servo_retries` |
+| Skip | `droping_skip` (the spelling matches the config field and `--droping-skip`) |
 
 ---
 
-## Missão: Pouso de Precisão
+## Mission: Precision Landing
 
-**Estados envolvidos:** `GoToLandingBase`, `CenterFixed` **ou** `CenterMoving` (escolhido na construção), `Reacquire`.
+**States involved:** `GoToLandingBase`, `CenterFixed` **or** `CenterMoving` (chosen at construction time), `Reacquire`.
 
 ```mermaid
 flowchart LR
-    A[GO_TO_LANDING_BASE] -->|sucesso| B["CENTER<br/>(Fixed ou Moving)"]
-    B -->|marcador perdido| C[REACQUIRE]
-    C -->|marcador encontrado| B
-    C -->|cancelado / timeout| X((⛔ Pouso cancelado))
-    B -->|centralizado e pousado| D((✅ Estado compartilhado Land / RTL))
-    B -->|timeout| Y((🛑 ABORT da missão))
-    A -->|cancelado / timeout| X
-
-    linkStyle 0,4 stroke:#238636,stroke-width:2px
-    linkStyle 1,2 stroke:#0969da,stroke-width:2px
-    linkStyle 3,6 stroke:#b78103,stroke-width:2px
-    linkStyle 5 stroke:#cf222e,stroke-width:2px
+    A[GO_TO_LANDING_BASE] -->|success| B["CENTER<br/>(Fixed or Moving)"]
+    B -->|marker lost| C[REACQUIRE]
+    C -->|marker found| B
+    C -->|cancel / timeout| X((⛔ Landing task cancelled))
+    B -->|centered & landed| D((✅ Shared Land / RTL state))
+    B -->|timeout| Y((🛑 Mission ABORT))
+    A -->|cancel / timeout| X
 ```
 
-### Passo a passo
+### Walkthrough
 
-1. **`GoToLandingBase`** voa até as coordenadas alvo `precise_fixed` ou `precise_mobile`, em altitude segura, conforme `config.precise_fixed`.
-2. **`CenterFixed`** (plataforma estacionária): um loop fechado a ~30 Hz lendo `(image, marker_id, translation, yaw)` da câmera inferior, corrigindo X/Y e guinada via PID (arredondada para o giro de 90° mais próximo), mantendo altitude até estar centralizado em XY e então descendo até `land_altitude` antes de declarar sucesso. Publica telemetria ao vivo em `blackboard['align_debug']` para o overlay de HUD compartilhado.
-3. **`CenterMoving`** (plataforma móvel, **experimental**): primeiro alinha a guinada, depois amostra o marcador oscilante para estimar sua velocidade e pontos de inversão (ajuste linear ao longo de vários meio-ciclos), paira sobre o centro estimado de sua trajetória e, por fim, sincroniza a descida final com o momento em que o marcador real cruza novamente aquele ponto.
-4. **`Reacquire`** sobe verticalmente até o marcador reaparecer no campo de visão mais amplo, ou desiste ao atingir `max_alt`.
+1. **`GoToLandingBase`** flies to either the `precise_fixed` or `precise_mobile` target coordinates at safe altitude, chosen by `config.precise_fixed`.
+2. **`CenterFixed`** (stationary pad): a ~30 Hz closed loop reading `(image, marker_id, translation, yaw)` from the down camera, PID-correcting X/Y and yaw (folded to the nearest quarter-turn), holding altitude until XY is centered, then descending to `land_altitude` before declaring success. Publishes live telemetry to `blackboard['align_debug']` for the shared HUD overlay.
+3. **`CenterMoving`** (moving pad, **experimental**): first aligns yaw, then samples the oscillating marker to estimate its speed and turning points (linear fit over several half-cycles), hovers over the estimated center of its path, and finally times the final drop to the moment the real marker re-crosses that point.
+4. **`Reacquire`** climbs straight up until the marker reappears in the wider field of view, or gives up at `max_alt`.
 
-### Configurações principais
+### Key config
 
-| Grupo | Chaves relevantes |
+| Group | Notable keys |
 |---|---|
-| Aproximação | `precise_fixed`, `precise_fixed_x/y`, `precise_mobile_x/y` |
-| Centralização | `precise_xy_kp/ki`, `obstacle_alt_kp`, `center_threshold_xy`, `land_altitude`, `precise_descend_vz` |
-| Reaquisição | `precise_reacquire_vz`, `max_alt`, `lost_tolerance` |
+| Approach | `precise_fixed`, `precise_fixed_x/y`, `precise_mobile_x/y` |
+| Centering | `precise_xy_kp/ki`, `obstacle_alt_kp`, `center_threshold_xy`, `land_altitude`, `precise_descend_vz` |
+| Reacquire | `precise_reacquire_vz`, `max_alt`, `lost_tolerance` |
 
 ---
 
-## Ferramentas Compartilhadas de Visão e Debug
+## Shared Vision & Debug Tooling
 
-Estes módulos não são estados em si, mas são usados em várias missões:
+These modules aren't states themselves but are used across multiple missions:
 
-- **[`gate_range.py`](indoor/gate_range.py)** — fusão de alcance por profundidade/bounding-box (`fuse_z`, `z_from_bbox`, `z_from_frame`, `smooth_z`) e o desenho do overlay de debug da travessia de gate (`overlay_gate`, `draw_align_markers`, `draw_hud`), usados tanto pelo `Window` (voo real) quanto pelo `gate_depth_check.py` (ferramenta standalone de bancada para ajustar detecção de gate e alcance por profundidade, executada independentemente das máquinas de estado de missão).
-- **[`align_overlay.py`](indoor/align_overlay.py)** — HUD de debug específico para ArUco (mira no centro da câmera, marcador no centro do ArUco, vetor de erro, leitura do PID), consumido por `CenterFixed`/`Reacquire` através da convenção compartilhada `blackboard['align_debug']`.
+- **[`gate_range.py`](indoor/gate_range.py)** — depth/bounding-box range fusion (`fuse_z`, `z_from_bbox`, `z_from_frame`, `smooth_z`) and the gate-crossing debug overlay drawing (`overlay_gate`, `draw_align_markers`, `draw_hud`) used by both `Window` (live flight) and `gate_depth_check.py` (standalone bench-tuning tool for gate detection + depth ranging, run independently of the mission state machines).
+- **[`states/inspect/align_overlay.py`](indoor/states/inspect/align_overlay.py)** — ArUco-specific debug HUD (camera-center crosshair, marker-center marker, error vector, PID readout) consumed by `CenterFixed`/`Reacquire` via the shared `blackboard['align_debug']` convention.
 
 <p align="center">
-  <img src="../assets/indoor/annotated-2026-08-18_03-53-53-990346.jpg" alt="Exemplos de overlay de debug para gate e alinhamento ArUco" width="700">
+  <img src="../assets/indoor/annotated-2026-08-18_03-53-53-990346.jpg" alt="Debug overlay examples for gate and ArUco alignment" width="700">
 </p>
-
 ---
 
-## Configuração e Presets
+## Configuration & Presets
 
-`Config` ([`config.py`](indoor/config.py)) é uma única dataclass contendo todos os parâmetros ajustáveis: conexão com o veículo, geometria das câmeras, pesos dos detectores, timeouts por missão, ganhos de PID, coordenadas de missão e flags de skip. Um **preset** ([`presets.py`](indoor/presets.py)) é uma subclasse de `Config` que sobrescreve um subconjunto desses campos para um teste específico ou um perfil de missão completa.
+`Config` ([`config.py`](indoor/config.py)) is a single dataclass holding every tunable: vehicle connection, camera geometry, detector weights, per-mission timeouts, PID gains, mission coordinates, and skip switches. A **preset** ([`presets.py`](indoor/presets.py)) is a `Config` subclass overriding a subset of fields for a specific test or full-mission profile.
 
 ```mermaid
 flowchart LR
-    A[Config padrão] --> B{"--preset NOME?"}
-    B -->|preset nomeado| C[Subclasse de presets.py aplicada]
-    B -->|"custom"| D[Assistente interativo<br/>customization.py]
-    B -->|nenhum| E[Config base]
-    C --> F[Overrides de CLI aplicados]
+    A[Config defaults] --> B{"--preset NAME?"}
+    B -->|named preset| C[presets.py subclass applied]
+    B -->|"custom"| D[Interactive wizard<br/>customization.py]
+    B -->|none| E[Base Config]
+    C --> F[CLI overrides applied]
     D --> F
     E --> F
-    F -->|--sitl| G[Overrides de câmera/conexão do SITL]
-    G --> H[Config final → IndoorSM]
-
-    style A fill:#0d1117,stroke:#8957e5,color:#c9d1d9
-    style H fill:#0d1117,stroke:#238636,color:#c9d1d9
+    F -->|--sitl| G[SITL camera/connection overrides]
+    G --> H[Final Config → IndoorSM]
 ```
 
-Presets atuais: `CLEITINHO`, `JORGE`, `TESTGATE`, `TESTGATEPASS`, `TESTGATEALIGN`, `TESTUAU`, `TESTBABIES`, `COMPLETE_MISSION1`, `TESTUAUUAU`, `PRECISIONLAND`, `VVV`, `SAMUEL`, `M1P`, `M2P`, `M1PSKIPBAR`, `M1PSKIPGATE`, `FULL`. Rode `--help` para confirmar as opções disponíveis no workspace instalado.
+Current presets: `CLEITINHO`, `JORGE`, `TESTGATE`, `TESTGATEPASS`, `TESTGATEALIGN`, `TESTUAU`, `TESTBABIES`, `COMPLETE_MISSION1`, `TESTUAUUAU`, `PRECISIONLAND`, `VVV`, `SAMUEL`, `M1P`, `M2P`, `M1PSKIPBAR`, `M1PSKIPGATE`, `FULL`. Run `--help` to confirm the choices in the installed workspace.
 
-`--preset custom` inicia um assistente interativo de terminal (menus por setas) que reaproveita um preset existente ou monta uma configuração nova por etapas (opções do percurso de obstáculos → opções de inspeção → modo de pouso), podendo opcionalmente **anexar o resultado como um novo preset nomeado** diretamente em `presets.py` para reutilização futura.
+`--preset custom` launches an interactive terminal wizard (arrow-key menus) that either reuses an existing preset or builds a new configuration stage-by-stage (obstacle course options → inspection options → landing mode), and can optionally **append the result as a new named preset** directly into `presets.py` for reuse next time.
 
-### Resumo dos presets
+### Preset summary
 
-| Preset | Obstáculos | Inspeção | Entrega | Pouso de Precisão | Observações |
+| Preset | Obstacle | Inspect | Drop | Precision Landing | Notes |
 |---|:---:|:---:|:---:|:---:|---|
-| `CLEITINHO` | ✅ | ✅ | ⛔ | ⛔ | Apenas obstáculos + inspeção |
-| `JORGE` | ⛔ | ⛔ | ✅ | ⛔ | Execução apenas de entrega |
-| `TESTGATE` | janela pulada | ⛔ | ⛔ | ⛔ | Teste de bancada de detecção de gate, sem RTL |
-| `TESTGATEPASS` | apenas 1º gate | ⛔ | ⛔ | ⛔ | Teste de travessia do primeiro gate |
-| `TESTGATEALIGN` | apenas alinhamento | ⛔ | ⛔ | ⛔ | Ajuste de alinhamento, sem comprometimento |
-| `TESTUAU` | ambos os gates | ⛔ | ⛔ | ⛔ | Teste completo de gate a gate |
-| `TESTBABIES` | ⛔ | ⛔ | ⛔ | ✅ | Foco na contagem de bebês |
-| `COMPLETE_MISSION1` / `TESTUAUUAU` | ✅ | ⛔ | ⛔ | ✅ fixo | Execuções completas de obstáculos + pouso |
-| `PRECISIONLAND` | ⛔ | ⛔ | ⛔ | ✅ fixo | Apenas pouso |
-| `VVV` / `SAMUEL` | ✅ (sem centralização de barras) | ✅ | ⛔ | ✅ fixo | Obstáculos (sem centralização de barra) + inspeção + pouso |
-| `M1P` / `M2P` / variantes | misto | misto | ⛔ | ✅ fixo | Voos de teste de marcos escalonados |
-| `FULL` | ✅ | ✅ | ⛔ | ✅ fixo | Mais próximo da execução completa de competição |
+| `CLEITINHO` | ✅ | ✅ | ⛔ | ⛔ | Obstacle + inspect only |
+| `JORGE` | ⛔ | ⛔ | ✅ | ⛔ | Drop-only run |
+| `TESTGATE` | window skip | ⛔ | ⛔ | ⛔ | Gate detection bench test, no RTL |
+| `TESTGATEPASS` | 1st gate only | ⛔ | ⛔ | ⛔ | First-gate pass-through test |
+| `TESTGATEALIGN` | align only | ⛔ | ⛔ | ⛔ | Alignment tuning, no commit |
+| `TESTUAU` | both gates | ⛔ | ⛔ | ⛔ | Full gate-to-gate test |
+| `TESTBABIES` | ⛔ | ✅ | ⛔ | ✅ | Inspection runs (`inspect_skip` stays the default). Obstacle and drop are skipped. |
+| `COMPLETE_MISSION1` / `TESTUAUUAU` | ✅ | ⛔ | ⛔ | ✅ fixed | Full obstacle + landing runs |
+| `PRECISIONLAND` | ⛔ | ⛔ | ⛔ | ✅ fixed | Landing-only |
+| `VVV` / `SAMUEL` | ✅ (bars skip) | ✅ | ⛔ | ✅ fixed | Obstacle (no bar-center) + inspect + land |
+| `M1P` | ✅ | ⛔ | ⛔ | ✅ fixed | Obstacle course + fixed landing |
+| `M2P` | ⛔ | ✅ | ⛔ | ✅ fixed | Inspection + fixed landing |
+| `M1PSKIPBAR` | ✅ (bars skip) | ⛔ | ⛔ | ✅ fixed | Obstacle course with bar-center skipped |
+| `M1PSKIPGATE` | gates skip | ⛔ | ⛔ | ✅ fixed | Obstacle course with both gates and bar-center skipped |
+| `FULL` | ✅ | ✅ | ⛔ | ✅ fixed | Obstacle, inspection, and fixed landing. The drop is skipped (`droping_skip = True`). `JORGE` is the drop-only preset. |
 
 ---
 
-## Executando a Missão
+## Running the Mission
 
-Compile e faça o source do workspace ROS 2, depois inspecione os argumentos disponíveis:
+Build from the [repository README](../README.md), then:
 
 ```bash
-cd ~/ros2_ws
-colcon build --packages-select indoor
-source install/setup.bash
 ros2 run indoor mangalarga --help
-```
-
-Execute um preset nomeado no veículo:
-
-```bash
 ros2 run indoor mangalarga --preset FULL
-```
-
-Execute SITL com um preset, ou configure uma missão interativamente:
-
-```bash
 ros2 run indoor mangalarga --sitl --preset TESTGATE
 ros2 run indoor mangalarga --preset custom
-```
-
-Pule etapas específicas da missão, ou pule o comando de decolagem quando o veículo já estiver no ar em um modo adequado:
-
-```bash
 ros2 run indoor mangalarga --preset FULL --inspect-skip --droping-skip
 ros2 run indoor mangalarga --preset PRECISIONLAND --no-takeoff
 ```
 
-Flags suportadas: `--sitl`, `--preset`, `--obstacle-skip`, `--inspect-skip`, `--droping-skip`, `--precise-skip`, `--no-takeoff` (atalhos curtos `-o-skip`, `-i-skip`, `-d-skip`, `-p-skip`). A grafia `droping` na CLI é mantida por compatibilidade com o campo de configuração. O assistente customizado requer um terminal interativo. Presets são definidos em `indoor/presets.py`; uma configuração criada pelo assistente deve ser commitada no código-fonte caso precise persistir entre instalações/máquinas.
+`--sitl` switches the node to the SITL connection and camera topics. It does not start Gazebo or ArduPilot. Follow [simulation/README.md](simulation/README.md) first, then run the mission node in another terminal.
 
-Ferramenta standalone de bancada para ajustar detecção de gate e alcance por profundidade sem rodar a missão completa:
+`ros2 launch indoor mangalarga.launch.py` and `simulation.launch.py` start the mission node only. They pass `--config`, and the node accepts `--preset`, so `config:=...` does not select a preset. Use `ros2 run` until those wrappers match.
+
+Supported switches: `--sitl`, `--preset`, `--obstacle-skip`, `--inspect-skip`, `--droping-skip`, `--precise-skip`, `--no-takeoff` (short aliases `-o-skip`, `-i-skip`, `-d-skip`, `-p-skip`). The CLI spelling `droping` matches the config field. The custom wizard needs an interactive terminal. Presets live in `indoor/presets.py`; commit a wizard result if it should persist.
+
+Standalone bench tool for gate detection and depth ranging:
 
 ```bash
 ros2 run indoor gate_depth_check --sitl --show-result

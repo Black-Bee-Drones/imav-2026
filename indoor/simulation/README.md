@@ -2,6 +2,10 @@
 
 Competition arena for the IMAV 2026 indoor cage (`imav_world.sdf`).
 
+<p align="center">
+  <img src="../../assets/overview/indoor-sitl.png" alt="Indoor mission in Gazebo" width="800">
+</p>
+
 ## Layout
 
 | Path | Purpose |
