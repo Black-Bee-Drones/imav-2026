@@ -43,4 +43,4 @@ class SearchSM(StateMachine):
             },
         )
 
-        self.set_start_state("ASCEND")
+        self.set_start_state("INIT_POSITION")
