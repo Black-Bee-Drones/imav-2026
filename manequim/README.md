@@ -157,6 +157,10 @@ flowchart LR
 2. **`Ascend`** — the real mission entry point. Climbs to `ASCEND_HEIGHT`, takes up to 3 photos, and checks each for a confident `person`/`kite`-class detection. Every confirmed sighting increments a persistent `blackboard['manequim_detections']` counter; once it reaches `MANEQUIM_NUMBER` confirmations, `Ascend` reports `MANEQUIM_FOUND` immediately — the spiral search never even runs. Otherwise it proceeds to `SQUARE_SEARCH`.
 3. **`SearchNavigation`** first descends to `SEARCH_ALTITUDE`, then builds an outward square spiral of waypoints (`_build_square_spiral`) sized against `SEARCH_RADIUS` and a step derived from the camera's horizontal FOV at that altitude (with a small overlap margin baked in so consecutive photos don't miss ground between them). It flies the spiral leg by leg — converting each map-frame waypoint into body-frame motion using the vehicle's running yaw, so the nose points down every new leg — repeating `Ascend`'s confirmation-counting logic at each stop. Reaching `MANEQUIM_NUMBER` confirmations at any waypoint halts the vehicle and returns `MANEQUIM_FOUND`; completing the whole spiral without confirmation returns plain `SUCCEED`.
 
+| Mannequin detected during the search | Annotated frame showing the mannequin and nearby scene objects |
+|:---:|:---:|
+| <img src="../assets/outdoor/manequim-detection.png" alt="Simulated mannequin outlined by a person detection box" width="320"> | <img src="../assets/outdoor/manequim-search-scene.png" alt="Annotated search frame with the detected mannequin, a cylinder, and a box" width="320"> |
+
 ### Key config (`searchSM/constants.py`)
 
 | Group | Notable keys |
@@ -254,6 +258,10 @@ The package ships Gazebo worlds under `Simulation/world/` and a local firefighte
 
 Once SITL and the model paths are up, start the node with `ros2 run manequim mangalarga` as above.
 
-> **Image placeholder:** Add a Gazebo view of the outdoor field with the target mannequins and delivery area. Replace this note with an image when available.
+<p align="center">
+  <img src="../assets/outdoor/manequim-simulation.png" alt="Simulated drone flying above the mannequin in the outdoor scene" width="400">
+</p>
+
+<p align="center"><em>Outdoor simulation: the drone approaches the mannequin.</em></p>
 
 ---

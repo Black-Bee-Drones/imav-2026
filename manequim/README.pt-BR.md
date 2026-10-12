@@ -156,6 +156,10 @@ flowchart LR
 2. **`Ascend`** é o ponto de entrada real da missão. Sobe até `ASCEND_HEIGHT`, tira até três fotos e verifica detecções confiáveis da classe `person`/`kite`. Cada avistamento confirmado incrementa o contador persistente `blackboard['manequim_detections']`. Ao atingir `MANEQUIM_NUMBER` confirmações, retorna `MANEQUIM_FOUND` sem iniciar a busca em espiral; caso contrário, segue para `SQUARE_SEARCH`.
 3. **`SearchNavigation`** desce até `SEARCH_ALTITUDE` e constrói uma espiral quadrada para fora (`_build_square_spiral`), dimensionada por `SEARCH_RADIUS`. O passo deriva do FOV horizontal da câmera nessa altitude e inclui uma pequena sobreposição para evitar lacunas entre fotos consecutivas. A aeronave percorre cada perna, convertendo waypoints do referencial do mapa para movimentos no referencial do corpo usando o yaw atual. Em cada parada, repete a lógica de confirmação do `Ascend`. Atingir `MANEQUIM_NUMBER` interrompe a busca e retorna `MANEQUIM_FOUND`; completar a espiral sem confirmação retorna `SUCCEED`.
 
+| Manequim detectado durante a busca | Frame anotado com o manequim e objetos próximos no cenário |
+|:---:|:---:|
+| <img src="../assets/outdoor/manequim-detection.png" alt="Manequim simulado destacado por uma caixa de detecção da classe person" width="320"> | <img src="../assets/outdoor/manequim-search-scene.png" alt="Frame de busca anotado com o manequim detectado, um cilindro e uma caixa" width="320"> |
+
 ### Configurações principais (`searchSM/constants.py`)
 
 | Grupo | Chaves relevantes |
@@ -253,4 +257,8 @@ O pacote inclui mundos Gazebo em `Simulation/world/` e um modelo local de bombei
 
 Com o SITL e os caminhos de modelo no ar, inicie o nó com `ros2 run manequim mangalarga`, como acima.
 
-> **Espaço para imagem:** adicione uma visão do Gazebo do campo outdoor com os manequins e a área de entrega. Substitua esta nota por uma imagem quando estiver disponível.
+<p align="center">
+  <img src="../assets/outdoor/manequim-simulation.png" alt="Drone simulado voando acima do manequim no cenário outdoor" width="400">
+</p>
+
+<p align="center"><em>Simulação outdoor: o drone se aproxima do manequim.</em></p>
